@@ -216,6 +216,10 @@
 	// Paso a instrucciones y al juego
 	// -----------------------------------------------------------------
 
+	var botonIniciar = document.getElementById( 'ntvs-iniciar' );
+	var juegoListo = false;
+	var juegoFallo = false;
+
 	function mostrarInstrucciones() {
 		var etiquetaNombre = document.getElementById( 'ntvs-nombre-jugador' );
 		if ( etiquetaNombre ) {
@@ -226,26 +230,142 @@
 		panelInstrucciones.hidden = false;
 		revisarOrientacion();
 		panelInstrucciones.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+
+		// El bundle se descarga mientras el participante lee las
+		// instrucciones. Son unos segundos que de otro modo se perderían
+		// después de pulsar el botón, con el reloj ya en marcha.
+		precargarJuego();
 	}
 
-	var botonIniciar = document.getElementById( 'ntvs-iniciar' );
+	function precargarJuego() {
+		if ( ! botonIniciar ) {
+			return;
+		}
+
+		if ( typeof window.navidadTvsIniciarJuego === 'function' ) {
+			juegoListo = true;
+			return;
+		}
+
+		botonIniciar.disabled = true;
+		botonIniciar.textContent = textos.cargando || 'Cargando el juego…';
+
+		var etiqueta = document.createElement( 'script' );
+		etiqueta.src = cfg.urlJuego;
+		etiqueta.async = true;
+
+		etiqueta.onload = function () {
+			juegoListo = true;
+			botonIniciar.disabled = false;
+			botonIniciar.textContent = textos.listo || 'Iniciar carrera';
+		};
+
+		etiqueta.onerror = function () {
+			juegoFallo = true;
+			botonIniciar.disabled = true;
+			mostrarErrorEn( panelInstrucciones, textos.errorJuego || 'No se pudo cargar el juego.' );
+		};
+
+		document.head.appendChild( etiqueta );
+	}
+
+	/** Muestra un error dentro de un panel que no tiene su propia caja. */
+	function mostrarErrorEn( panel, mensaje ) {
+		var caja = panel.querySelector( '.ntvs-error' );
+
+		if ( ! caja ) {
+			caja = document.createElement( 'p' );
+			caja.className = 'ntvs-error';
+			caja.setAttribute( 'role', 'alert' );
+			panel.insertBefore( caja, panel.firstChild );
+		}
+
+		caja.textContent = mensaje;
+		caja.hidden = false;
+	}
 
 	if ( botonIniciar ) {
 		botonIniciar.addEventListener( 'click', function () {
-			panelInstrucciones.hidden = true;
-			panelJuego.hidden = false;
-
-			var etiquetaToken = document.getElementById( 'ntvs-token' );
-			if ( etiquetaToken && sesion ) {
-				etiquetaToken.textContent = sesion.token;
+			if ( ! juegoListo || juegoFallo || ! sesion ) {
+				return;
 			}
 
-			// En E4 aquí arranca el countdown 3-2-1 y luego la carrera. El
-			// cronómetro no corre durante el countdown.
-			if ( typeof window.navidadTvsIniciarJuego === 'function' ) {
-				window.navidadTvsIniciarJuego( sesion );
-			}
+			botonIniciar.disabled = true;
+			botonIniciar.textContent = textos.preparando || 'Preparando la pista…';
+
+			// Este POST es el que gasta el intento: el servidor marca la sesión
+			// como consumida y recién entonces entrega el seed de la pista.
+			fetch( cfg.endpointIniciar, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify( { token: sesion.token } )
+			} )
+				.then( function ( respuesta ) {
+					return respuesta.text().then( function ( texto ) {
+						var datos;
+						try {
+							datos = JSON.parse( texto );
+						} catch ( e ) {
+							throw new Error( textos.errorServidor || 'El servidor no respondió como esperábamos.' );
+						}
+						if ( ! respuesta.ok ) {
+							throw new Error( datos.message || textos.errorGeneral );
+						}
+						return datos;
+					} );
+				} )
+				.then( function ( carrera ) {
+					panelInstrucciones.hidden = true;
+					panelJuego.hidden = false;
+
+					window.navidadTvsIniciarJuego( {
+						token: sesion.token,
+						nombre: carrera.nombre || sesion.nombre,
+						seed: carrera.seed,
+						alTerminar: mostrarResultado
+					} );
+				} )
+				.catch( function ( error ) {
+					botonIniciar.disabled = false;
+					botonIniciar.textContent = textos.listo || 'Iniciar carrera';
+					mostrarErrorEn( panelInstrucciones, error.message || textos.errorGeneral );
+				} );
 		} );
+	}
+
+	/**
+	 * Resultado al terminar la carrera.
+	 *
+	 * En E6 esto envía el registro de entradas al servidor, que reejecuta la
+	 * carrera y calcula la distancia oficial. Por ahora solo muestra lo que
+	 * calculó el navegador, que es informativo y no cuenta para nada.
+	 */
+	function mostrarResultado( resultado ) {
+		var caja = document.getElementById( 'ntvs-resultado' );
+		if ( ! caja ) {
+			return;
+		}
+
+		var pon = function ( id, valor ) {
+			var el = document.getElementById( id );
+			if ( el ) {
+				el.textContent = valor;
+			}
+		};
+
+		pon( 'ntvs-res-nombre', resultado.nombre );
+		pon( 'ntvs-res-distancia', resultado.distancia + ' m' );
+		pon( 'ntvs-res-logos', resultado.items );
+		pon( 'ntvs-res-caidas', resultado.caidas );
+		pon( 'ntvs-res-calones', resultado.calones );
+		pon( 'ntvs-res-bytes', resultado.entradas.length );
+
+		caja.hidden = false;
+		caja.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+
+		// Queda a mano para poder revisarlo desde la consola mientras E6 no
+		// exista.
+		window.navidadTvsUltimoResultado = resultado;
 	}
 
 	revisarOrientacion();

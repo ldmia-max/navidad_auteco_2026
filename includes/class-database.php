@@ -530,6 +530,76 @@ class NavidadTVS_Database {
 	}
 
 	/**
+	 * Busca una sesión por su nonce.
+	 *
+	 * @param string $nonce Token de 64 caracteres.
+	 * @return array|null
+	 */
+	public function buscar_sesion_por_nonce( $nonce ) {
+		global $wpdb;
+
+		if ( 64 !== strlen( (string) $nonce ) ) {
+			return null;
+		}
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_sesiones} WHERE nonce = %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				$nonce
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
+	 * Marca una sesión como consumida.
+	 *
+	 * El UPDATE lleva la condición estado = 'emitida' dentro del propio WHERE,
+	 * así que si llegan dos peticiones a la vez solo una afecta una fila. Sin
+	 * eso, dos pulsaciones rápidas del botón darían dos carreras.
+	 *
+	 * @param int $sesion_id Id de la sesión.
+	 * @return bool True si esta llamada fue la que la consumió.
+	 */
+	public function consumir_sesion( $sesion_id ) {
+		global $wpdb;
+
+		$afectadas = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$this->tabla_sesiones}
+				    SET estado = 'consumida', consumida_en = %s
+				  WHERE id = %d AND estado = 'emitida'", // phpcs:ignore WordPress.DB.PreparedSQL
+				gmdate( 'Y-m-d H:i:s' ),
+				$sesion_id
+			)
+		);
+
+		return 1 === (int) $afectadas;
+	}
+
+	/**
+	 * Devuelve un participante por su id.
+	 *
+	 * @param int $id Id del participante.
+	 * @return array|null
+	 */
+	public function buscar_participante( $id ) {
+		global $wpdb;
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_participantes} WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$id
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
 	 * Resumen del padrón agrupado por jornada.
 	 *
 	 * @param int $limite Máximo de jornadas a devolver, de la más reciente hacia atrás.

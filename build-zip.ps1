@@ -133,11 +133,19 @@ try {
         throw "El staging quedo sin navidad-tvs.php."
     }
 
-    $leaks = Get-ChildItem $StageWp -Recurse -File |
-        Where-Object {
-            $_.Name -match '^(docker-compose\.ya?ml|DOCKER\.md|CLAUDE\.md|.*\.sql|.*\.csv|build-zip\.(ps1|sh))$' -or
-            $_.FullName -match '\\(dev|docker|dist|docs|ayudas|imagenes_apoyo|game|\.git|node_modules)\\'
-        }
+    # Carpetas de desarrollo que nunca pueden viajar. Se comparan contra el
+    # PRIMER segmento de la ruta relativa, no contra la ruta completa: "game"
+    # en la raiz es el fuente TypeScript y no entra, pero "assets/game" es el
+    # bundle compilado y tiene que entrar.
+    $CarpetasProhibidas = @('dev', 'docker', 'dist', 'docs', 'ayudas', 'imagenes_apoyo', 'game', '.git', 'node_modules')
+
+    $leaks = Get-ChildItem $StageWp -Recurse -File | Where-Object {
+        $rel     = $_.FullName.Substring($StageWp.Length).TrimStart('\', '/')
+        $primero = ($rel -split '[\\/]')[0]
+
+        ($_.Name -match '^(docker-compose\.ya?ml|DOCKER\.md|CLAUDE\.md|.*\.sql|.*\.csv|build-zip\.(ps1|sh))$') -or
+        ($CarpetasProhibidas -contains $primero)
+    }
     if ($leaks) {
         throw ("Archivos de desarrollo en el paquete: " + ($leaks.Name -join ', '))
     }

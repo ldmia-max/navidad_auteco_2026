@@ -370,17 +370,82 @@
 
 /* --- Contenedor del juego ----------------------------------------------- */
 
+.ntvs-panel--juego {
+	padding: 10px;
+}
+
 .ntvs-game-root {
-	min-height: 200px;
+	min-height: 180px;
 	display: flex;
-	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	gap: 10px;
 	background: #000;
 	border: 3px solid var(--ntvs-blanco);
-	padding: 24px 16px;
+	/* El lienzo recibe los gestos: sin esto, arrastrar para cambiar de carril
+	   hace scroll de la página o dispara el pull-to-refresh. */
+	touch-action: none;
+	overscroll-behavior: contain;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.ntvs-game-root canvas {
+	display: block;
+	image-rendering: pixelated;
+	touch-action: none;
+}
+
+/* --- Resultado de la carrera -------------------------------------------- */
+
+.ntvs-resultado {
+	margin-top: 16px;
+	padding: 16px 12px;
 	text-align: center;
+	border: 3px solid var(--ntvs-blanco);
+	background: var(--ntvs-azul);
+}
+
+.ntvs-resultado__titulo {
+	margin: 0 0 12px;
+	font-size: 13px;
+	letter-spacing: 3px;
+	text-transform: uppercase;
+	color: var(--ntvs-crema);
+}
+
+.ntvs-resultado__nombre {
+	margin: 0 0 4px;
+	font-size: 15px;
+	color: var(--ntvs-blanco);
+}
+
+.ntvs-resultado__distancia {
+	margin: 0 0 16px;
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--ntvs-blanco);
+	text-shadow: 3px 3px 0 var(--ntvs-rojo);
+}
+
+.ntvs-resultado__detalle {
+	margin: 0 0 16px;
+	padding: 0;
+	list-style: none;
+	font-size: 11px;
+	line-height: 2;
+	color: #c9d6ea;
+}
+
+.ntvs-resultado__detalle span {
+	color: var(--ntvs-blanco);
+	font-weight: 700;
+}
+
+.ntvs-resultado__gracias {
+	margin: 0 0 12px;
+	font-size: 14px;
+	color: var(--ntvs-crema);
 }
 
 .ntvs-pendiente {

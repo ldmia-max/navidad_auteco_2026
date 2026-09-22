@@ -117,12 +117,25 @@ class NavidadTVS_Shortcode {
 			'navidad-tvs-acceso',
 			'NAVIDAD_TVS',
 			array(
-				'endpointAcceso' => rest_url( NAVIDAD_TVS_REST_NS . '/acceso' ),
-				'endpointEstado' => rest_url( NAVIDAD_TVS_REST_NS . '/estado' ),
-				'turnstileKey'   => $site_key,
+				'endpointAcceso'  => rest_url( NAVIDAD_TVS_REST_NS . '/acceso' ),
+				'endpointEstado'  => rest_url( NAVIDAD_TVS_REST_NS . '/estado' ),
+				'endpointIniciar' => rest_url( NAVIDAD_TVS_REST_NS . '/carrera/iniciar' ),
+				/*
+				 * El bundle del juego no se encola con la página: pesa bastante
+				 * y quien solo viene a leer los términos no tiene por qué
+				 * descargarlo. acceso.js lo pide en cuanto el acceso es válido,
+				 * mientras el participante lee las instrucciones, así que para
+				 * cuando pulsa "Iniciar carrera" ya está listo.
+				 */
+				'urlJuego'        => NAVIDAD_TVS_URL . 'assets/game/juego.js?ver=' . NAVIDAD_TVS_VERSION,
+				'turnstileKey'    => $site_key,
 				'textos'         => array(
-					'validando'    => __( 'Validando…', 'navidad-tvs' ),
-					'jugar'        => __( 'Entrar al juego', 'navidad-tvs' ),
+					'validando'     => __( 'Validando…', 'navidad-tvs' ),
+					'jugar'         => __( 'Entrar al juego', 'navidad-tvs' ),
+					'cargando'      => __( 'Cargando el juego…', 'navidad-tvs' ),
+					'listo'         => __( 'Iniciar carrera', 'navidad-tvs' ),
+					'errorJuego'    => __( 'No se pudo cargar el juego. Revisa tu conexión y recarga la página.', 'navidad-tvs' ),
+					'preparando'    => __( 'Preparando la pista…', 'navidad-tvs' ),
 					'errorRed'      => __( 'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.', 'navidad-tvs' ),
 					'errorServidor' => __( 'El servidor no respondió como esperábamos. Inténtalo de nuevo en unos segundos.', 'navidad-tvs' ),
 					'errorGeneral'  => __( 'Algo salió mal. Recarga la página e inténtalo de nuevo.', 'navidad-tvs' ),

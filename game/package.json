@@ -1,0 +1,22 @@
+{
+  "name": "navidad-tvs-juego",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Motor del juego arcade del Concurso Navideño TVS",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "sim": "tsx src/sim/banco-pruebas.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.87.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

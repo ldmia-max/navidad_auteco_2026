@@ -62,14 +62,21 @@ se usa el módulo.
 
 | Acción | Teclado | Táctil |
 |---|---|---|
-| Acelerador normal | `Z` | Zona inferior derecha |
-| Turbo | `X` | Zona superior derecha |
-| Cambiar de carril | `↑` `↓` | Zona izquierda, arriba/abajo |
-| Inclinación en el aire | `←` `→` | Zona izquierda, izquierda/derecha |
+| Acelerador normal | `Z` | Mitad derecha, abajo |
+| Turbo | `X` | Mitad derecha, arriba |
+| Cambiar de carril (en el suelo) | `↑` `↓` | Mitad izquierda, arriba/abajo |
+| Enderezar la moto (en el aire) | `↑` `↓` | Mitad izquierda, arriba/abajo |
 
-La moto nunca retrocede. Sin acelerador, desacelera por fricción.
+No hay botón de freno, igual que en el original: soltar el acelerador frena por
+fricción y además enfría el motor al doble de velocidad. La moto nunca
+retrocede.
 
-Zonas táctiles de 48×48 px reales como mínimo. Orientación horizontal forzada.
+Arriba y abajo valen para dos cosas según dónde esté la moto. Eso deja el mando
+en dos botones y una cruz, que es lo que cabe cómodo en la pantalla de un
+celular; las cuatro zonas son cuadrantes de media pantalla, muy por encima del
+mínimo de 48×48 px.
+
+Orientación horizontal forzada.
 
 ---
 
@@ -84,7 +91,7 @@ Zonas táctiles de 48×48 px reales como mínimo. Orientación horizontal forzad
 | Aceleración normal | 12 000 mm/s² | 12 m/s² |
 | Aceleración con turbo | 18 000 mm/s² | 18 m/s² |
 | Desaceleración por fricción (sin acelerar) | 8 000 mm/s² | 8 m/s² |
-| Desaceleración frenando | 20 000 mm/s² | 20 m/s² |
+| Pérdida de potencia con el motor calado | 40 000 mm/s² | 40 m/s² |
 
 La velocidad se satura en el máximo correspondiente. Si se suelta el turbo
 estando por encima de 22 000, decae por fricción hasta ese techo.
@@ -98,7 +105,7 @@ velocidad punta, pero calienta.
 |---|---|---|
 | Turbo activo | **+42** | 0 → 10 000 en ~4,0 s |
 | Acelerador normal | **−28** | 10 000 → 0 en ~6,0 s |
-| Sin acelerar o frenando | **−56** | 10 000 → 0 en ~3,0 s |
+| Sin acelerar | **−56** | 10 000 → 0 en ~3,0 s |
 
 Al llegar a 10 000 el motor **se cala**:
 
@@ -109,17 +116,27 @@ Al llegar a 10 000 el motor **se cala**:
 
 ### Verificación del balanceo
 
-| Estrategia | Velocidad media | Distancia en 90 s |
-|---|---|---|
-| Solo acelerador normal | 22 m/s | ~1980 m |
-| Turbo continuo (se cala cada 6,5 s) | 21,2 m/s | ~1900 m — **peor que no usarlo** |
-| Pulsos de 2 s turbo / 3 s normal (temperatura neutra) | 26 m/s | ~2340 m |
-| Pulsos optimizados con enfriamiento al frenar | ~27 m/s | ~2430 m |
+Medido con `cd game && npm run sim`, promediando ocho pistas distintas. Las
+estrategias son automáticas y **no cambian de carril**, así que recogen pocos
+logos y chocan con lo que les toca de frente: son el suelo, no el techo.
 
-Abusar del turbo castiga. Dosificarlo premia. Es exactamente la curva que se
-busca, y produce un rango de ~1200 m (jugador malo) a ~2700 m (experto), con
-resolución de 1 metro: espacio de sobra para ordenar 150 participantes sin
-empates masivos.
+| Estrategia | Distancia media | Veces que se cala |
+|---|---|---|
+| Sin tocar nada | 0 m | 0 |
+| Solo acelerador | **1927 m** | 0 |
+| Turbo continuo | **1549 m** | 13,3 |
+| Pulsos de 2 s turbo / 3 s normal | **2281 m** | 0,1 |
+| Pulsos de 2 s turbo / 2 s suelto | 2221 m | 0,4 |
+| Pulsos de 1 s turbo / 2 s normal | 2272 m | 0,0 |
+
+Abusar del turbo castiga de verdad: 1549 m frente a los 1927 m de no usarlo.
+Dosificarlo sube a 2281 m. Son 354 metros de diferencia entre jugar mal y jugar
+bien, sin contar los logos ni los carriles, y con resolución de 1 metro: espacio
+de sobra para ordenar 150 participantes.
+
+Una carrera completa se simula en **0,20 ms**. Validar las 150 de una jornada
+cuesta centésimas de segundo, así que en E6 se puede reejecutar el 100 % de las
+partidas y no solo las de los finalistas.
 
 ---
 
@@ -127,17 +144,24 @@ empates masivos.
 
 ### Estructura
 
-- **4 carriles**, cambio vertical como en Excitebike.
-- La pista se genera en **segmentos de 100 m** encadenados.
-- Cada segmento sale de una plantilla elegida con el PRNG.
-- Dificultad creciente: los primeros 300 m son limpios para que el jugador se
-  acomode; de ahí en adelante la probabilidad de plantillas difíciles sube.
+- **4 carriles**, cambio vertical como en Excitebike, con 8 ticks de espera
+  entre un cambio y el siguiente.
+- Se generan 3600 m de pista, por encima del tope de plausibilidad, para que
+  nadie se quede sin pista ni en una carrera perfecta.
+- Los obstáculos se colocan recorriendo la pista con saltos de 18 a 45 m
+  sorteados con el PRNG. Los primeros **300 m van limpios**, para que quien
+  nunca ha jugado pueda acomodarse.
+- **Nunca se bloquean los cuatro carriles a la vez**: un grupo ocupa uno o dos
+  como mucho. Si el jugador no tuviera salida, la caída no mediría habilidad y
+  el concurso sería impugnable.
+- La dificultad sube con la distancia: la probabilidad de que un obstáculo sea
+  una valla pasa del 10 % al 35 % entre el principio y el final.
 
 ### Obstáculos
 
 | Obstáculo | Efecto | Recuperación |
 |---|---|---|
-| **Rampa** | Salto. En el aire se controla la inclinación | Aterrizaje limpio (±15°): sin penalización y pequeño impulso. Fuera de rango: caída |
+| **Rampa** | Salto, con impulso proporcional a la velocidad. En el aire se endereza con arriba y abajo | Aterrizaje dentro de ±15,0°: sin penalización y +1,5 m/s. Fuera de rango: caída |
 | **Lodo** | Velocidad al 60 % mientras se está encima | Inmediata al salir |
 | **Valla / bache** | Caída del piloto | 120 ticks (2 s) inmóvil |
 
@@ -149,8 +173,13 @@ perdidos, más el tiempo de volver a acelerar.
 - Aparecen en promedio **1 cada 200 m**, en carriles alternados para obligar a
   moverse.
 - Valen **+50 m** cada uno, sumados directo al contador.
-- Un jugador bueno recoge unos 8–12 por carrera (+400 a +600 m).
 - Se renderizan como la letra del logo TVS, sin el caballo.
+
+**Recogerlos depende de cambiar de carril.** Las pruebas automáticas, que se
+quedan siempre en el mismo carril, recogen 2 o 3 por carrera. Sobre una pista de
+3600 m hay unos 17 logos, de los que unos 11 quedan dentro del alcance de una
+carrera buena. Quien se mueva bien puede llevarse la mayoría: ahí hay unos 400
+metros de diferencia que separan a quien solo acelera de quien además conduce.
 
 ---
 
@@ -178,14 +207,19 @@ Un byte por tick, con los botones como bits:
 |---|---|
 | 0 | Acelerador |
 | 1 | Turbo |
-| 2 | Carril arriba |
-| 3 | Carril abajo |
-| 4 | Inclinación adelante |
-| 5 | Inclinación atrás |
+| 2 | Arriba |
+| 3 | Abajo |
+| 4–7 | Reservados |
 
-5400 bytes por carrera, comprimidos con run-length y codificados en base64.
-En la práctica queda por debajo de 1 KB, porque los estados de botón cambian
-pocas veces por segundo.
+Arriba y abajo hacen dos cosas según dónde esté la moto: en el suelo cambian de
+carril, en el aire la enderezan. El registro guarda **lo que el jugador pulsó**,
+no lo que eso significaba en ese instante; interpretarlo es trabajo de la
+simulación. Así el mismo registro sirve para reejecutar la carrera sin arrastrar
+contexto.
+
+5400 bytes por carrera, comprimidos por repeticiones y codificados en base64. En
+la práctica quedan en unos **160 bytes**, porque los botones cambian pocas veces
+por segundo, no sesenta.
 
 ---
 

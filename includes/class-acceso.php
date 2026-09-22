@@ -237,6 +237,82 @@ class NavidadTVS_Acceso {
 	}
 
 	/**
+	 * Arranca la carrera: consume el intento y entrega el seed de la pista.
+	 *
+	 * El seed no se entrega en el acceso sino aquí, al pulsar "Iniciar
+	 * carrera". Así nadie puede estudiar la pista antes de correrla.
+	 *
+	 * Este es el punto exacto en que se gasta el único intento. Entrar y cerrar
+	 * la pestaña no lo consume; pulsar el botón sí.
+	 *
+	 * @param string $token Nonce que devolvió el acceso.
+	 * @return array|WP_Error
+	 */
+	public function iniciar_carrera( $token ) {
+		if ( ! NavidadTVS_Plugin::ventana_abierta() ) {
+			return new WP_Error(
+				'fuera_de_horario',
+				__( 'La jornada de participación ya terminó.', 'navidad-tvs' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$sesion = $this->database->buscar_sesion_por_nonce( (string) $token );
+
+		if ( null === $sesion ) {
+			return new WP_Error(
+				'sesion_invalida',
+				__( 'Tu sesión no es válida. Vuelve a ingresar tus datos.', 'navidad-tvs' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( 'emitida' !== $sesion['estado'] ) {
+			return new WP_Error(
+				'ya_participo',
+				__( 'Esta sesión ya se usó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		$limite = new DateTimeImmutable( $sesion['creada_en'], new DateTimeZone( 'UTC' ) );
+		$limite = $limite->modify( '+' . self::VIGENCIA_MINUTOS . ' minutes' );
+
+		if ( new DateTimeImmutable( 'now', new DateTimeZone( 'UTC' ) ) > $limite ) {
+			return new WP_Error(
+				'sesion_expirada',
+				__( 'Tu sesión caducó. Vuelve a ingresar tus datos.', 'navidad-tvs' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( $this->database->tiene_score( (int) $sesion['participante_id'] ) ) {
+			return new WP_Error(
+				'ya_participo',
+				__( 'Este número ya participó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		// El UPDATE condicionado es lo que hace de esto una operación atómica:
+		// si el botón se pulsa dos veces, solo la primera consume la sesión.
+		if ( ! $this->database->consumir_sesion( (int) $sesion['id'] ) ) {
+			return new WP_Error(
+				'ya_participo',
+				__( 'Esta sesión ya se usó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		return array(
+			'seed'     => (int) $sesion['seed'],
+			'nombre'   => $sesion['nombre_digitado'],
+			'ticks'    => NAVIDAD_TVS_TOTAL_TICKS,
+			'duracion' => NAVIDAD_TVS_DURACION_SEGUNDOS,
+		);
+	}
+
+	/**
 	 * Reutiliza la sesión vigente del participante o crea una nueva.
 	 *
 	 * Reutilizarla importa: si cada recarga creara una sesión, alguien que

@@ -76,6 +76,22 @@ class NavidadTVS_Rest {
 
 		register_rest_route(
 			NAVIDAD_TVS_REST_NS,
+			'/carrera/iniciar',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'iniciar_carrera' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'token' => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			NAVIDAD_TVS_REST_NS,
 			'/estado',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -100,6 +116,24 @@ class NavidadTVS_Rest {
 				'turnstile' => (string) $peticion->get_param( 'turnstile' ),
 			)
 		);
+
+		if ( is_wp_error( $resultado ) ) {
+			return $resultado;
+		}
+
+		return new WP_REST_Response( $resultado, 200 );
+	}
+
+	/**
+	 * POST /concurso/v1/carrera/iniciar
+	 *
+	 * Consume el intento y entrega el seed de la pista.
+	 *
+	 * @param WP_REST_Request $peticion Petición.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function iniciar_carrera( WP_REST_Request $peticion ) {
+		$resultado = $this->acceso->iniciar_carrera( (string) $peticion->get_param( 'token' ) );
 
 		if ( is_wp_error( $resultado ) ) {
 			return $resultado;

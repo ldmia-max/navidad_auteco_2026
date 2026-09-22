@@ -123,13 +123,31 @@ if [[ ! -f "$STAGE_WP/navidad-tvs.php" ]]; then
     exit 1
 fi
 
-leaks="$(find "$STAGE_WP" \
-    \( -name 'docker-compose.yml' -o -name 'docker-compose.yaml' \
-       -o -name 'DOCKER.md' -o -name 'CLAUDE.md' \
-       -o -name '*.sql' -o -name '*.csv' -o -name 'build-zip.*' \) \
-    -o -path '*/dev/*' -o -path '*/docker/*' -o -path '*/dist/*' \
-    -o -path '*/docs/*' -o -path '*/ayudas/*' -o -path '*/game/*' \
-    -o -path '*/node_modules/*' | head -n 20)"
+# Carpetas de desarrollo que nunca pueden viajar. Se comparan contra el PRIMER
+# segmento de la ruta relativa, no contra la ruta completa: "game" en la raiz es
+# el fuente TypeScript y no entra, pero "assets/game" es el bundle compilado y
+# tiene que entrar.
+CARPETAS_PROHIBIDAS="dev docker dist docs ayudas imagenes_apoyo game .git node_modules"
+
+leaks=""
+while IFS= read -r -d '' archivo; do
+    rel="${archivo#"$STAGE_WP/"}"
+    base="$(basename "$archivo")"
+    primero="${rel%%/*}"
+
+    case "$base" in
+        docker-compose.yml|docker-compose.yaml|DOCKER.md|CLAUDE.md|*.sql|*.csv|build-zip.*)
+            leaks="$leaks$rel"$'\n'; continue ;;
+    esac
+
+    for prohibida in $CARPETAS_PROHIBIDAS; do
+        if [[ "$primero" == "$prohibida" ]]; then
+            leaks="$leaks$rel"$'\n'
+            break
+        fi
+    done
+done < <(find "$STAGE_WP" -type f -print0)
+
 if [[ -n "$leaks" ]]; then
     echo "Archivos de desarrollo en el paquete:" >&2
     echo "$leaks" >&2
