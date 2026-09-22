@@ -371,6 +371,35 @@ $con_guiones = $acceso->validar(
 comprobar( 'entra digitando el numero con guiones', 'ok', codigo( $con_guiones ) );
 
 // =====================================================================
+echo "\n=== Render del shortcode ===\n";
+
+/*
+ * Regresión: los assets se registraban en 'wp_enqueue_scripts', pero con un
+ * tema de bloques el contenido se renderiza antes de ese hook. El handle no
+ * existía todavía, wp_localize_script() devolvía false y la página salía sin
+ * el objeto NAVIDAD_TVS: el fetch iba contra undefined, recibía el HTML del
+ * 404 y el formulario mostraba "Unexpected token '<'".
+ */
+abrir_ventana( $settings );
+
+wp_scripts()->registered['navidad-tvs-acceso']->extra['data'] = '';
+$html_abierto = do_shortcode( '[' . NavidadTVS_Shortcode::TAG . ']' );
+$datos_js     = (string) wp_scripts()->get_data( 'navidad-tvs-acceso', 'data' );
+
+comprobar( 'el script quedo registrado antes del render', true, wp_script_is( 'navidad-tvs-acceso', 'registered' ) );
+comprobar( 'la pagina lleva el objeto NAVIDAD_TVS', true, false !== strpos( $datos_js, 'var NAVIDAD_TVS' ) );
+// wp_json_encode escapa las barras, así que se comparan sin ellas.
+comprobar( 'lleva la URL del endpoint de acceso', true, false !== strpos( stripslashes( $datos_js ), rest_url( NAVIDAD_TVS_REST_NS . '/acceso' ) ) );
+comprobar( 'con la ventana abierta se pinta el formulario', true, false !== strpos( $html_abierto, 'id="ntvs-form"' ) );
+
+cerrar_ventana( $settings );
+$html_cerrado = do_shortcode( '[' . NavidadTVS_Shortcode::TAG . ']' );
+
+comprobar( 'fuera de horario NO existe el formulario', false, strpos( $html_cerrado, 'id="ntvs-form"' ) !== false );
+comprobar( 'fuera de horario NO existe el campo de telefono', false, strpos( $html_cerrado, 'id="ntvs-telefono"' ) !== false );
+comprobar( 'fuera de horario se muestra el aviso', true, false !== strpos( $html_cerrado, 'ntvs--cerrado' ) );
+
+// =====================================================================
 // Limpieza
 // =====================================================================
 $wpdb->query( "DELETE s FROM {$db->tabla_scores} s JOIN {$db->tabla_participantes} p ON p.id = s.participante_id WHERE p.telefono LIKE '30099988%'" );

@@ -143,6 +143,15 @@
 	} );
 
 	function enviar( nombre, telefono ) {
+		// Sin configuración no hay a dónde enviar. Pasó una vez: los assets se
+		// registraban tarde y este objeto no llegaba a la página, así que el
+		// fetch salía contra undefined y el participante veía el error del
+		// parser de JSON en pantalla.
+		if ( ! cfg.endpointAcceso ) {
+			mostrarError( textos.errorGeneral || 'Algo salió mal. Recarga la página e inténtalo de nuevo.' );
+			return;
+		}
+
 		enviando = true;
 		boton.disabled = true;
 		boton.textContent = textos.validando || 'Validando…';
@@ -158,7 +167,16 @@
 			} )
 		} )
 			.then( function ( respuesta ) {
-				return respuesta.json().then( function ( datos ) {
+				// Si el servidor devuelve HTML (una página de error, un
+				// mantenimiento, un proxy de por medio), json() lanzaría un
+				// error del parser. El participante no tiene por qué leer eso.
+				return respuesta.text().then( function ( texto ) {
+					var datos;
+					try {
+						datos = JSON.parse( texto );
+					} catch ( e ) {
+						throw new Error( textos.errorServidor || 'El servidor no respondió como esperábamos. Inténtalo de nuevo en unos segundos.' );
+					}
 					return { ok: respuesta.ok, datos: datos };
 				} );
 			} )

@@ -46,7 +46,22 @@ class NavidadTVS_Shortcode {
 	 */
 	public function registrar_hooks() {
 		add_shortcode( self::TAG, array( $this, 'render' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'registrar_assets' ) );
+
+		/*
+		 * Los assets se registran en 'init', no en 'wp_enqueue_scripts'.
+		 *
+		 * Con un tema de bloques, WordPress renderiza la plantilla —y con ella
+		 * el contenido y sus shortcodes— ANTES de disparar
+		 * 'wp_enqueue_scripts'. Registrando allí, cuando el shortcode corría el
+		 * handle todavía no existía: wp_enqueue_script() lo dejaba en cola y se
+		 * acababa imprimiendo, pero wp_localize_script() devolvía false y la
+		 * página quedaba sin el objeto NAVIDAD_TVS. El fetch salía entonces
+		 * contra undefined, recibía el HTML del 404 y el formulario mostraba
+		 * "Unexpected token '<'".
+		 *
+		 * En 'init' el registro siempre ocurre antes de cualquier render.
+		 */
+		add_action( 'init', array( $this, 'registrar_assets' ) );
 	}
 
 	/**
@@ -108,8 +123,9 @@ class NavidadTVS_Shortcode {
 				'textos'         => array(
 					'validando'    => __( 'Validando…', 'navidad-tvs' ),
 					'jugar'        => __( 'Entrar al juego', 'navidad-tvs' ),
-					'errorRed'     => __( 'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.', 'navidad-tvs' ),
-					'errorGeneral' => __( 'Algo salió mal. Inténtalo de nuevo.', 'navidad-tvs' ),
+					'errorRed'      => __( 'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.', 'navidad-tvs' ),
+					'errorServidor' => __( 'El servidor no respondió como esperábamos. Inténtalo de nuevo en unos segundos.', 'navidad-tvs' ),
+					'errorGeneral'  => __( 'Algo salió mal. Recarga la página e inténtalo de nuevo.', 'navidad-tvs' ),
 				),
 			)
 		);
