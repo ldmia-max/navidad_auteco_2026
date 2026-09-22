@@ -113,7 +113,9 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
 
 *(en paralelo con E4 y E6)*
 
-- Paleta derivada de `#0059E9`, `#003A70` y `#E00827`.
+- Paleta oficial TVS: azul `#1F3A72`, rojo `#E01D2D`, blanco `#FFFFFF`
+  (`imagenes_apoyo/paleta_colores.jpeg`). El azul `#0059E9` se reserva como
+  acento interactivo del sitio.
 - Una sola moto doble propósito, como en el Excitebike original.
 - Sprites: acelerar, wheelie, salto, caída, sobrecalentamiento.
 - Tribuna con público y cartel del concurso; banderines como luces navideñas.
@@ -121,8 +123,9 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
 - Ítem coleccionable con la letra del logo TVS.
 - Panel inferior: `DIST` izquierda, `TEMP` centro con barra roja/verde, `TIME`
   derecha, en marco azul con números rojo y blanco.
-- Pantalla final: piloto en podio, nombre y distancia debajo, mensaje de
-  agradecimiento.
+- Pantalla final: piloto en podio sobre panel con marco de cuadros, nombre y
+  distancia debajo, mensaje de agradecimiento
+  (`imagenes_apoyo/Ejemplo_final_carrera.png`).
 - Modal de instrucciones: controles, jugabilidad, aviso de girar el dispositivo
   y advertencia de conexión estable.
 - Audio chiptune en `.ogg` + `.m4a`.
