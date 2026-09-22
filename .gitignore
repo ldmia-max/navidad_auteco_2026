@@ -1,0 +1,19 @@
+# Datos personales reales del padrón — nunca se versionan
+ayudas/
+*.csv
+!docs/ejemplos/*.csv
+
+# Dependencias y artefactos de build
+node_modules/
+game/dist/
+.vite/
+
+# Entorno local
+.env
+.env.local
+wp-content/
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
