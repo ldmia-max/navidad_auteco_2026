@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.0.0' );
+define( 'NAVIDAD_TVS_VERSION', '1.1.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );

@@ -264,6 +264,176 @@ class NavidadTVS_Database {
 	}
 
 	/**
+	 * Busca qué teléfonos, cédulas y placas ya están en el padrón.
+	 *
+	 * Tres consultas por lote en vez de tres por fila: con 500 filas, eso son
+	 * 1500 consultas que no se hacen.
+	 *
+	 * @param string[] $telefonos Teléfonos normalizados a buscar.
+	 * @param string[] $cedulas   Cédulas normalizadas a buscar.
+	 * @param string[] $placas    Placas normalizadas a buscar.
+	 * @return array{telefono: array<string,string>, cedula: array<string,string>, placa: array<string,string>}
+	 *         Para cada campo, un mapa valor => fecha_concurso en la que ya está registrado.
+	 */
+	public function buscar_existentes( $telefonos, $cedulas, $placas ) {
+		return array(
+			'telefono' => $this->buscar_columna( 'telefono', $telefonos ),
+			'cedula'   => $this->buscar_columna( 'cedula', $cedulas ),
+			'placa'    => $this->buscar_columna( 'placa', $placas ),
+		);
+	}
+
+	/**
+	 * Devuelve los valores de una columna que ya existen en el padrón.
+	 *
+	 * @param string   $columna Nombre de columna. Solo se aceptan las tres
+	 *                          columnas únicas del padrón.
+	 * @param string[] $valores Valores a buscar.
+	 * @return array<string, string> Mapa valor => fecha_concurso.
+	 */
+	private function buscar_columna( $columna, $valores ) {
+		global $wpdb;
+
+		// Lista blanca: la columna se interpola en el SQL, así que no puede
+		// venir de ningún lado que no sea este archivo.
+		if ( ! in_array( $columna, array( 'telefono', 'cedula', 'placa' ), true ) ) {
+			return array();
+		}
+
+		$valores = array_values( array_unique( array_filter( (array) $valores ) ) );
+
+		if ( empty( $valores ) ) {
+			return array();
+		}
+
+		$encontrados = array();
+
+		// Se trocea para no armar una sentencia gigante con archivos grandes.
+		foreach ( array_chunk( $valores, 500 ) as $lote ) {
+			$huecos = implode( ',', array_fill( 0, count( $lote ), '%s' ) );
+
+			$sql = $wpdb->prepare(
+				"SELECT {$columna} AS valor, fecha_concurso FROM {$this->tabla_participantes} WHERE {$columna} IN ({$huecos})", // phpcs:ignore WordPress.DB.PreparedSQL
+				$lote
+			);
+
+			$filas = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			foreach ( (array) $filas as $fila ) {
+				$encontrados[ $fila['valor'] ] = $fila['fecha_concurso'];
+			}
+		}
+
+		return $encontrados;
+	}
+
+	/**
+	 * Inserta filas del padrón en lotes.
+	 *
+	 * Usa INSERT IGNORE: si dos peticiones simultáneas intentaran insertar el
+	 * mismo teléfono, los índices únicos de la tabla frenan la segunda sin
+	 * abortar el lote entero.
+	 *
+	 * @param array $filas  Filas ya validadas por el importador.
+	 * @param int   $tamano Filas por sentencia.
+	 * @return int Cantidad de filas efectivamente insertadas.
+	 */
+	public function insertar_participantes( $filas, $tamano = 200 ) {
+		global $wpdb;
+
+		if ( empty( $filas ) ) {
+			return 0;
+		}
+
+		$columnas = array(
+			'telefono',
+			'telefono_csv',
+			'cedula',
+			'placa',
+			'fecha_concurso',
+			'marca',
+			'fecha_matricula',
+			'fecha_acta',
+			'ciudad_propietario',
+			'departamento_propietario',
+			'razon_social_establecimiento',
+		);
+
+		$lista_columnas = '`' . implode( '`,`', $columnas ) . '`';
+		$insertadas     = 0;
+
+		foreach ( array_chunk( $filas, max( 1, (int) $tamano ) ) as $lote ) {
+			$grupos = array();
+			$datos  = array();
+
+			foreach ( $lote as $fila ) {
+				$marcadores = array();
+
+				foreach ( $columnas as $columna ) {
+					$valor = isset( $fila[ $columna ] ) ? $fila[ $columna ] : '';
+
+					// Las fechas opcionales vacías van como NULL, no como
+					// '0000-00-00', que MySQL en modo estricto rechaza.
+					if ( in_array( $columna, array( 'fecha_matricula', 'fecha_acta' ), true ) && '' === $valor ) {
+						$marcadores[] = 'NULL';
+						continue;
+					}
+
+					$marcadores[] = '%s';
+					$datos[]      = $valor;
+				}
+
+				$grupos[] = '(' . implode( ',', $marcadores ) . ')';
+			}
+
+			$sql = "INSERT IGNORE INTO {$this->tabla_participantes} ({$lista_columnas}) VALUES " . implode( ',', $grupos );
+
+			$resultado = $wpdb->query( $wpdb->prepare( $sql, $datos ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+			if ( false !== $resultado ) {
+				$insertadas += (int) $resultado;
+			}
+		}
+
+		return $insertadas;
+	}
+
+	/**
+	 * Resumen del padrón agrupado por jornada.
+	 *
+	 * @param int $limite Máximo de jornadas a devolver, de la más reciente hacia atrás.
+	 * @return array<int, array{fecha_concurso: string, total: int, jugaron: int}>
+	 */
+	public function resumen_por_jornada( $limite = 30 ) {
+		global $wpdb;
+
+		$sql = $wpdb->prepare(
+			"SELECT p.fecha_concurso,
+			        COUNT(*) AS total,
+			        SUM(CASE WHEN s.id IS NOT NULL AND s.valido = 1 THEN 1 ELSE 0 END) AS jugaron
+			   FROM {$this->tabla_participantes} p
+			   LEFT JOIN {$this->tabla_scores} s ON s.participante_id = p.id
+			  GROUP BY p.fecha_concurso
+			  ORDER BY p.fecha_concurso DESC
+			  LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
+			(int) $limite
+		);
+
+		$filas = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+		return array_map(
+			static function ( $fila ) {
+				return array(
+					'fecha_concurso' => $fila['fecha_concurso'],
+					'total'          => (int) $fila['total'],
+					'jugaron'        => (int) $fila['jugaron'],
+				);
+			},
+			(array) $filas
+		);
+	}
+
+	/**
 	 * Cuenta scores válidos, opcionalmente de una jornada.
 	 *
 	 * @param string $fecha Fecha Y-m-d, o cadena vacía para todas.

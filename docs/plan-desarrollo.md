@@ -14,7 +14,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 |---|-------|--------|--------|
 | E0 | Definición y arranque | ✅ Completada | 2026-09-22 |
 | E1 | Entorno y cimientos del plugin | ✅ Completada | 2026-09-22 |
-| E2 | Importador de padrón | ⬜ Pendiente | — |
+| E2 | Importador de padrón | ✅ Completada | 2026-09-22 |
 | E3 | Acceso, ventana horaria y sesión | ⬜ Pendiente | — |
 | E4 | Motor del juego | ⬜ Pendiente | — |
 | E5 | Arte y estética 16 bits | ⬜ Pendiente | — |

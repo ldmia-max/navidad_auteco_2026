@@ -26,6 +26,9 @@ class NavidadTVS_Admin {
 	/** @var NavidadTVS_Settings */
 	private $settings;
 
+	/** @var NavidadTVS_Import_Padron */
+	private $importador;
+
 	/**
 	 * @param NavidadTVS_Database $database Acceso a datos.
 	 * @param NavidadTVS_Settings $settings Configuración.
@@ -33,15 +36,22 @@ class NavidadTVS_Admin {
 	public function __construct( $database, $settings ) {
 		$this->database = $database;
 		$this->settings = $settings;
+
+		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-import-padron.php';
+		$this->importador = new NavidadTVS_Import_Padron( $database );
 	}
 
 	/**
 	 * Cablea los hooks del admin.
 	 *
+	 * Al agregar un módulo nuevo: require_once + instanciar en el constructor
+	 * + registrar sus hooks aquí.
+	 *
 	 * @return void
 	 */
 	public function registrar_hooks() {
 		add_action( 'admin_menu', array( $this, 'registrar_menu' ) );
+		$this->importador->registrar_hooks();
 	}
 
 	/**
@@ -127,15 +137,21 @@ class NavidadTVS_Admin {
 	}
 
 	/**
-	 * Importador de padrón. Se implementa en E2.
+	 * Importador del padrón.
 	 *
 	 * @return void
 	 */
 	public function render_importar() {
-		$this->render_pendiente(
-			__( 'Importar padrón', 'navidad-tvs' ),
-			__( 'La carga del CSV de compradores se implementa en la etapa E2.', 'navidad-tvs' )
-		);
+		if ( ! current_user_can( self::CAPACIDAD ) ) {
+			wp_die( esc_html__( 'No tienes permisos para ver esta página.', 'navidad-tvs' ) );
+		}
+
+		// El resultado se conserva hasta que el usuario recarga: así el enlace
+		// de descarga del reporte de rechazos sigue funcionando.
+		$resultado = $this->importador->leer_resultado();
+		$database  = $this->database;
+
+		include NAVIDAD_TVS_PATH . 'includes/admin/templates/importar.php';
 	}
 
 	/**
