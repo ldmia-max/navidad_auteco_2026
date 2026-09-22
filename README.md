@@ -61,6 +61,7 @@ cd game && npm install && npm run dev
   temperatura del motor
 - [Términos y condiciones (ejemplo)](docs/terminos-y-condiciones-ejemplo.md)
 - [Preguntas frecuentes (ejemplo)](docs/faq-ejemplo.md)
+- [DOCKER.md](DOCKER.md) — entorno local, WP-CLI y verificación del esquema
 - [CLAUDE.md](CLAUDE.md) — convenciones y reglas del proyecto
 
 ## Aviso sobre datos personales

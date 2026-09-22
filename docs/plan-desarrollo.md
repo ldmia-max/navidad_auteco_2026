@@ -13,7 +13,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | # | Etapa | Estado | Cierre |
 |---|-------|--------|--------|
 | E0 | Definición y arranque | ✅ Completada | 2026-09-22 |
-| E1 | Entorno y cimientos del plugin | ⬜ Pendiente | — |
+| E1 | Entorno y cimientos del plugin | ✅ Completada | 2026-09-22 |
 | E2 | Importador de padrón | ⬜ Pendiente | — |
 | E3 | Acceso, ventana horaria y sesión | ⬜ Pendiente | — |
 | E4 | Motor del juego | ⬜ Pendiente | — |
