@@ -91,7 +91,7 @@ Orientación horizontal forzada.
 | Aceleración normal | 12 000 mm/s² | 12 m/s² |
 | Aceleración con turbo | 18 000 mm/s² | 18 m/s² |
 | Desaceleración por fricción (sin acelerar) | 8 000 mm/s² | 8 m/s² |
-| Pérdida de potencia con el motor calado | 40 000 mm/s² | 40 m/s² |
+| Pérdida de potencia con el motor sobrecalentado | 40 000 mm/s² | 40 m/s² |
 
 La velocidad se satura en el máximo correspondiente. Si se suelta el turbo
 estando por encima de 22 000, decae por fricción hasta ese techo.
@@ -107,11 +107,11 @@ velocidad punta, pero calienta.
 | Acelerador normal | **−28** | 10 000 → 0 en ~6,0 s |
 | Sin acelerar | **−56** | 10 000 → 0 en ~3,0 s |
 
-Al llegar a 10 000 el motor **se cala**:
+Al llegar a 10 000 el motor **se sobrecalienta** y la moto se detiene:
 
 - La moto pierde potencia: la velocidad decae a 40 000 mm/s² hasta detenerse.
 - Dura **150 ticks (2,5 s)**.
-- Durante el calado la temperatura baja a 0.
+- Durante la parada la temperatura baja a 0.
 - Al terminar, se recupera el control con velocidad 0.
 
 ### Verificación del balanceo
@@ -120,7 +120,7 @@ Medido con `cd game && npm run sim`, promediando ocho pistas distintas. Las
 estrategias son automáticas y **no cambian de carril**, así que recogen pocos
 logos y chocan con lo que les toca de frente: son el suelo, no el techo.
 
-| Estrategia | Distancia media | Veces que se cala |
+| Estrategia | Distancia media | Veces que se sobrecalienta |
 |---|---|---|
 | Sin tocar nada | 0 m | 0 |
 | Solo acelerador | **1927 m** | 0 |
@@ -244,7 +244,7 @@ pruebas reales de juego, sobre todo:
 
 - Densidad de ítems y obstáculos, que es lo que más mueve el rango de
   distancias.
-- Duración del calado por sobrecalentamiento (2,5 s puede resultar muy duro en
+- Duración de la parada por sobrecalentamiento (2,5 s puede resultar muy duro en
   móvil).
 - Ventana de aterrizaje limpio (±15°), que define qué tan castigadas quedan las
   rampas en pantalla pequeña.

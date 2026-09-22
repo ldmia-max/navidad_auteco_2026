@@ -357,7 +357,7 @@
 		pon( 'ntvs-res-distancia', resultado.distancia + ' m' );
 		pon( 'ntvs-res-logos', resultado.items );
 		pon( 'ntvs-res-caidas', resultado.caidas );
-		pon( 'ntvs-res-calones', resultado.calones );
+		pon( 'ntvs-res-sobrecal', resultado.sobrecalentamientos );
 		pon( 'ntvs-res-bytes', resultado.entradas.length );
 
 		caja.hidden = false;

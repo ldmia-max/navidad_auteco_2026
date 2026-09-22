@@ -40,7 +40,7 @@ interface Resultado {
   distancia: number;
   items: number;
   caidas: number;
-  calones: number;
+  sobrecalentamientos: number;
   estado: Estado;
 }
 
@@ -56,7 +56,7 @@ function correr(seed: number, registro: Uint8Array): Resultado {
     distancia: distanciaMetros(estado),
     items: estado.items,
     caidas: estado.caidas,
-    calones: estado.calones,
+    sobrecalentamientos: estado.sobrecalentamientos,
     estado,
   };
 }
@@ -167,22 +167,22 @@ const estrategias: Array<{ nombre: string; fn: (t: number) => number }> = [
 const seeds = [101, 202, 303, 404, 505, 606, 707, 808];
 const resumen = new Map<string, number>();
 
-console.log('estrategia                        distancia   logos  caídas  calones');
-console.log('-------------------------------------------------------------------');
+console.log('estrategia                        distancia   logos  caídas  sobrecal.');
+console.log('---------------------------------------------------------------------');
 
 for (const e of estrategias) {
   const registro = registroDe(e.fn);
   let suma = 0;
   let items = 0;
   let caidas = 0;
-  let calones = 0;
+  let sobrecalentamientos = 0;
 
   for (const s of seeds) {
     const r = correr(s, registro);
     suma += r.distancia;
     items += r.items;
     caidas += r.caidas;
-    calones += r.calones;
+    sobrecalentamientos += r.sobrecalentamientos;
   }
 
   const n = seeds.length;
@@ -192,7 +192,7 @@ for (const e of estrategias) {
   console.log(
     `${e.nombre.padEnd(32)} ${String(media).padStart(6)} m  ${(items / n).toFixed(1).padStart(5)}  ${(caidas / n)
       .toFixed(1)
-      .padStart(6)}  ${(calones / n).toFixed(1).padStart(7)}`
+      .padStart(6)}  ${(sobrecalentamientos / n).toFixed(1).padStart(7)}`
   );
 }
 

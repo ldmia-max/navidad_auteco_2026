@@ -91,11 +91,11 @@ pantalla con las instrucciones.
 
 **¿Qué es la temperatura del motor?**
 El turbo te hace ir más rápido pero calienta el motor. Si la barra de
-temperatura llega al tope, el motor se cala y quedas detenido unos segundos.
+temperatura llega al tope, el motor se sobrecalienta y la moto se detiene unos segundos.
 Suelta el turbo o frena para que se enfríe.
 
 **¿Conviene usar el turbo todo el tiempo?**
-No. Usarlo sin parar hace que te cales tanto que terminas recorriendo menos
+No. Usarlo sin parar hace que se sobrecaliente tantas veces que terminas recorriendo menos
 distancia que sin usarlo. La clave es dosificarlo.
 
 **¿Para qué sirven los logos de TVS?**

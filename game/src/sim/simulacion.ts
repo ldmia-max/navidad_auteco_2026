@@ -19,7 +19,7 @@ import {
   ACEL_TURBO,
   BOOST_ATERRIZAJE,
   CARRILES,
-  DECEL_CALADO,
+  DECEL_SOBRECALENTADO,
   FRICCION,
   GRAVEDAD,
   IMPULSO_POR_MIL,
@@ -33,7 +33,7 @@ import {
   TEMP_SUELTO,
   TEMP_TURBO,
   TICKS_CAIDA,
-  TICKS_CALADO,
+  TICKS_SOBRECALENTADO,
   TICKS_CAMBIO_CARRIL,
   TIPO_LODO,
   TIPO_RAMPA,
@@ -57,8 +57,8 @@ export interface Estado {
   esperaCarril: number;
   /** Temperatura del motor, 0..10000. */
   temp: number;
-  /** Ticks que faltan de motor calado. */
-  calado: number;
+  /** Ticks que faltan de motor sobrecalentado. */
+  sobrecalentado: number;
   /** Ticks que faltan de caída. */
   caido: number;
   enAire: boolean;
@@ -73,7 +73,7 @@ export interface Estado {
   /** Veces que se fue al suelo. */
   caidas: number;
   /** Veces que se caló el motor. */
-  calones: number;
+  sobrecalentamientos: number;
   /** Hasta qué posición sigue habiendo lodo. */
   lodoHasta: number;
   /** Índices de recorrido de la pista. Nunca retroceden. */
@@ -89,7 +89,7 @@ export function crearEstado(): Estado {
     carril: 1,
     esperaCarril: 0,
     temp: 0,
-    calado: 0,
+    sobrecalentado: 0,
     caido: 0,
     enAire: false,
     altura: 0,
@@ -97,7 +97,7 @@ export function crearEstado(): Estado {
     inclinacion: 0,
     items: 0,
     caidas: 0,
-    calones: 0,
+    sobrecalentamientos: 0,
     lodoHasta: 0,
     idxObstaculo: 0,
     idxItem: 0,
@@ -131,10 +131,10 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
     return;
   }
 
-  // --- Motor calado: pierde potencia y se enfría ---------------------------
-  if (estado.calado > 0) {
-    estado.calado--;
-    estado.vel = Math.max(0, estado.vel - div(DECEL_CALADO, TPS));
+  // --- Motor sobrecalentado: pierde potencia y se enfría ---------------------------
+  if (estado.sobrecalentado > 0) {
+    estado.sobrecalentado--;
+    estado.vel = Math.max(0, estado.vel - div(DECEL_SOBRECALENTADO, TPS));
     estado.temp = 0;
     avanzar(estado, pista);
     return;
@@ -216,8 +216,8 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
 
   if (estado.temp >= TEMP_MAX) {
     estado.temp = 0;
-    estado.calado = TICKS_CALADO;
-    estado.calones++;
+    estado.sobrecalentado = TICKS_SOBRECALENTADO;
+    estado.sobrecalentamientos++;
   }
 
   /*

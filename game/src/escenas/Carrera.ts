@@ -67,7 +67,7 @@ export interface ResultadoCarrera {
   distancia: number;
   items: number;
   caidas: number;
-  calones: number;
+  sobrecalentamientos: number;
   entradas: string;
   ticks: number;
 }
@@ -98,7 +98,7 @@ export class Carrera extends Phaser.Scene {
   private textoDist!: Phaser.GameObjects.Text;
   private textoTiempo!: Phaser.GameObjects.Text;
   private barraTemp!: Phaser.GameObjects.Rectangle;
-  private avisoCalado!: Phaser.GameObjects.Text;
+  private avisoSobrecalentado!: Phaser.GameObjects.Text;
 
   // Cuenta regresiva
   private textoCuenta!: Phaser.GameObjects.Text;
@@ -205,7 +205,7 @@ export class Carrera extends Phaser.Scene {
     this.textoTiempo = this.add.text(ANCHO - 38, y + 13, '1:30', estiloDato).setOrigin(0.5, 0);
     this.marco(ANCHO - 70, y + 11, 64, 14);
 
-    this.avisoCalado = this.add
+    this.avisoSobrecalentado = this.add
       .text(ANCHO / 2, PISTA_Y + 6, '¡MOTOR CALIENTE!', {
         fontFamily: 'monospace',
         fontSize: '10px',
@@ -446,9 +446,9 @@ export class Carrera extends Phaser.Scene {
     // La barra roja crece de izquierda a derecha sobre la verde.
     this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * 60);
 
-    const caliente = e.calado > 0 || e.temp > TEMP_MAX * 0.8;
-    this.avisoCalado.setVisible(caliente);
-    this.avisoCalado.setText(e.calado > 0 ? 'MOTOR CALADO' : '¡MOTOR CALIENTE!');
+    const caliente = e.sobrecalentado > 0 || e.temp > TEMP_MAX * 0.8;
+    this.avisoSobrecalentado.setVisible(caliente);
+    this.avisoSobrecalentado.setText(e.sobrecalentado > 0 ? 'MOTOR SOBRECALENTADO' : '¡MOTOR CALIENTE!');
   }
 
   // -------------------------------------------------------------------------
@@ -471,7 +471,7 @@ export class Carrera extends Phaser.Scene {
       distancia: distanciaMetros(e),
       items: e.items,
       caidas: e.caidas,
-      calones: e.calones,
+      sobrecalentamientos: e.sobrecalentamientos,
       entradas: codificar(this.registro),
       ticks: e.tick,
     });

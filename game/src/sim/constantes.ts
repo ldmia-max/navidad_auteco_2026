@@ -26,7 +26,7 @@ export const ACEL_TURBO = 18000;
 export const FRICCION = 8000;
 
 /** Al calarse el motor la moto pierde potencia rápido. */
-export const DECEL_CALADO = 40000;
+export const DECEL_SOBRECALENTADO = 40000;
 
 // ---------------------------------------------------------------------------
 // Temperatura del motor. Escala 0..10000.
@@ -43,8 +43,8 @@ export const TEMP_NORMAL = -28;
 /** Sin acelerar: 10000 → 0 en unos 3,0 s. */
 export const TEMP_SUELTO = -56;
 
-/** El motor calado dura 2,5 s. */
-export const TICKS_CALADO = 150;
+/** La parada por sobrecalentamiento dura 2,5 s. */
+export const TICKS_SOBRECALENTADO = 150;
 
 // ---------------------------------------------------------------------------
 // Caídas

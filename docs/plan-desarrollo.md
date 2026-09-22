@@ -118,6 +118,10 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
   acento interactivo del sitio.
 - Una sola moto doble propósito, como en el Excitebike original.
 - Sprites: acelerar, wheelie, salto, caída, sobrecalentamiento.
+- **Cambio de carril con transición**, no instantáneo: en el original la moto
+  se inclina y se desplaza durante unos cuadros. Hoy salta de golpe y se nota
+  brusco (observado al probar E4).
+- Vista del piloto girando al cambiar de carril, como en la referencia.
 - Tribuna con público y cartel del concurso; banderines como luces navideñas.
 - Parallax de 3–4 capas.
 - Ítem coleccionable con la letra del logo TVS.

@@ -138,7 +138,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</li>
 			<li>
 				<strong><?php esc_html_e( 'Temperatura', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'El turbo la sube. Si llega al tope, el motor se cala dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble de rápido.', 'navidad-tvs' ); ?>
+				<?php esc_html_e( 'El turbo la sube. Si llega al tope, el motor se sobrecalienta y la moto se detiene dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble de rápido.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
 				<strong><?php esc_html_e( 'Logos TVS', 'navidad-tvs' ); ?></strong>
@@ -172,7 +172,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<ul class="ntvs-resultado__detalle">
 				<li><?php esc_html_e( 'Logos TVS', 'navidad-tvs' ); ?> <span id="ntvs-res-logos"></span></li>
 				<li><?php esc_html_e( 'Caídas', 'navidad-tvs' ); ?> <span id="ntvs-res-caidas"></span></li>
-				<li><?php esc_html_e( 'Veces que se caló', 'navidad-tvs' ); ?> <span id="ntvs-res-calones"></span></li>
+				<li><?php esc_html_e( 'Veces que se sobrecalentó', 'navidad-tvs' ); ?> <span id="ntvs-res-sobrecal"></span></li>
 				<li><?php esc_html_e( 'Registro de la carrera', 'navidad-tvs' ); ?> <span id="ntvs-res-bytes"></span> B</li>
 			</ul>
 
