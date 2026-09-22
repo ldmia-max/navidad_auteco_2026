@@ -370,8 +370,21 @@
 
 /* --- Contenedor del juego ----------------------------------------------- */
 
+/*
+ * El panel del juego se sale del ancho máximo de lectura.
+ *
+ * El resto de la página se limita a 720 px porque es texto y a más ancho se
+ * lee peor. El juego es lo contrario: cuanto más grande, mejor se distingue al
+ * piloto. Sin esto, en un monitor de 1920 el lienzo se quedaba en 640×360.
+ */
 .ntvs-panel--juego {
-	padding: 10px;
+	padding: 8px 0;
+	border-left: 0;
+	border-right: 0;
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	margin-right: calc(50% - 50vw);
+	background: var(--ntvs-azul-profundo);
 }
 
 .ntvs-game-root {
@@ -381,6 +394,9 @@
 	align-items: center;
 	background: #000;
 	border: 3px solid var(--ntvs-blanco);
+	width: fit-content;
+	margin: 0 auto;
+	max-width: 100%;
 	/* El lienzo recibe los gestos: sin esto, arrastrar para cambiar de carril
 	   hace scroll de la página o dispara el pull-to-refresh. */
 	touch-action: none;
@@ -399,6 +415,9 @@
 /* --- Resultado de la carrera -------------------------------------------- */
 
 .ntvs-resultado {
+	max-width: 640px;
+	margin-left: auto;
+	margin-right: auto;
 	margin-top: 16px;
 	padding: 16px 12px;
 	text-align: center;

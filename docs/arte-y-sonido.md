@@ -132,16 +132,40 @@ Se puede silenciar desde la consola con `navidadTvsSilenciar(true)`.
 
 | Banda | Franja | Parallax |
 |---|---|---|
-| Cielo | 0–94 | fijo |
-| Nubes | 4–26 | 0,04 |
-| Cerros y pinos | 26–56 | 0,14 |
-| Tribuna, luces y cartel | 56–88 | 0,36 |
-| Césped | 86–94 | 0,7 |
-| Pista, 4 carriles de 13 px | 94–146 | 1,0 |
+| Cielo | 0–82 | fijo |
+| Nubes | 0–18 | 0,04 |
+| Cerros y pinos | 18–46 | 0,14 |
+| Tribuna, luces y cartel | 46–74 | 0,36 |
+| Césped | 74–82 | 0,7 |
+| Pista, 4 carriles de 16 px | 82–146 | 1,0 |
 | Panel DIST / TEMP / TIME | 146–180 | fijo |
 
-Las bandas no se pisan. En la primera versión la tribuna arrancaba dentro de
+Las bandas no se pisan. En una versión anterior la tribuna arrancaba dentro de
 los cerros y se comía los pinos enteros.
+
+Los carriles son de 16 px porque la moto mide 20: con los 13 de la primera
+versión ocupaba carril y medio y costaba saber en cuál iba. En el original la
+moto y el carril miden casi lo mismo.
+
+### Tamaño en pantalla
+
+El lienzo se escala por un múltiplo **entero** de 320×180, calculado contra la
+ventana y con tope en ×6:
+
+| Pantalla | Factor | Tamaño |
+|---|---|---|
+| Monitor 1080p | ×5 | 1600×900 |
+| Portátil 1366×768 | ×4 | 1280×720 |
+| Tablet 1024×768 | ×3 | 960×540 |
+| Teléfono en horizontal | ×2 | 640×360 |
+
+**Subir la resolución interna no agranda nada: la encoge.** A 480×270 un
+teléfono de 667 px solo daría para ×1, y el resultado sería más pequeño en
+pantalla que los 640×360 de ahora. Lo que agranda es el factor de escala.
+
+Por eso el panel del juego se sale del ancho máximo de lectura de la página
+(720 px): con ese límite, en un monitor de 1920 el juego se quedaba clavado en
+×2, o sea 640×360, y había que forzar la vista.
 
 ---
 

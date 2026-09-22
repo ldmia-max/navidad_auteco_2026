@@ -189,7 +189,7 @@ function hojaSprites(): Lienzo {
     ['ESTRELLA', S.ESTRELLA],
   ];
 
-  const celda = 30;
+  const celda = 56;
   const columnas = 6;
   const filas = Math.ceil(items.length / columnas);
   const lienzo = new Lienzo(columnas * celda, filas * celda + 8, 0x303030);
@@ -221,39 +221,39 @@ function hojaSprites(): Lienzo {
 
 const ANCHO = 320;
 const ALTO = 180;
-const PISTA_Y = 94;
-const PISTA_ALTO = 52;
+const PISTA_Y = 82;
+const PISTA_ALTO = 64;
 const CARRIL_ALTO = PISTA_ALTO / 4;
 
 function maquetaPantalla(): Lienzo {
   const l = new Lienzo(ANCHO, ALTO, P.cieloAlto);
 
   // Cielo en bandas.
-  l.rect(P.cielo, 0, 56, ANCHO, 38);
+  l.rect(P.cielo, 0, 50, ANCHO, 32);
 
   // Nubes.
   for (const [x, y] of [
-    [10, 8],
-    [120, 4],
-    [230, 12],
+    [10, 4],
+    [120, 0],
+    [230, 8],
   ]) {
     l.sprite(S.NUBE, P, x, y);
   }
 
-  // Cerros y pinos, banda 26-56.
+  // Cerros y pinos, banda 18-46.
   for (let x = -20; x < ANCHO + 40; x += 64) {
-    for (let i = 0; i < 30; i++) {
-      const mitad = Math.round((i / 30) * 32);
-      l.rect(P.verde, x + 32 - mitad, 26 + i, mitad * 2, 1);
+    for (let i = 0; i < 28; i++) {
+      const mitad = Math.round((i / 28) * 32);
+      l.rect(P.verde, x + 32 - mitad, 18 + i, mitad * 2, 1);
     }
   }
   for (const x of [30, 118, 200, 272]) {
-    l.sprite(S.PINO, P, x, 36);
+    l.sprite(S.PINO, P, x, 26);
   }
 
-  // Tribuna, banda 56-88.
-  const T0 = 56;
-  l.rect(P.verdeOscuro, 0, T0, ANCHO, 32);
+  // Tribuna, banda 46-74.
+  const T0 = 46;
+  l.rect(P.verdeOscuro, 0, T0, ANCHO, 28);
   l.rect(P.negro, 0, T0 + 6, ANCHO, 1);
 
   const coloresLuz = [P.rojo, P.verdeClaro, P.crema, P.azulClaro];
@@ -263,14 +263,14 @@ function maquetaPantalla(): Lienzo {
 
   const coloresRopa = [P.rojo, P.azul, P.crema, P.verdeClaro, P.amarillo, P.blanco];
   for (let fila = 0; fila < 2; fila++) {
-    const y = T0 + 12 + fila * 8;
+    const y = T0 + 9 + fila * 7;
     for (let i = 0, x = fila * 4; x < ANCHO; x += 9, i++) {
       const base = (i + fila) % 3 === 0 ? S.ESPECTADOR_ANIMANDO : S.ESPECTADOR;
       l.sprite(base, P, x, y, ['r', coloresRopa[(i + fila * 3) % coloresRopa.length]]);
     }
   }
-  l.rect(P.blanco, 0, T0 + 27, ANCHO, 2);
-  l.rect(P.verde, 0, T0 + 29, ANCHO, 3);
+  l.rect(P.blanco, 0, T0 + 23, ANCHO, 2);
+  l.rect(P.verde, 0, T0 + 25, ANCHO, 3);
 
   // Cartel de la tribuna.
   const textoCartel = TEMA_POR_DEFECTO.textos.cartelTribuna;
@@ -280,13 +280,13 @@ function maquetaPantalla(): Lienzo {
   l.rect(P.azul, xCartel + 2, T0 + 4, anchoCartel - 4, 13);
   l.texto(textoCartel, xCartel + 7, T0 + 7, P.blanco);
 
-  // Césped, banda 86-94.
-  l.rect(P.verde, 0, 86, ANCHO, 8);
+  // Césped, banda 74-82.
+  l.rect(P.verde, 0, 74, ANCHO, 8);
   for (let x = 0; x < ANCHO; x += 16) {
-    l.rect(P.verdeClaro, x + 3, 88, 2, 2);
-    l.rect(P.verdeOscuro, x + 9, 90, 3, 2);
+    l.rect(P.verdeClaro, x + 3, 76, 2, 2);
+    l.rect(P.verdeOscuro, x + 9, 78, 3, 2);
   }
-  l.rect(P.pistaBorde, 0, 92, ANCHO, 2);
+  l.rect(P.pistaBorde, 0, 80, ANCHO, 2);
 
   // Pista.
   for (let carril = 0; carril < 4; carril++) {

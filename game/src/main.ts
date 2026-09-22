@@ -26,17 +26,39 @@ export interface SesionJuego {
 let juego: Phaser.Game | null = null;
 
 /**
+ * Tope del factor de escala.
+ *
+ * A ×6 el lienzo mide 1920×1080. Más allá, los píxeles se vuelven tan grandes
+ * que la moto deja de leerse como una moto.
+ */
+const FACTOR_MAXIMO = 6;
+
+/**
  * Ajusta el tamaño del lienzo a un múltiplo entero del tamaño interno.
  *
  * Escalar por un factor fraccionario mezcla píxeles vecinos y el pixel art
  * pierde el filo: es la diferencia entre parecer de 16 bits y parecer una foto
  * borrosa de algo de 16 bits.
+ *
+ * El espacio disponible se mide contra la ventana, no contra el contenedor. El
+ * contenedor de la página tiene un ancho máximo pensado para leer texto y
+ * dejaba el juego clavado en ×2, o sea 640×360 en un monitor de 1920: había
+ * que forzar la vista para distinguir al piloto.
  */
 function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void {
-  const dispoAncho = contenedor.clientWidth || ANCHO;
-  const dispoAlto = Math.max(window.innerHeight - 40, ALTO);
+  /*
+   * Margen pequeño a propósito. innerHeight ya descuenta la barra del
+   * navegador, así que restarle mucho más deja los teléfonos pequeños en ×1:
+   * un iPhone SE en horizontal (667×375) se quedaba en 320×180 por 5 píxeles
+   * de diferencia.
+   */
+  const dispoAncho = Math.max(window.innerWidth - 8, ANCHO);
+  const dispoAlto = Math.max(window.innerHeight - 8, ALTO);
 
-  const factor = Math.max(1, Math.floor(Math.min(dispoAncho / ANCHO, dispoAlto / ALTO)));
+  const factor = Math.min(
+    FACTOR_MAXIMO,
+    Math.max(1, Math.floor(Math.min(dispoAncho / ANCHO, dispoAlto / ALTO)))
+  );
 
   lienzo.style.width = `${ANCHO * factor}px`;
   lienzo.style.height = `${ALTO * factor}px`;
@@ -44,6 +66,9 @@ function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void
   lienzo.style.display = 'block';
   lienzo.style.margin = '0 auto';
   lienzo.style.touchAction = 'none';
+
+  // El panel que lo contiene tiene que dejarle sitio.
+  contenedor.style.width = '100%';
 }
 
 /**

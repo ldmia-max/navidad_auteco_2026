@@ -47,8 +47,14 @@ export const TEX = {
 /** Ancho de las franjas que se repiten. Múltiplo del ancho de pantalla. */
 const FRANJA = 320;
 
-/** Alto de la pista y de cada carril. */
-export const PISTA_ALTO = 52;
+/**
+ * Alto de la pista y de cada carril.
+ *
+ * Carriles de 16 px: con los 13 anteriores la moto, de 20 px, ocupaba carril y
+ * medio y costaba saber en cuál estaba. En el original la moto y el carril
+ * miden casi lo mismo.
+ */
+export const PISTA_ALTO = 64;
 export const CARRILES_VISUALES = 4;
 export const CARRIL_ALTO = PISTA_ALTO / CARRILES_VISUALES;
 
@@ -125,7 +131,7 @@ export function crearTexturas(escena: Phaser.Scene, tema: Tema): void {
 /** Degradado del cielo en bandas, como se hacía cuando no había degradados. */
 function crearCielo(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 96;
+  const alto = 82;
 
   rect(g, p.cieloAlto, 0, 0, FRANJA, alto);
 
@@ -135,8 +141,8 @@ function crearCielo(escena: Phaser.Scene, p: Paleta): void {
    * devuelve un objeto {r,g,b,a} y no un color empaquetado, así que pedirle
    * .color daba undefined y la banda salía negra.
    */
-  rect(g, mezclar(p.cieloAlto, p.cielo, 0.5), 0, 30, FRANJA, alto - 30);
-  rect(g, p.cielo, 0, 56, FRANJA, alto - 56);
+  rect(g, mezclar(p.cieloAlto, p.cielo, 0.5), 0, 26, FRANJA, alto - 26);
+  rect(g, p.cielo, 0, 50, FRANJA, alto - 50);
 
   g.generateTexture(TEX.cielo, FRANJA, alto);
   g.destroy();
@@ -145,15 +151,15 @@ function crearCielo(escena: Phaser.Scene, p: Paleta): void {
 /** Capa de nubes, la más lejana del parallax. */
 function crearNubes(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 22;
+  const alto = 18;
 
   // Posiciones fijas: el parallax las mueve, no hace falta aleatoriedad.
   for (const [x, y] of [
-    [10, 4],
-    [90, 10],
-    [160, 2],
-    [230, 9],
-    [290, 5],
+    [10, 2],
+    [90, 8],
+    [160, 0],
+    [230, 7],
+    [290, 3],
   ]) {
     pintar(g, S.NUBE, p, x, y);
   }
@@ -165,7 +171,7 @@ function crearNubes(escena: Phaser.Scene, p: Paleta): void {
 /** Cerros y pinos nevados del fondo. */
 function crearCerros(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 30;
+  const alto = 28;
 
   /*
    * Cerros en verdes claros. Los pinos van en verde oscuro, así que si los
@@ -200,7 +206,7 @@ function crearCerros(escena: Phaser.Scene, p: Paleta): void {
  */
 function crearTribuna(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 32;
+  const alto = 28;
 
   rect(g, p.verdeOscuro, 0, 0, FRANJA, alto);
 
@@ -220,7 +226,7 @@ function crearTribuna(escena: Phaser.Scene, p: Paleta): void {
   const coloresRopa: Array<keyof Paleta> = ['rojo', 'azul', 'crema', 'verdeClaro', 'amarillo', 'blanco'];
 
   for (let fila = 0; fila < 2; fila++) {
-    const y = 12 + fila * 8;
+    const y = 9 + fila * 7;
 
     for (let i = 0, x = fila * 4; x < FRANJA; x += 9, i++) {
       const color = coloresRopa[(i + fila * 3) % coloresRopa.length];

@@ -30,7 +30,7 @@ export const ANCHO = 320;
 export const ALTO = 180;
 
 /** Dónde empieza la pista en vertical. */
-const PISTA_Y = 94;
+const PISTA_Y = 82;
 
 /** Panel inferior. */
 const PANEL_Y = PISTA_Y + PISTA_ALTO;
@@ -189,13 +189,13 @@ export class Carrera extends Phaser.Scene {
      * la tribuna empieza justo debajo. En la primera versión la tribuna
      * arrancaba dentro de los cerros y se comía los pinos enteros.
      */
-    this.nubes = this.add.tileSprite(0, 4, ANCHO, 22, TEX.nubes).setOrigin(0, 0);
-    this.cerros = this.add.tileSprite(0, 26, ANCHO, 30, TEX.cerros).setOrigin(0, 0);
-    this.tribuna = this.add.tileSprite(0, 56, ANCHO, 32, TEX.tribuna).setOrigin(0, 0);
+    this.nubes = this.add.tileSprite(0, 0, ANCHO, 18, TEX.nubes).setOrigin(0, 0);
+    this.cerros = this.add.tileSprite(0, 18, ANCHO, 28, TEX.cerros).setOrigin(0, 0);
+    this.tribuna = this.add.tileSprite(0, 46, ANCHO, 28, TEX.tribuna).setOrigin(0, 0);
 
-    this.cartel = this.add.image(ANCHO / 2, 58, TEX.cartel).setOrigin(0.5, 0);
+    this.cartel = this.add.image(ANCHO / 2, 48, TEX.cartel).setOrigin(0.5, 0);
 
-    this.cesped = this.add.tileSprite(0, 86, ANCHO, 8, TEX.cesped).setOrigin(0, 0);
+    this.cesped = this.add.tileSprite(0, 74, ANCHO, 8, TEX.cesped).setOrigin(0, 0);
     this.suelo = this.add.tileSprite(0, PISTA_Y, ANCHO, PISTA_ALTO, TEX.pista).setOrigin(0, 0);
   }
 
