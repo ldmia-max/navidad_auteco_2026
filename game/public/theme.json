@@ -1,0 +1,46 @@
+{
+  "_ayuda": "Colores y textos del juego. Se puede editar sin recompilar: el juego lo carga al arrancar. Lo que falte o no se entienda usa el valor por defecto. Los colores aceptan #RRGGBB.",
+
+  "paleta": {
+    "azul": "#1F3A72",
+    "rojo": "#E01D2D",
+    "blanco": "#FFFFFF",
+
+    "azulClaro": "#4A90D9",
+    "azulProfundo": "#0B1730",
+    "rojoOscuro": "#8F0F1C",
+    "crema": "#F2E9D8",
+    "negro": "#0A0A0A",
+    "gris": "#5A5A5A",
+    "grisClaro": "#9A9A9A",
+    "amarillo": "#F5C518",
+    "piel": "#E8B38A",
+
+    "cielo": "#4A90D9",
+    "cieloAlto": "#2F6FB5",
+    "verde": "#3AA93A",
+    "verdeOscuro": "#227722",
+    "verdeClaro": "#5FC75F",
+    "pista": "#D98A4A",
+    "pistaAlt": "#C97A3D",
+    "pistaBorde": "#8A5228",
+    "lodo": "#5A3A20",
+    "lodoClaro": "#7A5230",
+
+    "tempFria": "#3AA93A",
+    "tempCaliente": "#E01D2D"
+  },
+
+  "textos": {
+    "cartelTribuna": "CONCURSO TVS",
+    "rotuloDistancia": "DIST",
+    "rotuloTemperatura": "TEMP",
+    "rotuloTiempo": "TIME",
+    "avisoCaliente": "MOTOR CALIENTE",
+    "avisoSobrecalentado": "MOTOR SOBRECALENTADO",
+    "cuentaYa": "YA!",
+    "podioTitulo": "CONCURSO TVS",
+    "podioGracias": "GRACIAS POR PARTICIPAR",
+    "unidadMetros": "M"
+  }
+}

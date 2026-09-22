@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "sim": "tsx src/sim/banco-pruebas.ts"
+    "sim": "tsx src/sim/banco-pruebas.ts",
+    "arte": "tsx src/render/banco-arte.ts",
+    "arte:png": "tsx src/render/exportar-png.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"

@@ -322,6 +322,7 @@
 						token: sesion.token,
 						nombre: carrera.nombre || sesion.nombre,
 						seed: carrera.seed,
+						urlTema: cfg.urlTema,
 						alTerminar: mostrarResultado
 					} );
 				} )

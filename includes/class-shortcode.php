@@ -128,6 +128,12 @@ class NavidadTVS_Shortcode {
 				 * cuando pulsa "Iniciar carrera" ya está listo.
 				 */
 				'urlJuego'        => NAVIDAD_TVS_URL . 'assets/game/juego.js?ver=' . NAVIDAD_TVS_VERSION,
+				/*
+				 * Colores y textos del juego. Se puede editar el archivo sin
+				 * recompilar el bundle: sirve para ajustar el cartel de la
+				 * tribuna o un color de marca sin tocar TypeScript.
+				 */
+				'urlTema'         => NAVIDAD_TVS_URL . 'assets/game/theme.json?ver=' . NAVIDAD_TVS_VERSION,
 				'turnstileKey'    => $site_key,
 				'textos'         => array(
 					'validando'     => __( 'Validando…', 'navidad-tvs' ),

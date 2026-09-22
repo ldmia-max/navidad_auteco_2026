@@ -9,48 +9,60 @@
  */
 
 import Phaser from 'phaser';
+import { sonido } from '../audio/sonido';
 import {
-  CARRILES,
-  ITEM_METROS,
+  TEMP_MAX,
   TIPO_LODO,
   TIPO_RAMPA,
-  TIPO_VALLA,
   TOTAL_TICKS,
   TPS,
-  TEMP_MAX,
+  V_MAX_TURBO,
   div,
 } from '../sim/constantes';
 import { BIT_ABAJO, BIT_ACELERA, BIT_ARRIBA, BIT_TURBO, codificar, registroVacio } from '../sim/entradas';
 import { generarPista, type Pista } from '../sim/pista';
 import { crearEstado, distanciaMetros, paso, segundosRestantes, type Estado } from '../sim/simulacion';
-import { PAL, css } from '../render/paleta';
-import { TEX, crearTexturas } from '../render/texturas';
+import { TextoPixel } from '../render/fuente';
+import type { Tema } from '../render/tema';
+import { CARRIL_ALTO, PISTA_ALTO, TEX, crearPanel, crearTexturas } from '../render/texturas';
 
 export const ANCHO = 320;
 export const ALTO = 180;
 
-/** Dónde empieza y termina la pista en vertical. */
-const PISTA_Y = 96;
-const PISTA_ALTO = 52;
-const CARRIL_ALTO = PISTA_ALTO / CARRILES;
+/** Dónde empieza la pista en vertical. */
+const PISTA_Y = 94;
+
+/** Panel inferior. */
+const PANEL_Y = PISTA_Y + PISTA_ALTO;
+const PANEL_ALTO = ALTO - PANEL_Y;
 
 /** La moto se queda quieta en pantalla y el mundo se mueve. */
-const MOTO_X = 72;
+const MOTO_X = 74;
 
 /** Píxeles por metro al dibujar. */
 const PX_POR_METRO = 8;
 
-/** Altura máxima de salto, en píxeles, para escalar la altura de la simulación. */
+/** Cuántos píxeles de altura equivale un milímetro de salto. */
 const PX_POR_MM_ALTURA = 0.012;
+
+/**
+ * Cuadros que tarda la moto en deslizarse de un carril al otro.
+ *
+ * Es SOLO visual. La simulación cambia de carril en un tick y así tiene que
+ * seguir: si el cambio tardara en surtir efecto, alteraría las colisiones y
+ * habría que replicar la interpolación exacta en el puerto PHP de E6. La moto
+ * se desliza en pantalla mientras la física ya la considera en el carril
+ * nuevo, que es justo lo que hacía el original.
+ */
+const CUADROS_CAMBIO_CARRIL = 7;
 
 /**
  * Tope de ticks que se pueden recuperar en un solo frame.
  *
- * Si el navegador se congela (cambio de pestaña, notificación, garbage
- * collector), al volver habría que simular cientos de ticks de golpe y la
- * pantalla daría un salto imposible de jugar. Con el tope, la carrera sigue
- * durando exactamente 5400 ticks: lo que se estira es el reloj de pared, no la
- * carrera. Todos simulan lo mismo, que es lo que exige el concurso.
+ * Si el navegador se congela (cambio de pestaña, notificación, recolector de
+ * basura), al volver habría que simular cientos de ticks de golpe y la pantalla
+ * daría un salto imposible de jugar. Con el tope, la carrera sigue durando
+ * exactamente 5400 ticks: lo que se estira es el reloj de pared, no la carrera.
  */
 const MAX_TICKS_POR_FRAME = 8;
 
@@ -58,6 +70,7 @@ export interface DatosCarrera {
   seed: number;
   token: string;
   nombre: string;
+  tema: Tema;
   alTerminar: (resultado: ResultadoCarrera) => void;
 }
 
@@ -74,6 +87,7 @@ export interface ResultadoCarrera {
 
 export class Carrera extends Phaser.Scene {
   private datos!: DatosCarrera;
+  private tema!: Tema;
   private pista!: Pista;
   private estado!: Estado;
   private registro!: Uint8Array;
@@ -82,29 +96,40 @@ export class Carrera extends Phaser.Scene {
   private corriendo = false;
   private terminada = false;
 
-  // Fondo. Solo se guardan las capas que se mueven con el parallax; el cielo y
-  // el cartel se pintan una vez y no se vuelven a tocar.
+  // Capas del fondo que se mueven con el parallax.
+  private nubes!: Phaser.GameObjects.TileSprite;
   private cerros!: Phaser.GameObjects.TileSprite;
   private tribuna!: Phaser.GameObjects.TileSprite;
+  private cesped!: Phaser.GameObjects.TileSprite;
   private suelo!: Phaser.GameObjects.TileSprite;
+  private cartel!: Phaser.GameObjects.Image;
 
   // Actores
   private moto!: Phaser.GameObjects.Image;
   private sombra!: Phaser.GameObjects.Image;
+  private humo: Phaser.GameObjects.Image[] = [];
   private obstaculos: Phaser.GameObjects.Image[] = [];
   private items: Phaser.GameObjects.Image[] = [];
 
-  // Panel inferior
-  private textoDist!: Phaser.GameObjects.Text;
-  private textoTiempo!: Phaser.GameObjects.Text;
+  // Panel
+  private textoDist!: TextoPixel;
+  private textoTiempo!: TextoPixel;
   private barraTemp!: Phaser.GameObjects.Rectangle;
-  private avisoSobrecalentado!: Phaser.GameObjects.Text;
+  private avisoMotor!: TextoPixel;
+  private textoCuenta!: TextoPixel;
 
-  // Cuenta regresiva
-  private textoCuenta!: Phaser.GameObjects.Text;
+  // Interpolación visual del cambio de carril.
+  private carrilDibujado = 1;
+  private carrilAnterior = 1;
+  private cuadrosCambio = 0;
 
-  // Controles
-  private teclas!: {
+  // Para disparar sonidos cuando algo cambia entre un tick y el siguiente.
+  private itemsPrevios = 0;
+  private caidasPrevias = 0;
+  private sobrecalentamientosPrevios = 0;
+  private enAirePrevio = false;
+
+  private teclas?: {
     acelera: Phaser.Input.Keyboard.Key;
     turbo: Phaser.Input.Keyboard.Key;
     arriba: Phaser.Input.Keyboard.Key;
@@ -117,23 +142,38 @@ export class Carrera extends Phaser.Scene {
 
   init(datos: DatosCarrera): void {
     this.datos = datos;
+    this.tema = datos.tema;
     this.pista = generarPista(datos.seed);
     this.estado = crearEstado();
     this.registro = registroVacio();
+
     this.acumulador = 0;
     this.corriendo = false;
     this.terminada = false;
     this.obstaculos = [];
     this.items = [];
+    this.humo = [];
+
+    this.carrilDibujado = this.estado.carril;
+    this.carrilAnterior = this.estado.carril;
+    this.cuadrosCambio = 0;
+
+    this.itemsPrevios = 0;
+    this.caidasPrevias = 0;
+    this.sobrecalentamientosPrevios = 0;
+    this.enAirePrevio = false;
   }
 
   create(): void {
-    crearTexturas(this);
+    crearTexturas(this, this.tema);
+    crearPanel(this, this.tema, ANCHO, PANEL_ALTO);
 
     this.construirFondo();
     this.construirActores();
     this.construirPanel();
     this.construirControles();
+
+    sonido.arrancarMotor();
     this.cuentaRegresiva();
   }
 
@@ -142,86 +182,56 @@ export class Carrera extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   private construirFondo(): void {
-    this.add.rectangle(0, 0, ANCHO, PISTA_Y, PAL.cieloAlto).setOrigin(0, 0);
+    this.add.image(0, 0, TEX.cielo).setOrigin(0, 0);
 
-    this.tribuna = this.add.tileSprite(0, 8, ANCHO, 34, TEX.tribuna).setOrigin(0, 0);
+    /*
+     * Las bandas no se pisan: los pinos ocupan la parte baja de los cerros y
+     * la tribuna empieza justo debajo. En la primera versión la tribuna
+     * arrancaba dentro de los cerros y se comía los pinos enteros.
+     */
+    this.nubes = this.add.tileSprite(0, 4, ANCHO, 22, TEX.nubes).setOrigin(0, 0);
+    this.cerros = this.add.tileSprite(0, 26, ANCHO, 30, TEX.cerros).setOrigin(0, 0);
+    this.tribuna = this.add.tileSprite(0, 56, ANCHO, 32, TEX.tribuna).setOrigin(0, 0);
 
-    // El cartel de la tribuna: donde el original decía NINTENDO.
-    this.add
-      .text(ANCHO / 2, 14, 'CONCURSO TVS', {
-        fontFamily: 'monospace',
-        fontSize: '10px',
-        color: css(PAL.blanco),
-        backgroundColor: css(PAL.azul),
-        padding: { x: 4, y: 2 },
-      })
-      .setOrigin(0.5, 0);
+    this.cartel = this.add.image(ANCHO / 2, 58, TEX.cartel).setOrigin(0.5, 0);
 
-    this.cerros = this.add.tileSprite(0, 48, ANCHO, 24, TEX.cerros).setOrigin(0, 0);
-
-    this.add.rectangle(0, 72, ANCHO, PISTA_Y - 72, PAL.verde).setOrigin(0, 0);
-
+    this.cesped = this.add.tileSprite(0, 86, ANCHO, 8, TEX.cesped).setOrigin(0, 0);
     this.suelo = this.add.tileSprite(0, PISTA_Y, ANCHO, PISTA_ALTO, TEX.pista).setOrigin(0, 0);
-
-    this.add.rectangle(0, PISTA_Y - 2, ANCHO, 2, PAL.pistaBorde).setOrigin(0, 0);
-    this.add.rectangle(0, PISTA_Y + PISTA_ALTO, ANCHO, 2, PAL.pistaBorde).setOrigin(0, 0);
   }
 
   private construirActores(): void {
     // Se crean pocos objetos y se reciclan: en pantalla nunca caben muchos.
-    for (let i = 0; i < 12; i++) {
-      const img = this.add.image(-100, 0, TEX.valla).setOrigin(0.5, 1).setVisible(false);
-      this.obstaculos.push(img);
+    for (let i = 0; i < 14; i++) {
+      this.obstaculos.push(this.add.image(-100, 0, TEX.valla).setOrigin(0.5, 1).setVisible(false));
     }
     for (let i = 0; i < 6; i++) {
-      const img = this.add.image(-100, 0, TEX.item).setOrigin(0.5, 0.5).setVisible(false);
-      this.items.push(img);
+      this.items.push(this.add.image(-100, 0, TEX.item).setOrigin(0.5, 0.5).setVisible(false));
     }
 
     this.sombra = this.add.image(MOTO_X, 0, TEX.sombra).setOrigin(0.5, 0.5).setVisible(false);
     this.moto = this.add.image(MOTO_X, 0, TEX.moto).setOrigin(0.5, 1);
+
+    for (let i = 0; i < 4; i++) {
+      this.humo.push(this.add.image(-100, 0, TEX.humo).setOrigin(0.5, 0.5).setVisible(false));
+    }
   }
 
   private construirPanel(): void {
-    const y = PISTA_Y + PISTA_ALTO + 2;
-    const alto = ALTO - y;
+    this.add.image(0, PANEL_Y, TEX.panel).setOrigin(0, 0);
 
-    this.add.rectangle(0, y, ANCHO, alto, PAL.negro).setOrigin(0, 0);
+    const p = this.tema.paleta;
+    const cx = Math.floor(ANCHO / 2);
 
-    const estiloRotulo = { fontFamily: 'monospace', fontSize: '8px', color: css(PAL.rojo) };
-    const estiloDato = { fontFamily: 'monospace', fontSize: '10px', color: css(PAL.blanco) };
+    this.textoDist = new TextoPixel(this, 40, PANEL_Y + 16, p.blanco, 'centro');
+    this.textoTiempo = new TextoPixel(this, ANCHO - 40, PANEL_Y + 16, p.blanco, 'centro');
 
-    // Izquierda: distancia. Centro: temperatura. Derecha: tiempo.
-    this.add.text(24, y + 3, 'DIST', estiloRotulo).setOrigin(0.5, 0);
-    this.textoDist = this.add.text(38, y + 13, '0 m', estiloDato).setOrigin(0.5, 0);
-    this.marco(6, y + 11, 64, 14);
+    // Barra de temperatura: verde de fondo, rojo que crece encima.
+    this.add.rectangle(cx - 31, PANEL_Y + 14, 62, 8, p.tempFria).setOrigin(0, 0);
+    this.barraTemp = this.add.rectangle(cx - 31, PANEL_Y + 14, 0, 8, p.tempCaliente).setOrigin(0, 0);
 
-    this.add.text(ANCHO / 2, y + 3, 'TEMP', estiloRotulo).setOrigin(0.5, 0);
-    this.marco(ANCHO / 2 - 32, y + 12, 64, 12);
-    this.add.rectangle(ANCHO / 2 - 30, y + 14, 60, 8, PAL.tempFria).setOrigin(0, 0);
-    this.barraTemp = this.add.rectangle(ANCHO / 2 - 30, y + 14, 0, 8, PAL.tempCaliente).setOrigin(0, 0);
-
-    this.add.text(ANCHO - 40, y + 3, 'TIME', estiloRotulo).setOrigin(0.5, 0);
-    this.textoTiempo = this.add.text(ANCHO - 38, y + 13, '1:30', estiloDato).setOrigin(0.5, 0);
-    this.marco(ANCHO - 70, y + 11, 64, 14);
-
-    this.avisoSobrecalentado = this.add
-      .text(ANCHO / 2, PISTA_Y + 6, '¡MOTOR CALIENTE!', {
-        fontFamily: 'monospace',
-        fontSize: '10px',
-        color: css(PAL.blanco),
-        backgroundColor: css(PAL.rojo),
-        padding: { x: 3, y: 1 },
-      })
-      .setOrigin(0.5, 0)
-      .setVisible(false);
-  }
-
-  /** Marco azul de los recuadros del panel, como en la referencia. */
-  private marco(x: number, y: number, w: number, h: number): void {
-    const g = this.add.graphics();
-    g.lineStyle(1, PAL.cielo, 1);
-    g.strokeRect(x + 0.5, y + 0.5, w, h);
+    this.avisoMotor = new TextoPixel(this, cx, PISTA_Y - 12, p.blanco, 'centro');
+    this.avisoMotor.setVisible(false);
+    this.avisoMotor.setDepth(10);
   }
 
   private construirControles(): void {
@@ -241,15 +251,10 @@ export class Carrera extends Phaser.Scene {
   }
 
   private cuentaRegresiva(): void {
-    this.textoCuenta = this.add
-      .text(ANCHO / 2, 56, '3', {
-        fontFamily: 'monospace',
-        fontSize: '32px',
-        color: css(PAL.blanco),
-        stroke: css(PAL.rojo),
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5, 0.5);
+    this.textoCuenta = new TextoPixel(this, ANCHO / 2, 36, this.tema.paleta.blanco, 'centro');
+    this.textoCuenta.setDepth(20);
+    this.textoCuenta.set('3');
+    sonido.cuentaRegresiva(3);
 
     let n = 3;
 
@@ -258,10 +263,13 @@ export class Carrera extends Phaser.Scene {
       repeat: 3,
       callback: () => {
         n--;
+
         if (n > 0) {
-          this.textoCuenta.setText(String(n));
+          this.textoCuenta.set(String(n));
+          sonido.cuentaRegresiva(n);
         } else if (n === 0) {
-          this.textoCuenta.setText('¡YA!');
+          this.textoCuenta.set(this.tema.textos.cuentaYa);
+          sonido.cuentaRegresiva(0);
           // El cronómetro arranca aquí, no antes: perder segundos por no estar
           // listo sería motivo de reclamo, y solo hay un intento.
           this.corriendo = true;
@@ -291,7 +299,15 @@ export class Carrera extends Phaser.Scene {
           this.registro[this.estado.tick] = entrada;
         }
 
+        const carrilAntes = this.estado.carril;
         paso(this.estado, entrada, this.pista);
+
+        if (this.estado.carril !== carrilAntes) {
+          this.carrilAnterior = carrilAntes;
+          this.cuadrosCambio = CUADROS_CAMBIO_CARRIL;
+        }
+
+        this.sonarCambios();
 
         this.acumulador -= msPorTick;
         ticksEsteFrame++;
@@ -324,7 +340,7 @@ export class Carrera extends Phaser.Scene {
     }
 
     /*
-     * Zonas táctiles:
+     * Zonas táctiles, cuadrantes de media pantalla:
      *
      *   izquierda arriba  -> subir de carril / enderezar en el aire
      *   izquierda abajo   -> bajar de carril / inclinar en el aire
@@ -352,27 +368,95 @@ export class Carrera extends Phaser.Scene {
     return entrada;
   }
 
+  /** Dispara los sonidos de lo que acaba de pasar en el último tick. */
+  private sonarCambios(): void {
+    const e = this.estado;
+
+    if (e.items !== this.itemsPrevios) {
+      sonido.recogerItem();
+      this.itemsPrevios = e.items;
+    }
+
+    if (e.caidas !== this.caidasPrevias) {
+      sonido.caida();
+      this.caidasPrevias = e.caidas;
+    }
+
+    if (e.sobrecalentamientos !== this.sobrecalentamientosPrevios) {
+      sonido.sobrecalentar();
+      this.sobrecalentamientosPrevios = e.sobrecalentamientos;
+    }
+
+    if (e.enAire && !this.enAirePrevio) {
+      sonido.salto();
+    } else if (!e.enAire && this.enAirePrevio && e.caido === 0) {
+      sonido.aterrizajeLimpio();
+    }
+    this.enAirePrevio = e.enAire;
+
+    // Pitido intermitente mientras la temperatura está en zona roja.
+    if (e.sobrecalentado === 0 && e.temp > TEMP_MAX * 0.8 && e.tick % 20 === 0) {
+      sonido.avisoCalor();
+    }
+
+    sonido.ajustarMotor(div(e.vel * 1000, V_MAX_TURBO), e.sobrecalentado > 0);
+  }
+
   // -------------------------------------------------------------------------
   // Pintado
   // -------------------------------------------------------------------------
 
   private pintar(): void {
     const e = this.estado;
-    const metros = div(e.pos, 1000);
-    const scroll = metros * PX_POR_METRO + div((e.pos % 1000) * PX_POR_METRO, 1000);
+    const scroll = div(e.pos * PX_POR_METRO, 1000);
 
     // Parallax: cuanto más lejos, más despacio.
-    this.cerros.tilePositionX = scroll * 0.15;
-    this.tribuna.tilePositionX = scroll * 0.35;
+    this.nubes.tilePositionX = scroll * 0.04;
+    this.cerros.tilePositionX = scroll * 0.14;
+    this.tribuna.tilePositionX = scroll * 0.36;
+    this.cesped.tilePositionX = scroll * 0.7;
     this.suelo.tilePositionX = scroll;
 
-    // --- Moto ---------------------------------------------------------------
-    const yCarril = PISTA_Y + e.carril * CARRIL_ALTO + CARRIL_ALTO;
+    // El cartel viaja con la tribuna y reaparece: si se quedara clavado en el
+    // centro, la tribuna se movería por debajo y parecería un error.
+    const recorrido = ANCHO + this.cartel.width;
+    this.cartel.x = ANCHO - (((scroll * 0.36) % recorrido) | 0);
+
+    this.pintarMoto();
+    this.pintarPista();
+    this.pintarPanel();
+  }
+
+  private pintarMoto(): void {
+    const e = this.estado;
+
+    // Interpolación visual entre carriles. La física ya está en el nuevo.
+    if (this.cuadrosCambio > 0) {
+      this.cuadrosCambio--;
+      const avance = 1 - this.cuadrosCambio / CUADROS_CAMBIO_CARRIL;
+      this.carrilDibujado = this.carrilAnterior + (e.carril - this.carrilAnterior) * avance;
+    } else {
+      this.carrilDibujado = e.carril;
+    }
+
+    const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
     const alturaPx = e.altura * PX_POR_MM_ALTURA;
 
-    this.moto.setTexture(e.caido > 0 ? TEX.motoCaida : TEX.moto);
+    // La moto se inclina mientras cambia de carril, como en el original.
+    const inclinacionCarril = this.cuadrosCambio > 0 ? (e.carril - this.carrilAnterior) * 7 : 0;
+
+    if (e.caido > 0) {
+      this.moto.setTexture(TEX.motoCaida);
+      this.moto.setAngle(0);
+    } else if (e.enAire) {
+      this.moto.setTexture(TEX.motoWheelie);
+      this.moto.setAngle(-e.inclinacion / 10);
+    } else {
+      this.moto.setTexture(TEX.moto);
+      this.moto.setAngle(inclinacionCarril);
+    }
+
     this.moto.setPosition(MOTO_X, yCarril - alturaPx);
-    this.moto.setAngle(e.enAire ? -e.inclinacion / 10 : 0);
 
     this.sombra.setVisible(e.enAire);
     if (e.enAire) {
@@ -380,17 +464,41 @@ export class Carrera extends Phaser.Scene {
     }
 
     // Parpadeo mientras se está caído, para que se note por qué no avanza.
-    this.moto.setAlpha(e.caido > 0 && Math.floor(e.caido / 6) % 2 === 0 ? 0.4 : 1);
+    this.moto.setAlpha(e.caido > 0 && Math.floor(e.caido / 6) % 2 === 0 ? 0.45 : 1);
 
-    this.pintarPista(scroll);
-    this.pintarPanel();
+    this.pintarHumo(yCarril);
+  }
+
+  /** Humo saliendo del motor cuando la temperatura aprieta. */
+  private pintarHumo(yCarril: number): void {
+    const e = this.estado;
+    const caliente = e.sobrecalentado > 0 || e.temp > TEMP_MAX * 0.7;
+
+    if (!caliente) {
+      for (const h of this.humo) {
+        h.setVisible(false);
+      }
+      return;
+    }
+
+    const intensidad = e.sobrecalentado > 0 ? 1 : (e.temp - TEMP_MAX * 0.7) / (TEMP_MAX * 0.3);
+
+    this.humo.forEach((h, i) => {
+      // Cada bocanada sube y se desvanece con un desfase distinto.
+      const fase = ((e.tick * 2 + i * 15) % 60) / 60;
+
+      h.setVisible(true);
+      h.setPosition(MOTO_X - 10 - fase * 8, yCarril - 12 - fase * 14);
+      h.setAlpha((1 - fase) * 0.7 * intensidad);
+      h.setScale(0.5 + fase);
+    });
   }
 
   /** Coloca obstáculos y logos visibles reciclando los objetos creados. */
-  private pintarPista(scroll: number): void {
+  private pintarPista(): void {
     const e = this.estado;
     const desdeMm = e.pos - div(MOTO_X * 1000, PX_POR_METRO);
-    const hastaMm = e.pos + div((ANCHO - MOTO_X) * 1000, PX_POR_METRO);
+    const hastaMm = e.pos + div((ANCHO - MOTO_X + 24) * 1000, PX_POR_METRO);
 
     let usados = 0;
 
@@ -403,9 +511,14 @@ export class Carrera extends Phaser.Scene {
       const x = MOTO_X + div((obs.pos - e.pos) * PX_POR_METRO, 1000);
       const y = PISTA_Y + obs.carril * CARRIL_ALTO + CARRIL_ALTO;
 
-      img.setTexture(obs.tipo === TIPO_RAMPA ? TEX.rampa : obs.tipo === TIPO_LODO ? TEX.lodo : TEX.valla);
-      img.setPosition(x, obs.tipo === TIPO_LODO ? y - 1 : y);
-      img.setOrigin(0.5, obs.tipo === TIPO_LODO ? 0.5 : 1);
+      if (obs.tipo === TIPO_RAMPA) {
+        img.setTexture(TEX.rampa).setOrigin(0.5, 1).setPosition(x, y + 1);
+      } else if (obs.tipo === TIPO_LODO) {
+        img.setTexture(TEX.lodo).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
+      } else {
+        img.setTexture(TEX.valla).setOrigin(0.5, 1).setPosition(x, y + 1);
+      }
+
       img.setVisible(true);
     }
 
@@ -421,9 +534,11 @@ export class Carrera extends Phaser.Scene {
       if (usadosItem >= this.items.length) break;
 
       const img = this.items[usadosItem++];
+      const flote = Math.round(Math.sin((e.tick + i * 10) / 8) * 1.5);
+
       img.setPosition(
         MOTO_X + div((item.pos - e.pos) * PX_POR_METRO, 1000),
-        PISTA_Y + item.carril * CARRIL_ALTO + CARRIL_ALTO / 2
+        PISTA_Y + item.carril * CARRIL_ALTO + CARRIL_ALTO / 2 + flote
       );
       img.setVisible(true);
     }
@@ -431,24 +546,29 @@ export class Carrera extends Phaser.Scene {
     for (let i = usadosItem; i < this.items.length; i++) {
       this.items[i].setVisible(false);
     }
-
-    void scroll;
   }
 
   private pintarPanel(): void {
     const e = this.estado;
+    const t = this.tema.textos;
 
-    this.textoDist.setText(`${distanciaMetros(e)} m`);
+    this.textoDist.set(`${distanciaMetros(e)}${t.unidadMetros}`);
 
     const seg = segundosRestantes(e, TOTAL_TICKS);
-    this.textoTiempo.setText(`${div(seg, 60)}:${String(seg % 60).padStart(2, '0')}`);
+    this.textoTiempo.set(`${div(seg, 60)}:${String(seg % 60).padStart(2, '0')}`);
 
-    // La barra roja crece de izquierda a derecha sobre la verde.
-    this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * 60);
+    this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * 62);
 
-    const caliente = e.sobrecalentado > 0 || e.temp > TEMP_MAX * 0.8;
-    this.avisoSobrecalentado.setVisible(caliente);
-    this.avisoSobrecalentado.setText(e.sobrecalentado > 0 ? 'MOTOR SOBRECALENTADO' : '¡MOTOR CALIENTE!');
+    if (e.sobrecalentado > 0) {
+      this.avisoMotor.setVisible(true);
+      this.avisoMotor.set(t.avisoSobrecalentado);
+    } else if (e.temp > TEMP_MAX * 0.8) {
+      // Parpadea, para distinguirlo del aviso fijo de motor parado.
+      this.avisoMotor.set(t.avisoCaliente);
+      this.avisoMotor.setVisible(Math.floor(e.tick / 10) % 2 === 0);
+    } else {
+      this.avisoMotor.setVisible(false);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -462,6 +582,9 @@ export class Carrera extends Phaser.Scene {
 
     this.terminada = true;
     this.corriendo = false;
+
+    sonido.pararMotor();
+    sonido.finCarrera();
 
     const e = this.estado;
 
@@ -477,5 +600,3 @@ export class Carrera extends Phaser.Scene {
     });
   }
 }
-
-export { ITEM_METROS, TIPO_VALLA };

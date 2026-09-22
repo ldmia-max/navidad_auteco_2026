@@ -59,6 +59,8 @@ cd game && npm install && npm run dev
 - [Plan de desarrollo](docs/plan-desarrollo.md) — etapas y estado de avance
 - [Mecánica y balanceo](docs/mecanica-y-balanceo.md) — física, obstáculos,
   temperatura del motor
+- [Arte y sonido](docs/arte-y-sonido.md) — cómo está hecho el pixel art y cómo
+  cambiar colores y textos
 - [Términos y condiciones (ejemplo)](docs/terminos-y-condiciones-ejemplo.md)
 - [Preguntas frecuentes (ejemplo)](docs/faq-ejemplo.md)
 - [DOCKER.md](DOCKER.md) — entorno local, WP-CLI y verificación del esquema

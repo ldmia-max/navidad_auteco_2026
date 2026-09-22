@@ -7,14 +7,19 @@
  */
 
 import Phaser from 'phaser';
+import { sonido } from './audio/sonido';
 import { ALTO, ANCHO, Carrera, type ResultadoCarrera } from './escenas/Carrera';
+import { Podio } from './escenas/Podio';
 import { TOTAL_TICKS } from './sim/constantes';
+import { cargarTema, type Tema } from './render/tema';
 
 export interface SesionJuego {
   token: string;
   nombre: string;
   seed: number;
   contenedor?: string;
+  /** URL de theme.json. Sin ella se usan los colores por defecto. */
+  urlTema?: string;
   alTerminar?: (resultado: ResultadoCarrera) => void;
 }
 
@@ -29,7 +34,7 @@ let juego: Phaser.Game | null = null;
  */
 function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void {
   const dispoAncho = contenedor.clientWidth || ANCHO;
-  const dispoAlto = Math.max(window.innerHeight - 40, 180);
+  const dispoAlto = Math.max(window.innerHeight - 40, ALTO);
 
   const factor = Math.max(1, Math.floor(Math.min(dispoAncho / ANCHO, dispoAlto / ALTO)));
 
@@ -46,7 +51,7 @@ function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void
  *
  * @param sesion Datos que entrega el endpoint de inicio de carrera.
  */
-export function iniciarJuego(sesion: SesionJuego): void {
+export async function iniciarJuego(sesion: SesionJuego): Promise<void> {
   const idContenedor = sesion.contenedor ?? 'ntvs-game-root';
   const contenedor = document.getElementById(idContenedor);
 
@@ -60,6 +65,15 @@ export function iniciarJuego(sesion: SesionJuego): void {
     console.warn('[navidad-tvs] El juego ya estaba iniciado.');
     return;
   }
+
+  /*
+   * El audio se desbloquea aquí porque esta llamada viene del clic en "Iniciar
+   * carrera". iOS no deja sonar nada fuera de un gesto del usuario, y este es
+   * el último que hay antes de la carrera.
+   */
+  sonido.iniciar();
+
+  const tema: Tema = await cargarTema(sesion.urlTema);
 
   contenedor.innerHTML = '';
 
@@ -75,7 +89,7 @@ export function iniciarJuego(sesion: SesionJuego): void {
     // El juego no usa el motor de física de Phaser: la nuestra es propia y en
     // enteros, porque el servidor tiene que poder repetirla exactamente.
     physics: undefined,
-    scene: [Carrera],
+    scene: [Carrera, Podio],
     callbacks: {
       postBoot: (instancia) => {
         const lienzo = instancia.canvas;
@@ -90,12 +104,20 @@ export function iniciarJuego(sesion: SesionJuego): void {
     seed: sesion.seed,
     token: sesion.token,
     nombre: sesion.nombre,
+    tema,
     alTerminar: (resultado: ResultadoCarrera) => {
+      // La pantalla del podio se muestra siempre; el envío del resultado al
+      // servidor lo resuelve quien nos llamó (E6).
+      juego?.scene.stop('carrera');
+      juego?.scene.start('podio', {
+        tema,
+        nombre: resultado.nombre,
+        distancia: resultado.distancia,
+      });
+
       if (sesion.alTerminar) {
         sesion.alTerminar(resultado);
       } else {
-        // Mientras E6 no exista, el resultado se deja a la vista para poder
-        // revisarlo desde la consola del navegador.
         console.log('[navidad-tvs] Carrera terminada', resultado);
       }
     },
@@ -106,8 +128,12 @@ declare global {
   interface Window {
     navidadTvsIniciarJuego?: (sesion: SesionJuego) => void;
     navidadTvsTicks?: number;
+    navidadTvsSilenciar?: (valor: boolean) => void;
   }
 }
 
-window.navidadTvsIniciarJuego = iniciarJuego;
+window.navidadTvsIniciarJuego = (sesion: SesionJuego) => {
+  void iniciarJuego(sesion);
+};
 window.navidadTvsTicks = TOTAL_TICKS;
+window.navidadTvsSilenciar = (valor: boolean) => sonido.silenciar(valor);

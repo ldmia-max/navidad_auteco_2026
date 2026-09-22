@@ -17,7 +17,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | E2 | Importador de padrón | ✅ Completada | 2026-09-22 |
 | E3 | Acceso, ventana horaria y sesión | ✅ Completada | 2026-09-22 |
 | E4 | Motor del juego | ✅ Completada | 2026-09-22 |
-| E5 | Arte y estética 16 bits | ⬜ Pendiente | — |
+| E5 | Arte y estética 16 bits | ✅ Completada | 2026-09-22 |
 | E6 | Validación server-side y score | ⬜ Pendiente | — |
 | E7 | Sitio público | ⬜ Pendiente | — |
 | E8 | Backoffice y ranking | ⬜ Pendiente | — |
@@ -132,8 +132,10 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
   (`imagenes_apoyo/Ejemplo_final_carrera.png`).
 - Modal de instrucciones: controles, jugabilidad, aviso de girar el dispositivo
   y advertencia de conexión estable.
-- Audio chiptune en `.ogg` + `.m4a`.
+- Audio chiptune **sintetizado con Web Audio**, sin archivos: cero bytes que
+  descargar y sin el problema de que Safari no reproduzca `.ogg`.
 - `theme.json` para cambiar textos y colores sin recompilar.
+- Tipografía de píxeles propia de 5×7, en vez de una fuente del sistema.
 
 **Revisión:** capturas de cada pantalla antes de integrarlas.
 
