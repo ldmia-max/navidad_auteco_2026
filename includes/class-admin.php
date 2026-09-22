@@ -29,6 +29,9 @@ class NavidadTVS_Admin {
 	/** @var NavidadTVS_Import_Padron */
 	private $importador;
 
+	/** @var NavidadTVS_Admin_Settings */
+	private $config;
+
 	/**
 	 * @param NavidadTVS_Database $database Acceso a datos.
 	 * @param NavidadTVS_Settings $settings Configuración.
@@ -39,6 +42,9 @@ class NavidadTVS_Admin {
 
 		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-import-padron.php';
 		$this->importador = new NavidadTVS_Import_Padron( $database );
+
+		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-admin-settings.php';
+		$this->config = new NavidadTVS_Admin_Settings( $settings );
 	}
 
 	/**
@@ -52,6 +58,7 @@ class NavidadTVS_Admin {
 	public function registrar_hooks() {
 		add_action( 'admin_menu', array( $this, 'registrar_menu' ) );
 		$this->importador->registrar_hooks();
+		$this->config->registrar_hooks();
 	}
 
 	/**
@@ -155,15 +162,18 @@ class NavidadTVS_Admin {
 	}
 
 	/**
-	 * Configuración del concurso. Se implementa en E3.
+	 * Configuración del concurso.
 	 *
 	 * @return void
 	 */
 	public function render_configuracion() {
-		$this->render_pendiente(
-			__( 'Configuración', 'navidad-tvs' ),
-			__( 'El formulario de configuración se implementa en la etapa E3.', 'navidad-tvs' )
-		);
+		if ( ! current_user_can( self::CAPACIDAD ) ) {
+			wp_die( esc_html__( 'No tienes permisos para ver esta página.', 'navidad-tvs' ) );
+		}
+
+		$settings = $this->settings;
+
+		include NAVIDAD_TVS_PATH . 'includes/admin/templates/configuracion.php';
 	}
 
 	/**

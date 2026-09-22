@@ -1,0 +1,421 @@
+/*
+ * Estilo arcade-retro de la página de acceso.
+ *
+ * Solo se carga en la página que usa el shortcode [concurso_tvs]. El resto del
+ * sitio va con la identidad corporativa de Auteco.
+ *
+ * La paleta sale del manual de marca TVS. Los tonos de pista y cielo están
+ * limitados a propósito: parte del look de 16 bits es que haya pocos colores.
+ *
+ * Pendiente para E5: la tipografía de píxeles. Hoy se usa una pila monoespaciada
+ * del sistema para no depender de una descarga externa en la ventana de 90
+ * minutos, donde todo el tráfico del día llega junto.
+ */
+
+.ntvs {
+	--ntvs-azul: #1f3a72;
+	--ntvs-azul-oscuro: #12234a;
+	--ntvs-azul-profundo: #0b1730;
+	--ntvs-rojo: #e01d2d;
+	--ntvs-blanco: #ffffff;
+	--ntvs-crema: #f2e9d8;
+	--ntvs-verde: #3aa93a;
+	--ntvs-verde-oscuro: #227722;
+	--ntvs-pista: #d98a4a;
+	--ntvs-cielo: #4a90d9;
+	--ntvs-borde: 4px;
+
+	--ntvs-fuente: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono", Menlo, Consolas, monospace;
+
+	box-sizing: border-box;
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 16px;
+	font-family: var(--ntvs-fuente);
+	color: var(--ntvs-crema);
+	background: var(--ntvs-azul-profundo);
+	image-rendering: pixelated;
+	-webkit-font-smoothing: none;
+}
+
+.ntvs *,
+.ntvs *::before,
+.ntvs *::after {
+	box-sizing: inherit;
+}
+
+/* --- Portada ----------------------------------------------------------- */
+
+.ntvs-portada {
+	position: relative;
+	border: var(--ntvs-borde) solid var(--ntvs-blanco);
+	background: var(--ntvs-cielo);
+	padding: 0 0 20px;
+	margin-bottom: 20px;
+	overflow: hidden;
+}
+
+.ntvs-portada__tribuna {
+	background: var(--ntvs-verde-oscuro);
+	padding: 10px 0 14px;
+	border-bottom: var(--ntvs-borde) solid var(--ntvs-verde);
+}
+
+/* Banderines de Excitebike convertidos en luces navideñas. */
+.ntvs-luces {
+	height: 14px;
+	margin-bottom: 10px;
+	background-image:
+		repeating-linear-gradient(
+			90deg,
+			var(--ntvs-rojo) 0 8px,
+			transparent 8px 16px,
+			var(--ntvs-verde) 16px 24px,
+			transparent 24px 32px,
+			var(--ntvs-crema) 32px 40px,
+			transparent 40px 48px
+		);
+	background-size: 48px 14px;
+	background-repeat: repeat-x;
+	background-position: center;
+}
+
+.ntvs-cartel {
+	display: block;
+	width: max-content;
+	max-width: calc(100% - 24px);
+	margin: 0 auto;
+	padding: 6px 16px;
+	background: var(--ntvs-azul);
+	border: 3px solid var(--ntvs-blanco);
+	color: var(--ntvs-blanco);
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 3px;
+	text-align: center;
+}
+
+.ntvs-portada__pista {
+	height: 56px;
+	background:
+		linear-gradient(var(--ntvs-verde) 0 12px, transparent 12px),
+		repeating-linear-gradient(
+			90deg,
+			var(--ntvs-pista) 0 24px,
+			#c97a3d 24px 48px
+		);
+	border-bottom: var(--ntvs-borde) solid #8a5228;
+}
+
+.ntvs-titulo {
+	margin: 16px 12px 4px;
+	font-family: var(--ntvs-fuente);
+	font-size: 26px;
+	line-height: 1.2;
+	font-weight: 700;
+	letter-spacing: 1px;
+	text-align: center;
+	color: var(--ntvs-blanco);
+	text-shadow: 3px 3px 0 var(--ntvs-rojo);
+}
+
+.ntvs-subtitulo {
+	margin: 0 12px;
+	text-align: center;
+	font-size: 13px;
+	color: var(--ntvs-azul-oscuro);
+}
+
+/* --- Paneles ------------------------------------------------------------ */
+
+.ntvs-panel {
+	border: var(--ntvs-borde) solid var(--ntvs-blanco);
+	background: var(--ntvs-azul-oscuro);
+	padding: 20px 16px;
+	margin-bottom: 16px;
+}
+
+.ntvs-panel--aviso {
+	border-color: var(--ntvs-rojo);
+	text-align: center;
+}
+
+.ntvs-panel__intro {
+	margin: 0 0 20px;
+	text-align: center;
+	font-size: 13px;
+	letter-spacing: 1px;
+}
+
+.ntvs-h2 {
+	margin: 0 0 12px;
+	font-family: var(--ntvs-fuente);
+	font-size: 15px;
+	letter-spacing: 2px;
+	color: var(--ntvs-blanco);
+}
+
+/* --- Formulario --------------------------------------------------------- */
+
+.ntvs-campo {
+	margin-bottom: 18px;
+}
+
+.ntvs-label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 12px;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: var(--ntvs-blanco);
+}
+
+.ntvs-input {
+	display: block;
+	width: 100%;
+	padding: 12px;
+	font-family: var(--ntvs-fuente);
+	font-size: 16px; /* 16px evita que iOS haga zoom al enfocar. */
+	color: var(--ntvs-azul-profundo);
+	background: var(--ntvs-crema);
+	border: 3px solid var(--ntvs-blanco);
+	border-radius: 0;
+	appearance: none;
+}
+
+.ntvs-input:focus {
+	outline: 3px solid var(--ntvs-rojo);
+	outline-offset: 2px;
+}
+
+.ntvs-input[aria-invalid="true"] {
+	border-color: var(--ntvs-rojo);
+}
+
+.ntvs-ayuda {
+	margin: 6px 0 0;
+	font-size: 11px;
+	line-height: 1.5;
+	color: #a9bcd8;
+}
+
+.ntvs-campo--check {
+	margin-bottom: 20px;
+}
+
+.ntvs-check {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	font-size: 12px;
+	line-height: 1.6;
+	cursor: pointer;
+}
+
+.ntvs-check input {
+	flex: 0 0 auto;
+	width: 22px;
+	height: 22px;
+	margin: 0;
+	accent-color: var(--ntvs-rojo);
+}
+
+.ntvs a {
+	color: var(--ntvs-blanco);
+	text-decoration: underline;
+}
+
+.ntvs a:hover,
+.ntvs a:focus {
+	color: var(--ntvs-rojo);
+}
+
+/* --- Botón -------------------------------------------------------------- */
+
+.ntvs-boton {
+	display: block;
+	width: 100%;
+	min-height: 52px;
+	padding: 14px;
+	font-family: var(--ntvs-fuente);
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: var(--ntvs-blanco);
+	background: var(--ntvs-rojo);
+	border: 3px solid var(--ntvs-blanco);
+	border-radius: 0;
+	cursor: pointer;
+	box-shadow: 4px 4px 0 var(--ntvs-azul-profundo);
+}
+
+.ntvs-boton:hover:not(:disabled),
+.ntvs-boton:focus-visible:not(:disabled) {
+	background: #f02a3a;
+}
+
+.ntvs-boton:active:not(:disabled) {
+	transform: translate(2px, 2px);
+	box-shadow: 2px 2px 0 var(--ntvs-azul-profundo);
+}
+
+.ntvs-boton:disabled {
+	background: #6b7280;
+	cursor: progress;
+	box-shadow: none;
+}
+
+/* --- Mensajes ----------------------------------------------------------- */
+
+.ntvs-error {
+	margin: 0 0 16px;
+	padding: 12px;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--ntvs-blanco);
+	background: var(--ntvs-rojo);
+	border: 3px solid var(--ntvs-blanco);
+}
+
+.ntvs-aviso {
+	margin: 18px 0 0;
+	font-size: 11px;
+	line-height: 1.7;
+	text-align: center;
+	color: #a9bcd8;
+}
+
+.ntvs-aviso--fuerte {
+	color: var(--ntvs-crema);
+	font-size: 12px;
+}
+
+.ntvs-enlaces {
+	margin: 16px 0 0;
+	font-size: 11px;
+	text-align: center;
+}
+
+.ntvs-enlaces span {
+	margin: 0 6px;
+	color: #6b7f9e;
+}
+
+/* --- Fuera de horario --------------------------------------------------- */
+
+.ntvs-cerrado-titulo {
+	margin: 0 0 14px;
+	font-size: 17px;
+	font-weight: 700;
+	letter-spacing: 3px;
+	text-transform: uppercase;
+	color: var(--ntvs-rojo);
+}
+
+.ntvs-horario {
+	margin: 0 0 10px;
+	font-size: 13px;
+	line-height: 1.7;
+}
+
+.ntvs-proxima {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.7;
+	color: var(--ntvs-blanco);
+}
+
+/* --- Instrucciones ------------------------------------------------------ */
+
+.ntvs-bienvenida {
+	margin: 0 0 18px;
+	font-size: 15px;
+	text-align: center;
+	color: var(--ntvs-blanco);
+}
+
+.ntvs-instrucciones {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.ntvs-instrucciones li {
+	padding: 10px 0;
+	font-size: 12px;
+	line-height: 1.7;
+	border-bottom: 2px solid #23407a;
+}
+
+.ntvs-instrucciones li:last-child {
+	border-bottom: 0;
+}
+
+.ntvs-instrucciones strong {
+	display: block;
+	color: var(--ntvs-blanco);
+	letter-spacing: 1px;
+}
+
+.ntvs-rotar {
+	margin: 16px 0 0;
+	padding: 12px;
+	font-size: 12px;
+	text-align: center;
+	color: var(--ntvs-azul-profundo);
+	background: var(--ntvs-crema);
+	border: 3px solid var(--ntvs-rojo);
+}
+
+/* --- Contenedor del juego ----------------------------------------------- */
+
+.ntvs-game-root {
+	min-height: 200px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+	background: #000;
+	border: 3px solid var(--ntvs-blanco);
+	padding: 24px 16px;
+	text-align: center;
+}
+
+.ntvs-pendiente {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--ntvs-verde);
+}
+
+.ntvs-pendiente--dato {
+	font-size: 10px;
+	color: #6b7f9e;
+	word-break: break-all;
+}
+
+/* --- Pantallas pequeñas -------------------------------------------------- */
+
+@media (max-width: 480px) {
+	.ntvs {
+		padding: 12px;
+	}
+
+	.ntvs-titulo {
+		font-size: 20px;
+	}
+
+	.ntvs-cartel {
+		font-size: 12px;
+		letter-spacing: 2px;
+	}
+}
+
+/* Quien prefiera menos movimiento no debería sufrir el botón que salta. */
+@media (prefers-reduced-motion: reduce) {
+	.ntvs-boton:active:not(:disabled) {
+		transform: none;
+	}
+}

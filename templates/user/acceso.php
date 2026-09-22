@@ -1,0 +1,169 @@
+<?php
+/**
+ * Página de acceso al juego, con la ventana de participación abierta.
+ *
+ * Variables desde NavidadTVS_Shortcode::render():
+ *
+ * @var array  $estado   Estado de la ventana.
+ * @var string $url_tyc  Enlace a términos y condiciones.
+ * @var string $url_faq  Enlace a preguntas frecuentes.
+ * @var string $site_key Clave pública de Turnstile, o cadena vacía.
+ * @var int    $duracion Duración de la carrera en segundos.
+ *
+ * @package NavidadTVS
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
+<div class="ntvs" id="ntvs-app">
+
+	<!-- Portada ------------------------------------------------------- -->
+	<div class="ntvs-portada">
+		<div class="ntvs-portada__tribuna" aria-hidden="true">
+			<div class="ntvs-luces"></div>
+			<div class="ntvs-cartel"><?php esc_html_e( 'CONCURSO TVS', 'navidad-tvs' ); ?></div>
+		</div>
+		<div class="ntvs-portada__pista" aria-hidden="true"></div>
+		<h1 class="ntvs-titulo"><?php esc_html_e( 'Concurso Navideño', 'navidad-tvs' ); ?></h1>
+		<p class="ntvs-subtitulo">
+			<?php
+			printf(
+				/* translators: %d: duración de la carrera en segundos */
+				esc_html__( '%d segundos. La mayor distancia gana.', 'navidad-tvs' ),
+				(int) $duracion
+			);
+			?>
+		</p>
+	</div>
+
+	<!-- Formulario ----------------------------------------------------- -->
+	<div class="ntvs-panel" id="ntvs-panel-acceso">
+		<p class="ntvs-panel__intro"><?php esc_html_e( 'Ingresa tus datos para entrar al juego', 'navidad-tvs' ); ?></p>
+
+		<form class="ntvs-form" id="ntvs-form" novalidate>
+
+			<div class="ntvs-campo">
+				<label class="ntvs-label" for="ntvs-nombre"><?php esc_html_e( 'Tu nombre', 'navidad-tvs' ); ?></label>
+				<input
+					class="ntvs-input"
+					type="text"
+					id="ntvs-nombre"
+					name="nombre"
+					maxlength="60"
+					autocomplete="name"
+					autocapitalize="words"
+					required>
+			</div>
+
+			<div class="ntvs-campo">
+				<label class="ntvs-label" for="ntvs-telefono"><?php esc_html_e( 'Tu celular', 'navidad-tvs' ); ?></label>
+				<input
+					class="ntvs-input"
+					type="tel"
+					id="ntvs-telefono"
+					name="telefono"
+					inputmode="numeric"
+					pattern="[0-9]*"
+					maxlength="14"
+					placeholder="3001234567"
+					autocomplete="tel-national"
+					required>
+				<p class="ntvs-ayuda"><?php esc_html_e( 'Diez dígitos, el mismo que registraste al comprar tu moto.', 'navidad-tvs' ); ?></p>
+			</div>
+
+			<div class="ntvs-campo ntvs-campo--check">
+				<label class="ntvs-check">
+					<input type="checkbox" id="ntvs-acepta" name="acepta" value="1" required>
+					<span>
+						<?php
+						printf(
+							/* translators: %s: enlace a los términos y condiciones */
+							esc_html__( 'Acepto los %s y el tratamiento de mis datos personales.', 'navidad-tvs' ),
+							'<a href="' . esc_url( $url_tyc ) . '" target="_blank" rel="noopener">' . esc_html__( 'términos y condiciones', 'navidad-tvs' ) . '</a>'
+						);
+						?>
+					</span>
+				</label>
+			</div>
+
+			<?php if ( '' !== $site_key ) : ?>
+				<div class="cf-turnstile" data-sitekey="<?php echo esc_attr( $site_key ); ?>" data-theme="dark"></div>
+			<?php endif; ?>
+
+			<p class="ntvs-error" id="ntvs-error" role="alert" aria-live="assertive" hidden></p>
+
+			<button class="ntvs-boton" type="submit" id="ntvs-enviar">
+				<?php esc_html_e( 'Entrar al juego', 'navidad-tvs' ); ?>
+			</button>
+		</form>
+
+		<p class="ntvs-aviso">
+			<?php esc_html_e( 'Tienes un solo intento. Juega desde una conexión estable, preferiblemente WiFi.', 'navidad-tvs' ); ?>
+		</p>
+
+		<p class="ntvs-enlaces">
+			<a href="<?php echo esc_url( $url_faq ); ?>"><?php esc_html_e( 'Preguntas frecuentes', 'navidad-tvs' ); ?></a>
+			<span aria-hidden="true">·</span>
+			<a href="<?php echo esc_url( $url_tyc ); ?>"><?php esc_html_e( 'Términos y condiciones', 'navidad-tvs' ); ?></a>
+		</p>
+	</div>
+
+	<!-- Instrucciones (tras validar el acceso) -------------------------- -->
+	<div class="ntvs-panel" id="ntvs-panel-instrucciones" hidden>
+		<p class="ntvs-bienvenida">
+			<?php esc_html_e( '¡Listo', 'navidad-tvs' ); ?>
+			<span id="ntvs-nombre-jugador"></span>!
+		</p>
+
+		<h2 class="ntvs-h2"><?php esc_html_e( 'Cómo se juega', 'navidad-tvs' ); ?></h2>
+
+		<ul class="ntvs-instrucciones">
+			<li>
+				<strong><?php esc_html_e( 'Acelerador', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Zona inferior derecha, o la tecla Z.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Turbo', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Zona superior derecha, o la tecla X. Vas más rápido, pero calienta el motor.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Cambiar de carril', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Zona izquierda arriba y abajo, o las flechas.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Temperatura', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Si la barra llega al tope, el motor se cala unos segundos. Suelta el turbo o frena para enfriarlo.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Logos TVS', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Cada uno que recojas suma 50 metros.', 'navidad-tvs' ); ?>
+			</li>
+		</ul>
+
+		<p class="ntvs-rotar" id="ntvs-rotar" hidden>
+			<?php esc_html_e( 'Gira tu dispositivo en horizontal para jugar.', 'navidad-tvs' ); ?>
+		</p>
+
+		<p class="ntvs-aviso ntvs-aviso--fuerte">
+			<?php esc_html_e( 'Al pulsar el botón empieza una cuenta regresiva y luego la carrera. Es tu único intento.', 'navidad-tvs' ); ?>
+		</p>
+
+		<button class="ntvs-boton" type="button" id="ntvs-iniciar">
+			<?php esc_html_e( 'Iniciar carrera', 'navidad-tvs' ); ?>
+		</button>
+	</div>
+
+	<!-- Contenedor del juego (se construye en E4) ------------------------ -->
+	<div class="ntvs-panel" id="ntvs-panel-juego" hidden>
+		<div id="ntvs-game-root" class="ntvs-game-root">
+			<p class="ntvs-pendiente"><?php esc_html_e( 'El motor del juego se implementa en la etapa E4.', 'navidad-tvs' ); ?></p>
+			<p class="ntvs-pendiente ntvs-pendiente--dato">
+				<?php esc_html_e( 'Sesión validada. Token:', 'navidad-tvs' ); ?>
+				<code id="ntvs-token"></code>
+			</p>
+		</div>
+	</div>
+
+</div>

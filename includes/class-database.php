@@ -398,6 +398,137 @@ class NavidadTVS_Database {
 		return $insertadas;
 	}
 
+	// ---------------------------------------------------------------------
+	// Acceso al juego
+	// ---------------------------------------------------------------------
+
+	/**
+	 * Busca un participante por su teléfono ya normalizado.
+	 *
+	 * @param string $telefono Diez dígitos.
+	 * @return array|null Fila del padrón, o null si no existe.
+	 */
+	public function buscar_participante_por_telefono( $telefono ) {
+		global $wpdb;
+
+		if ( '' === $telefono ) {
+			return null;
+		}
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_participantes} WHERE telefono = %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				$telefono
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
+	 * Indica si un participante ya tiene un resultado registrado.
+	 *
+	 * Incluye los descalificados a propósito: haber sido descalificado no
+	 * devuelve el derecho a otro intento.
+	 *
+	 * @param int $participante_id Id del participante.
+	 * @return bool
+	 */
+	public function tiene_score( $participante_id ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_scores} WHERE participante_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$participante_id
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Indica si el participante ya arrancó su carrera alguna vez.
+	 *
+	 * Una sesión consumida significa que la carrera empezó. Da igual si llegó
+	 * a enviarse un resultado: el intento está gastado.
+	 *
+	 * @param int $participante_id Id del participante.
+	 * @return bool
+	 */
+	public function tiene_sesion_consumida( $participante_id ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_sesiones} WHERE participante_id = %d AND estado = 'consumida' LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				$participante_id
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Devuelve la sesión emitida y todavía vigente de un participante.
+	 *
+	 * Permite que quien recargue la página antes de arrancar la carrera
+	 * retome su sesión en vez de generar una nueva cada vez.
+	 *
+	 * @param int $participante_id Id del participante.
+	 * @param int $minutos         Vigencia en minutos.
+	 * @return array|null
+	 */
+	public function sesion_vigente_de( $participante_id, $minutos ) {
+		global $wpdb;
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_sesiones}
+				  WHERE participante_id = %d
+				    AND estado = 'emitida'
+				    AND creada_en > ( UTC_TIMESTAMP() - INTERVAL %d MINUTE )
+				  ORDER BY id DESC
+				  LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				$participante_id,
+				$minutos
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
+	 * Crea una sesión de carrera.
+	 *
+	 * @param array $datos Campos de la sesión.
+	 * @return int|false Id de la sesión, o false si falló el INSERT.
+	 */
+	public function crear_sesion( array $datos ) {
+		global $wpdb;
+
+		$ok = $wpdb->insert(
+			$this->tabla_sesiones,
+			array(
+				'participante_id'  => (int) $datos['participante_id'],
+				'nombre_digitado'  => (string) $datos['nombre_digitado'],
+				'seed'             => (int) $datos['seed'],
+				'nonce'            => (string) $datos['nonce'],
+				'estado'           => 'emitida',
+				'acepto_terminos'  => ! empty( $datos['acepto_terminos'] ) ? 1 : 0,
+				'terminos_version' => (string) $datos['terminos_version'],
+				'ip'               => (string) $datos['ip'],
+				'user_agent'       => (string) $datos['user_agent'],
+				'creada_en'        => gmdate( 'Y-m-d H:i:s' ),
+			),
+			array( '%d', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+		);
+
+		return $ok ? (int) $wpdb->insert_id : false;
+	}
+
 	/**
 	 * Resumen del padrón agrupado por jornada.
 	 *

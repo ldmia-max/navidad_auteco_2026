@@ -10,14 +10,13 @@
  * @package NavidadTVS
  */
 
-$fallos = 0;
+$GLOBALS['fallos'] = 0;
 $base   = dirname( __DIR__ );
 
 function comprobar( $etiqueta, $esperado, $obtenido ) {
-	global $fallos;
 	$ok = ( $esperado === $obtenido );
 	if ( ! $ok ) {
-		$fallos++;
+		$GLOBALS['fallos']++;
 	}
 	printf(
 		"%s %-52s esperado=%-10s obtenido=%s\n",
@@ -80,7 +79,7 @@ $analisis = $importador->analizar( $ruta );
 
 if ( is_wp_error( $analisis ) ) {
 	echo 'FALLA  el analisis devolvio error: ' . $analisis->get_error_message() . "\n";
-	$fallos++;
+	$GLOBALS['fallos']++;
 } else {
 	comprobar( 'delimitador detectado', ';', $analisis['delimitador'] );
 	comprobar( 'filas validas', 7, count( $analisis['filas'] ) );
@@ -153,7 +152,7 @@ if ( file_exists( $real ) ) {
 
 	if ( is_wp_error( $analisis ) ) {
 		echo 'FALLA  ' . $analisis->get_error_message() . "\n";
-		$fallos++;
+		$GLOBALS['fallos']++;
 	} else {
 		$validas   = count( $analisis['filas'] );
 		$rechazos  = count( $analisis['rechazos'] );
@@ -179,4 +178,5 @@ if ( file_exists( $real ) ) {
 }
 
 echo "\n";
+$fallos = (int) $GLOBALS['fallos'];
 echo 0 === $fallos ? "TODO OK\n" : "{$fallos} FALLO(S)\n";

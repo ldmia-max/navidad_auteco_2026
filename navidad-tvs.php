@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.1.0' );
+define( 'NAVIDAD_TVS_VERSION', '1.2.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );
@@ -50,6 +50,9 @@ define( 'NAVIDAD_TVS_DISTANCIA_MAXIMA_M', 3100 );
 
 require_once NAVIDAD_TVS_PATH . 'includes/class-settings.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-database.php';
+require_once NAVIDAD_TVS_PATH . 'includes/class-acceso.php';
+require_once NAVIDAD_TVS_PATH . 'includes/class-rest.php';
+require_once NAVIDAD_TVS_PATH . 'includes/class-shortcode.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-admin.php';
 
 /**
@@ -72,6 +75,15 @@ final class NavidadTVS_Plugin {
 	/** @var NavidadTVS_Admin */
 	public $admin;
 
+	/** @var NavidadTVS_Acceso */
+	public $acceso;
+
+	/** @var NavidadTVS_Rest */
+	public $rest;
+
+	/** @var NavidadTVS_Shortcode */
+	public $shortcode;
+
 	/**
 	 * Devuelve la instancia única.
 	 *
@@ -87,6 +99,13 @@ final class NavidadTVS_Plugin {
 	private function __construct() {
 		$this->settings = new NavidadTVS_Settings();
 		$this->database = new NavidadTVS_Database();
+		$this->acceso   = new NavidadTVS_Acceso( $this->database, $this->settings );
+
+		$this->rest = new NavidadTVS_Rest( $this->acceso );
+		$this->rest->registrar_hooks();
+
+		$this->shortcode = new NavidadTVS_Shortcode( $this->acceso, $this->settings );
+		$this->shortcode->registrar_hooks();
 
 		if ( is_admin() ) {
 			$this->admin = new NavidadTVS_Admin( $this->database, $this->settings );

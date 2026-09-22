@@ -254,8 +254,17 @@ class NavidadTVS_Import_Padron {
 				break;
 			}
 
-			// Saltar filas totalmente vacías sin contarlas como rechazo.
-			$contenido = implode( '', array_map( 'trim', (array) $cruda ) );
+			/*
+			 * Saltar filas totalmente vacías sin contarlas como rechazo.
+			 *
+			 * fgetcsv devuelve array( null ) ante una línea en blanco, y desde
+			 * PHP 8.1 pasarle null a trim() emite un aviso de obsolescencia. Un
+			 * CSV con líneas vacías al final llenaría el log en producción.
+			 */
+			$contenido = '';
+			foreach ( (array) $cruda as $celda ) {
+				$contenido .= trim( (string) $celda );
+			}
 			if ( '' === $contenido ) {
 				continue;
 			}
