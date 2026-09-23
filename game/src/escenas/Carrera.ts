@@ -57,6 +57,20 @@ const PX_POR_MM_ALTURA = 0.012;
 const CUADROS_CAMBIO_CARRIL = 7;
 
 /**
+ * Inclinación que la pose de salto ya trae dibujada, en grados.
+ *
+ * El diseño del salto viene con la moto girada unos 42°, con la rueda trasera
+ * abajo a la izquierda y la delantera arriba a la derecha. La escena tiene que
+ * restar ese giro antes de aplicar el de la simulación; si no, se sumarían los
+ * dos y la moto aparecería casi vertical nada más despegar.
+ *
+ * Restándolo, el ángulo que ve el jugador es el de la física: con la
+ * inclinación a cero la moto se ve horizontal, que es justo la señal de que va
+ * a aterrizar limpio.
+ */
+const GRADOS_DIBUJADOS_SALTO = 42;
+
+/**
  * Tope de ticks que se pueden recuperar en un solo frame.
  *
  * Si el navegador se congela (cambio de pestaña, notificación, recolector de
@@ -450,7 +464,7 @@ export class Carrera extends Phaser.Scene {
       this.moto.setAngle(0);
     } else if (e.enAire) {
       this.moto.setTexture(TEX.motoWheelie);
-      this.moto.setAngle(-e.inclinacion / 10);
+      this.moto.setAngle(-e.inclinacion / 10 + GRADOS_DIBUJADOS_SALTO);
     } else {
       this.moto.setTexture(TEX.moto);
       this.moto.setAngle(inclinacionCarril);

@@ -399,6 +399,12 @@ for (let cy = 0; cy < altoSalida; cy++) {
 
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
+        // Con un offset negativo la primera celda empieza fuera de la imagen.
+        // Leer ahí devolvía basura y la celda salía con un color inventado.
+        if (x < 0 || y < 0 || x >= img.ancho || y >= img.alto) {
+          continue;
+        }
+
         const i = (y * img.ancho + x) * 4;
         const [r, g, b, a] = [img.px[i], img.px[i + 1], img.px[i + 2], img.px[i + 3]];
         total++;

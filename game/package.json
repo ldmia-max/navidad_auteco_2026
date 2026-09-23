@@ -11,7 +11,8 @@
     "sim": "tsx src/sim/banco-pruebas.ts",
     "arte": "tsx src/render/banco-arte.ts",
     "arte:png": "tsx src/render/exportar-png.ts",
-    "arte:importar": "tsx src/render/importar-png.ts"
+    "arte:importar": "tsx src/render/importar-png.ts",
+    "arte:rejilla": "tsx src/render/buscar-rejilla.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"
