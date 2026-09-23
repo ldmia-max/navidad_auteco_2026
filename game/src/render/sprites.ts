@@ -12,129 +12,109 @@
 import type { Sprite } from './pixeles';
 
 // ---------------------------------------------------------------------------
-// Moto y piloto, vista lateral, mirando a la derecha. 28×31.
+// Moto y piloto, vista lateral, mirando a la derecha. 22×24.
 //
-// Las tres poses vienen de los diseños del cliente, importadas píxel por píxel
-// con `npm run arte:importar`. No se retocan a mano: si hay que cambiar algo,
-// se cambia el PNG y se vuelve a importar.
+// Las poses vienen de los diseños del cliente, importadas píxel por píxel con
+// `npm run arte:importar`. No se retocan a mano: si hay que cambiar algo, se
+// cambia el PNG y se vuelve a importar.
 //
-//   MOTO     conductor_y_moto_nuevo_diseño.png
-//              --tamano 24x23 --fondo auto --offset 6,2
-//   WHEELIE  conductor_y_moto_salto.png
-//              --tamano 28x31 --fondo auto --offset 2,-4
+//   MOTO     conductor_y_moto_nuevo_diseño.png  --tamano 24x23 --offset 6,2
+//   WHEELIE  conductor_y_moto_salto.png         --tamano 23x26 --offset 2,-4
 //
-//   --mapa "ff9f00=.,ffffff=w,3f48cc=B,c3c3c3=t,d02a16=r,000000=n"
+//   --fondo auto --mapa "ff9f00=.,ffffff=w,3f48cc=B,c3c3c3=t,d02a16=r,000000=n"
 //
-// Las tres comparten lienzo de 28×31 y van alineadas por abajo. Tienen que
-// medir lo mismo: la escena las dibuja con origen (0.5, 1) sobre la línea del
-// carril, y un cambio de tamaño haría saltar la moto al cambiar de pose.
+// El salto se importa a 23×26 y no a su rejilla natural de 28×31 porque el
+// diseño está dibujado a mayor escala: a 28×31 su distancia entre ejes era de
+// 16,6 píxeles frente a los 13,7 de la moto rodando, un 21 % más grande, y en
+// pleno salto la moto crecía. A 23×26 quedan en 13,9 y 13,7.
+//
+// Las tres comparten lienzo y van alineadas por abajo. Tienen que medir lo
+// mismo: la escena las dibuja con origen (0.5, 1) sobre la línea del carril, y
+// un cambio de tamaño haría saltar la moto al cambiar de pose.
 // ---------------------------------------------------------------------------
 
 /** Rodando normal. */
 export const MOTO: Sprite = [
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............wwwww...........',
-  '...........wwwwww...........',
-  '...........wwwnnn...........',
-  '...........wwwnnn...........',
-  '...........wwwwww...........',
-  '...........nrrwww...........',
-  '..........wwrrr.............',
-  '.........wwwrrw.............',
-  '.........wwwrrrrr.n.........',
-  '.........wwwwrrrnrn.........',
-  '.........wwww...ttn.........',
-  '......BBBwwwww.BBtBBBB......',
-  '.........nnwwwwBBtt.........',
-  '......nnBBBnwwwBBBttnn......',
-  '.....nn.BBBnwwwBB.nt.nn.....',
-  '....nn..BB.trrrn.nnt..nn....',
-  '....n..n..ttrrrn.n.tn..n....',
-  '....n..tttt.rrrr.n..t..n....',
-  '....nn...nn..rr..nn...nn....',
-  '.....nn.nnn.......nn.nn.....',
-  '......nnn..........nnn......',
-  '............................',
+  '......................',
+  '......................',
+  '......................',
+  '.........wwwww........',
+  '........wwwwww........',
+  '........wwwnnn........',
+  '........wwwnnn........',
+  '........wwwwww........',
+  '........nrrwww........',
+  '.......wwrrr..........',
+  '......wwwrrw..........',
+  '......wwwrrrrr.n......',
+  '......wwwwrrrnrn......',
+  '......wwww...ttn......',
+  '...BBBwwwww.BBtBBBB...',
+  '......nnwwwwBBtt......',
+  '...nnBBBnwwwBBBttnn...',
+  '..nn.BBBnwwwBB.nt.nn..',
+  '.nn..BB.trrrn.nnt..nn.',
+  '.n..n..ttrrrn.n.tn..n.',
+  '.n..tttt.rrrr.n..t..n.',
+  '.nn...nn..rr..nn...nn.',
+  '..nn.nnn.......nn.nn..',
+  '...nnn..........nnn...',
 ];
 
-/**
- * En el aire, girada, como en el diseño del salto.
- */
+/** En el aire, girada 35°, como en el diseño del salto. */
 export const MOTO_WHEELIE: Sprite = [
-  '............................',
-  '............................',
-  '.....wwwwww.................',
-  '....wwwwwwww................',
-  '....wwwwwwww................',
-  '....wwwwnnnn................',
-  '....wwwwwnnn................',
-  '....wwwwwwww................',
-  '....nnrnwwww.n..............',
-  '....nrrr...r.nn...BB........',
-  '....nrrrw.rrrrnn.BB.........',
-  '....wwrrrrrrnttBBB..n.......',
-  '....wwwrrrrrttttt.nnnnnn....',
-  '...wwwwwwr..BBBtttt.n.nnn...',
-  '...wwwwwwww.BBBBBntt....nn..',
-  '....wwwwwwwwwBBB.nntnn...n..',
-  '.....wwwwwwwwwBBBnntttt.nn..',
-  '.....wwwwwwwwwBn.nn.....nn..',
-  '....BBwnnnwwwwrnn.nnn...n...',
-  '...BB..BBBnwrrrrr.nnnnnnn...',
-  '...B..BBBBttrrrrr....nnn....',
-  '....nnBBBB.ttrrrn...........',
-  '....nn.BBBtt.rrnn...........',
-  '....nn....tt................',
-  '....nn.ntttnn...............',
-  '...nn...tt.n................',
-  '....n.....nn................',
-  '.....nnn..nn................',
-  '.....nnnnnnn................',
-  '.......n.n..................',
-  '............................',
+  '....www...............',
+  '...wwwww..............',
+  '..wwwwwww.............',
+  '..wwwwnnn.............',
+  '..wwwwnnn.............',
+  '..wwwwwww.............',
+  '..nrrnwww.n...........',
+  '..nrrr..rrnn.BB.......',
+  '..wwrrrrrntnBB........',
+  '..wwwrrrrtttt.nnnnn...',
+  '..wwwww..BBtttt..nnn..',
+  '..wwwwww.BBBBnt....n..',
+  '...wwwwwwwBBBnntn..nn.',
+  '...wwwwwwwwB.n.....n..',
+  '...Bwnnwwwrnn.n...nn..',
+  '.BB.BBBnwrrrr.nnnnnn..',
+  '...nBBBttrrrr....n....',
+  '..nnBBBttrrrn.........',
+  '..nn.B.tt.............',
+  '..nn.nttnn............',
+  '..n..tt.n.............',
+  '..nn...nn.............',
+  '...nnnnnn.............',
+  '....nnnn..............',
 ];
 
 /** Piloto en el suelo y la moto tumbada. Derivada; falta su diseño. */
 export const MOTO_CAIDA: Sprite = [
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '............................',
-  '.....wwwww..................',
-  '....wwwnnnw.................',
-  '....wwwnnnw...BBBBBB........',
-  '.....wwwww..BBBBttBBBB......',
-  '.....rrrrr.BBBtt....BB......',
-  '....rrrrrrr.................',
-  '....rrrrr..nnn.......nnn....',
-  '.....rrr..nnnnn.....nnnnn...',
-  '.....w.w.nn.t.nn...nn.t.nn..',
-  '.........nn...nn...nn...nn..',
-  '.........nn.t.nn...nn.t.nn..',
-  '..........nnnnn.....nnnnn...',
-  '...........nnn.......nnn....',
-  '............................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '......................',
+  '.wwwww................',
+  'wwwnnnw...............',
+  'wwwnnnw...BBBBBB......',
+  '.wwwww..BBBBttBBBB....',
+  '.rrrrr.BBBtt....BB....',
+  'rrrrrrr...............',
+  'rrrrr..nnn.......nnn..',
+  '.rrr..nnnnn.....nnnnn.',
+  '.w.w.nn.t.nn...nn.t.nn',
+  '.....nn...nn...nn...nn',
+  '.....nn.t.nn...nn.t.nn',
+  '......nnnnn.....nnnnn.',
+  '.......nnn.......nnn..',
 ];
 
 /** Humo del motor sobrecalentado. 8×8, se anima con alfa y escala. */

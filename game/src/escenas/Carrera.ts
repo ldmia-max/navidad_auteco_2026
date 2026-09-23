@@ -59,16 +59,16 @@ const CUADROS_CAMBIO_CARRIL = 7;
 /**
  * Inclinación que la pose de salto ya trae dibujada, en grados.
  *
- * El diseño del salto viene con la moto girada unos 42°, con la rueda trasera
- * abajo a la izquierda y la delantera arriba a la derecha. La escena tiene que
- * restar ese giro antes de aplicar el de la simulación; si no, se sumarían los
- * dos y la moto aparecería casi vertical nada más despegar.
+ * El diseño viene con la moto girada 35°, con la rueda trasera abajo a la
+ * izquierda y la delantera arriba a la derecha. La escena resta ese giro antes
+ * de aplicar el de la simulación, para que el ángulo que ve el jugador sea el
+ * de la física y no la suma de los dos.
  *
- * Restándolo, el ángulo que ve el jugador es el de la física: con la
- * inclinación a cero la moto se ve horizontal, que es justo la señal de que va
- * a aterrizar limpio.
+ * Coincide con PITCH_LANZAMIENTO: al salir de la rampa, la resta da cero y la
+ * moto se ve exactamente como se dibujó. A partir de ahí se endereza, y cuando
+ * llega a horizontal es la señal de que va a aterrizar limpio.
  */
-const GRADOS_DIBUJADOS_SALTO = 42;
+const GRADOS_DIBUJADOS_SALTO = 35;
 
 /**
  * Tope de ticks que se pueden recuperar en un solo frame.

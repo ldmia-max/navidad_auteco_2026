@@ -14,7 +14,7 @@
 
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { pintarTexto as pintarTextoFuente } from './fuente';
+import { anchoTexto, pintarTexto as pintarTextoFuente } from './fuente';
 import { LEYENDA } from './pixeles';
 import * as S from './sprites';
 import { TEMA_POR_DEFECTO, type Paleta } from './tema';
@@ -29,10 +29,12 @@ class Lienzo {
   constructor(
     readonly ancho: number,
     readonly alto: number,
-    fondo = 0x000000
+    fondo?: number
   ) {
     this.datos = new Uint8Array(ancho * alto * 4);
-    this.rect(fondo, 0, 0, ancho, alto);
+    if (fondo !== undefined) {
+      this.rect(fondo, 0, 0, ancho, alto);
+    }
   }
 
   punto(color: number, x: number, y: number): void {
@@ -80,6 +82,44 @@ class Lienzo {
     };
     // El Graphics de Phaser solo se usa aquí para fillStyle y fillRect.
     pintarTextoFuente(falso as never, cadena, x, y, color);
+  }
+
+  /**
+   * Rota el contenido en grados, con vecino más cercano.
+   *
+   * Sirve para ver cómo se verá una pose que la escena gira en tiempo real,
+   * sin tener que abrir el navegador.
+   */
+  rotar(grados: number, fondo = 0x303030): Lienzo {
+    const salida = new Lienzo(this.ancho, this.alto, fondo);
+    const rad = (grados * Math.PI) / 180;
+    const cos = Math.cos(-rad);
+    const sen = Math.sin(-rad);
+    const cx = this.ancho / 2;
+    const cy = this.alto / 2;
+
+    for (let y = 0; y < this.alto; y++) {
+      for (let x = 0; x < this.ancho; x++) {
+        // Se recorre el destino y se busca en el origen: así no quedan huecos.
+        const dx = x - cx;
+        const dy = y - cy;
+        const ox = Math.round(cx + dx * cos - dy * sen);
+        const oy = Math.round(cy + dx * sen + dy * cos);
+
+        if (ox < 0 || oy < 0 || ox >= this.ancho || oy >= this.alto) {
+          continue;
+        }
+
+        const i = (oy * this.ancho + ox) * 4;
+        if (this.datos[i + 3] === 0) {
+          continue;
+        }
+
+        salida.punto((this.datos[i] << 16) | (this.datos[i + 1] << 8) | this.datos[i + 2], x, y);
+      }
+    }
+
+    return salida;
   }
 
   /** Devuelve un lienzo escalado por un entero, sin suavizado. */
@@ -418,7 +458,54 @@ function maquetaPodio(): Lienzo {
 const destino = new URL('../../salida-arte/', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 mkdirSync(destino, { recursive: true });
 
+/**
+ * Cómo se ve la pose de salto a lo largo del vuelo.
+ *
+ * La escena la gira restándole los 45° que trae dibujada, así que al despegar
+ * se ve como el diseño y al enderezarse queda horizontal, que es la señal de
+ * aterrizaje limpio. Esta tira permite comprobarlo sin abrir el navegador.
+ */
+function tiraSalto(): Lienzo {
+  const ancho = S.MOTO_WHEELIE[0].length;
+  const alto = S.MOTO_WHEELIE.length;
+
+  const base = new Lienzo(ancho, alto);
+  base.sprite(S.MOTO_WHEELIE, P, 0, 0);
+
+  // Inclinación en decigrados y el ángulo que aplica la escena.
+  const momentos: Array<[string, number]> = [
+    ['DESPEGUE', 350],
+    ['SUBIENDO', 250],
+    ['MEDIO', 150],
+    ['PLANO', 0],
+    ['MORRO ABAJO', -300],
+  ];
+
+  // La celda tiene que caber la etiqueta más larga, o los textos se solapan.
+  const celda = Math.max(ancho + 4, ...momentos.map(([e]) => anchoTexto(e) + 4));
+  const l = new Lienzo(celda * momentos.length, alto + 12, 0x303030);
+
+  momentos.forEach(([etiqueta, incl], i) => {
+    const girada = base.rotar(-incl / 10 + 35);
+    for (let y = 0; y < alto; y++) {
+      for (let x = 0; x < ancho; x++) {
+        const j = (y * ancho + x) * 4;
+        if (girada.datos[j + 3] === 0) continue;
+        l.punto(
+          (girada.datos[j] << 16) | (girada.datos[j + 1] << 8) | girada.datos[j + 2],
+          i * celda + Math.floor((celda - ancho) / 2) + x,
+          y
+        );
+      }
+    }
+    l.texto(etiqueta, i * celda + 1, alto + 1, 0xffffff);
+  });
+
+  return l;
+}
+
 const salidas: Array<[string, Lienzo, number]> = [
+  ['salto.png', tiraSalto(), 4],
   ['sprites.png', hojaSprites(), 4],
   ['pantalla-carrera.png', maquetaPantalla(), 3],
   ['pantalla-podio.png', maquetaPodio(), 3],

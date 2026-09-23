@@ -231,7 +231,31 @@ simulación.
 
 ---
 
-## 7. Errores que ya se cometieron
+## 7. Dos diseños tienen que estar a la misma escala
+
+Cuando llegan varias poses del mismo objeto dibujadas por separado, casi nunca
+vienen al mismo tamaño. Es lo que pasó con la moto: la pose de salto, a su
+rejilla natural de 28×31, tenía una distancia entre ejes de **16,6 píxeles**
+frente a los **13,7** de la pose de rodar. Un 21 % más grande, y la moto crecía
+en pleno salto.
+
+La forma de comprobarlo no es mirar el lienzo, que cambia con el giro, sino
+medir algo invariante: la distancia entre los centros de las dos ruedas. Se
+localizan con un relleno por inundación sobre los píxeles negros y se toman los
+dos grupos más grandes.
+
+La corrección fue importar el salto a 23×26 en vez de a su rejilla natural, con
+lo que la distancia queda en 13,9. Se pierde algo de detalle al remuestrear,
+pero mucho menos de lo que molesta una moto que cambia de tamaño.
+
+Lo mismo con el **ángulo**: el diseño del salto parecía de 45° a ojo y resultó
+ser de **35,6°** al medirlo entre los ejes. Ese número importa porque la escena
+resta el giro dibujado antes de aplicar el de la física; con 45 la moto salía
+del salto ya inclinada hacia abajo.
+
+---
+
+## 8. Errores que ya se cometieron
 
 Quedan anotados porque son fáciles de repetir:
 
@@ -245,6 +269,9 @@ Quedan anotados porque son fáciles de repetir:
   arena.
 - **`Interpolate.ColorWithColor()` devuelve `{r,g,b,a}`,** no un color
   empaquetado. Pedirle `.color` da `undefined` y la banda sale negra.
+- **Estimar un ángulo a ojo.** El salto parecía de 45° y era de 35,6°. Medirlo
+  cuesta un minuto y evita que la moto salga del salto ya cabeceando.
+- **Dar por hecho que dos diseños vienen a la misma escala.** No vienen.
 
 Casi todos se detectan mirando `npm run arte:png`. Conviene hacerlo antes de
 dar por bueno un cambio de arte.

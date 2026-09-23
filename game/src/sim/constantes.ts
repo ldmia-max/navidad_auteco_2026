@@ -65,6 +65,27 @@ export const IMPULSO_POR_MIL = 260;
 /** Cuánto gira la moto por tick mientras está en el aire. */
 export const PITCH_POR_TICK = 25;
 
+/**
+ * Con cuánta inclinación sale la moto de una rampa, en decigrados.
+ *
+ * Coincide con la inclinación que trae dibujada la pose de salto, para que al
+ * despegar se vea exactamente como el diseño. Antes salía a cero y la escena
+ * tenía que enderezar el dibujo, con lo que la moto aparecía horizontal y
+ * alargada en pleno salto.
+ */
+export const PITCH_LANZAMIENTO = 350;
+
+/**
+ * Cuánto se endereza la moto por tick cuando el jugador no toca nada.
+ *
+ * Sin esto, salir de la rampa a 45° condenaría a caerse a quien no sepa que
+ * hay que corregir, y en un concurso de un solo intento con público que nunca
+ * ha jugado eso no es dificultad, es una trampa. Enderezándose sola, quien no
+ * hace nada aterriza bien; quien quiera puede aguantar el morro arriba o
+ * bajarlo antes, que es donde está la habilidad.
+ */
+export const PITCH_AUTONIVELA = 25;
+
 /** Tope de inclinación: ±90,0°. */
 export const PITCH_MAX = 900;
 

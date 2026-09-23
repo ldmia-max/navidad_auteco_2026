@@ -26,6 +26,8 @@ import {
   ITEM_METROS,
   LODO_POR_MIL,
   PITCH_ATERRIZAJE_OK,
+  PITCH_AUTONIVELA,
+  PITCH_LANZAMIENTO,
   PITCH_MAX,
   PITCH_POR_TICK,
   TEMP_MAX,
@@ -164,11 +166,18 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
    * de un celular.
    */
   if (estado.enAire) {
-    if (tiene(entrada, BIT_ABAJO)) {
+    const subir = tiene(entrada, BIT_ARRIBA);
+    const bajar = tiene(entrada, BIT_ABAJO);
+
+    if (bajar) {
       estado.inclinacion = Math.max(-PITCH_MAX, estado.inclinacion - PITCH_POR_TICK);
-    }
-    if (tiene(entrada, BIT_ARRIBA)) {
+    } else if (subir) {
       estado.inclinacion = Math.min(PITCH_MAX, estado.inclinacion + PITCH_POR_TICK);
+    } else if (estado.inclinacion > 0) {
+      // Sin tocar nada la moto se endereza sola.
+      estado.inclinacion = Math.max(0, estado.inclinacion - PITCH_AUTONIVELA);
+    } else if (estado.inclinacion < 0) {
+      estado.inclinacion = Math.min(0, estado.inclinacion + PITCH_AUTONIVELA);
     }
 
     estado.velY -= div(GRAVEDAD, TPS);
@@ -267,7 +276,9 @@ function avanzar(estado: Estado, pista: Pista): void {
       estado.enAire = true;
       estado.velY = div(estado.vel * IMPULSO_POR_MIL, 1000);
       estado.altura = 1;
-      estado.inclinacion = 0;
+      // La rampa levanta el morro: así se ve al despegar y hay que bajarlo
+      // antes de aterrizar, o dejar que se enderece solo.
+      estado.inclinacion = PITCH_LANZAMIENTO;
     } else if (obs.tipo === TIPO_LODO) {
       estado.lodoHasta = obs.pos + obs.largo;
     } else if (obs.tipo === TIPO_VALLA) {
