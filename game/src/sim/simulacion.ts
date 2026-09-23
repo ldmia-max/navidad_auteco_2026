@@ -25,6 +25,7 @@ import {
   IMPULSO_POR_MIL,
   ITEM_METROS,
   LODO_POR_MIL,
+  RAMPA_METROS,
   TEMP_MAX,
   TEMP_NORMAL,
   TEMP_SUELTO,
@@ -65,6 +66,8 @@ export interface Estado {
   velY: number;
   /** Logos TVS recogidos. */
   items: number;
+  /** Rampas saltadas. */
+  rampas: number;
   /** Veces que se fue al suelo. */
   caidas: number;
   /** Veces que se caló el motor. */
@@ -90,6 +93,7 @@ export function crearEstado(): Estado {
     altura: 0,
     velY: 0,
     items: 0,
+    rampas: 0,
     caidas: 0,
     sobrecalentamientos: 0,
     lodoHasta: 0,
@@ -100,7 +104,7 @@ export function crearEstado(): Estado {
 
 /** Distancia que se le muestra al participante y que decide el ranking. */
 export function distanciaMetros(estado: Estado): number {
-  return div(estado.pos, 1000) + estado.items * ITEM_METROS;
+  return div(estado.pos, 1000) + estado.items * ITEM_METROS + estado.rampas * RAMPA_METROS;
 }
 
 /** Segundos que quedan de carrera, redondeados hacia arriba. */
@@ -242,6 +246,7 @@ function avanzar(estado: Estado, pista: Pista): void {
 
     if (obs.tipo === TIPO_RAMPA) {
       estado.enAire = true;
+      estado.rampas++;
       estado.velY = div(estado.vel * IMPULSO_POR_MIL, 1000);
       estado.altura = 1;
     } else if (obs.tipo === TIPO_LODO) {

@@ -13,6 +13,9 @@ este documento se aplica en los dos lados y se corre la suite de paridad.
 - Gana quien recorra **más metros**.
 - El contador avanza de 1 en 1 metro.
 - Los ítems con el logo TVS suman **+50 m** directos al contador.
+- Cada **rampa saltada suma +1 m**, con el mismo rótulo flotante que el bonus.
+  Es un premio simbólico —unos 18 m en una carrera buena— que sirve para que el
+  salto se sienta recompensado, no para decidir el ranking.
 - Un solo intento por participante. No hay reintentos.
 - Los **4 mayores del día** son ganadores. Si hay empate, todos los empatados
   reciben premio.
@@ -120,21 +123,25 @@ Medido con `cd game && npm run sim`, promediando ocho pistas distintas. Las
 estrategias son automáticas y **no cambian de carril**, así que recogen pocos
 logos y chocan con lo que les toca de frente: son el suelo, no el techo.
 
-| Estrategia | Distancia media | Veces que se sobrecalienta |
-|---|---|---|
-| Sin tocar nada | 0 m | 0 |
-| Solo acelerador | **1927 m** | 0 |
-| Turbo continuo | **1549 m** | 13,3 |
-| Pulsos de 2 s turbo / 3 s normal | **2281 m** | 0,1 |
-| Pulsos de 2 s turbo / 2 s suelto | 2221 m | 0,4 |
-| Pulsos de 1 s turbo / 2 s normal | 2272 m | 0,0 |
+| Estrategia | Distancia media | Rampas | Caídas | Veces que se sobrecalienta |
+|---|---|---|---|---|
+| Sin tocar nada | 0 m | 0,0 | 0,0 | 0,0 |
+| Solo acelerador | **1858 m** | 16,5 | 3,5 | 0,0 |
+| Turbo continuo | **1570 m** | 13,6 | 1,8 | 13,1 |
+| Pulsos de 2 s turbo / 3 s normal | **2120 m** | 18,1 | 4,8 | 0,1 |
+| Pulsos de 2 s turbo / 2 s suelto | 2071 m | 17,5 | 4,3 | 0,1 |
+| Pulsos de 1 s turbo / 2 s normal | 2129 m | 18,3 | 4,6 | 0,0 |
 
-Abusar del turbo castiga de verdad: 1549 m frente a los 1927 m de no usarlo.
-Dosificarlo sube a 2281 m. Son 354 metros de diferencia entre jugar mal y jugar
+Abusar del turbo castiga de verdad: 1570 m frente a los 1858 m de no usarlo.
+Dosificarlo sube a 2129 m. Son 271 metros de diferencia entre jugar mal y jugar
 bien, sin contar los logos ni los carriles, y con resolución de 1 metro: espacio
 de sobra para ordenar 150 participantes.
 
-Una carrera completa se simula en **0,20 ms**. Validar las 150 de una jornada
+Al poblar más la pista todas las marcas bajaron alrededor de 100 m respecto de
+la versión anterior, y las caídas subieron de 2 a 4 por carrera. El orden entre
+estrategias, que es lo que sostiene el concurso, no cambió.
+
+Una carrera completa se simula en **0,18 ms**. Validar las 150 de una jornada
 cuesta centésimas de segundo, así que en E6 se puede reejecutar el 100 % de las
 partidas y no solo las de los finalistas.
 
@@ -148,12 +155,18 @@ partidas y no solo las de los finalistas.
   entre un cambio y el siguiente.
 - Se generan 3600 m de pista, por encima del tope de plausibilidad, para que
   nadie se quede sin pista ni en una carrera perfecta.
-- Los obstáculos se colocan recorriendo la pista con saltos de 18 a 45 m
-  sorteados con el PRNG. Los primeros **300 m van limpios**, para que quien
-  nunca ha jugado pueda acomodarse.
+- Los obstáculos se colocan recorriendo la pista con saltos de 11 a 26 m
+  sorteados con el PRNG. Los primeros **30 m van limpios**: con el primer hueco
+  encima, el primer obstáculo aparece entre el segundo 3 y el 4.
 - **Nunca se bloquean los cuatro carriles a la vez**: un grupo ocupa uno o dos
   como mucho. Si el jugador no tuviera salida, la caída no mediría habilidad y
   el concurso sería impugnable.
+- **Entre dos vallas hay siempre 30 m como mínimo.** La densidad de la pista y
+  su dificultad se regulan por separado: la rampa premia y el lodo solo frena,
+  así que la pista puede ir llena sin ser injusta. La única que tumba es la
+  valla, y ahí sí hace falta margen de reacción: 30 m son casi un segundo
+  yendo a tope de turbo. Cuando el sorteo pide una valla demasiado pronto,
+  sale una rampa en su lugar.
 - La dificultad sube con la distancia: la probabilidad de que un obstáculo sea
   una valla pasa del 10 % al 35 % entre el principio y el final.
 
@@ -161,7 +174,7 @@ partidas y no solo las de los finalistas.
 
 | Obstáculo | Efecto | Recuperación |
 |---|---|---|
-| **Rampa** | Salto, con impulso proporcional a la velocidad. En el aire se endereza con arriba y abajo | Aterrizaje dentro de ±15,0°: sin penalización y +1,5 m/s. Fuera de rango: caída |
+| **Rampa** | Salto, con impulso proporcional a la velocidad, **+1 m** al contador y paso por encima de lo que venga. En el aire no hay nada que controlar | Siempre cae de pie, con +1,5 m/s de premio |
 | **Lodo** | Velocidad al 60 % mientras se está encima | Inmediata al salir |
 | **Valla / bache** | Caída del piloto | 120 ticks (2 s) inmóvil |
 
@@ -192,9 +205,13 @@ metros de diferencia que separan a quien solo acelera de quien además conduce.
 3. Al pulsarlo: el servidor emite `seed` y nonce, y arranca un **countdown
    3-2-1** en pantalla. El cronómetro no corre durante el countdown.
 4. Carrera de 90 s. El panel inferior muestra `DIST`, `TEMP` y `TIME`.
-5. Al terminar, el cliente envía el log de inputs. El servidor reejecuta,
-   calcula la distancia y la persiste.
-6. Pantalla final: piloto en podio, nombre y distancia recorrida debajo, y el
+5. Al agotarse el tiempo la pantalla se congela **1,2 s**: el reloj queda en
+   `0:00` y la moto vuelve al suelo en su pose normal, aunque el tiempo se
+   acabara en pleno salto o con el piloto tumbado. Sin esa pausa el último
+   valor legible del reloj era `0:01` y el fotograma de `0:00` pasaba de largo.
+6. El cliente envía el log de inputs. El servidor reejecuta, calcula la
+   distancia y la persiste.
+7. Pantalla final: piloto en podio, nombre y distancia recorrida debajo, y el
    mensaje de agradecimiento.
 
 ---
@@ -242,9 +259,10 @@ Segunda malla, por si algo se escapa de la reejecución:
 Los números de este documento son el punto de partida. Se afinan en E4 con
 pruebas reales de juego, sobre todo:
 
-- Densidad de ítems y obstáculos, que es lo que más mueve el rango de
-  distancias.
+- Densidad de ítems, que es lo que más mueve el rango de distancias. La de
+  obstáculos ya se subió una vez (huecos de 18–45 m a 11–26 m) a petición del
+  cliente.
 - Duración de la parada por sobrecalentamiento (2,5 s puede resultar muy duro en
   móvil).
-- Ventana de aterrizaje limpio (±15°), que define qué tan castigadas quedan las
-  rampas en pantalla pequeña.
+- Separación mínima entre vallas (30 m): es el mando de dificultad real ahora
+  que la densidad general y el castigo van por separado.

@@ -90,6 +90,17 @@ export const LODO_POR_MIL = 600;
 export const ITEM_METROS = 50;
 
 /**
+ * Metros que suma cada rampa saltada.
+ *
+ * Es un premio simbólico, no una fuente de distancia: con treinta y pico de
+ * rampas en una carrera buena son unos 35 m sobre más de dos mil. Sirve para
+ * que buscar la rampa se sienta recompensado además de por el impulso del
+ * aterrizaje, y para que el "+1" que sale volando le diga al jugador que el
+ * salto contó.
+ */
+export const RAMPA_METROS = 1;
+
+/**
  * Tramo limpio del arranque.
  *
  * El primer obstáculo no cae aquí sino tras el primer hueco, que mide entre 18

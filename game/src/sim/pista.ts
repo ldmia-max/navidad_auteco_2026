@@ -40,8 +40,26 @@ export interface Pista {
 }
 
 /** Separación mínima y máxima entre grupos de obstáculos, en mm. */
-const GAP_MIN = 18_000;
-const GAP_MAX = 45_000;
+const GAP_MIN = 11_000;
+const GAP_MAX = 26_000;
+
+/**
+ * Separación mínima entre dos grupos que contengan vallas, en mm.
+ *
+ * La pista puede ir tan llena como se quiera porque la rampa y el lodo no
+ * castigan: la rampa es un premio y el lodo solo frena. La única que tumba es
+ * la valla, así que el límite de dificultad se pone sobre ella y no sobre la
+ * densidad general.
+ *
+ * Con 30 m de separación, aun yendo a tope de turbo (32 m/s) queda casi un
+ * segundo entre una valla y la siguiente, y un cambio de carril cuesta ocho
+ * ticks. Una valla que llegara antes no mediría habilidad, y con un solo
+ * intento por persona eso no se puede permitir.
+ *
+ * Cuando el dado pide una valla demasiado pronto, sale una rampa en su lugar:
+ * la pista sigue igual de poblada y el jugador sale ganando.
+ */
+const SEPARACION_VALLAS = 30_000;
 
 /** Separación entre logos TVS. Promedio ~200 m, como dice el balanceo. */
 const GAP_ITEM_MIN = 150_000;
@@ -60,6 +78,7 @@ export function generarPista(seed: number): Pista {
 
   // --- Obstáculos ---------------------------------------------------------
   let cursor = ARRANQUE_LIMPIO_MM;
+  let posUltimaValla = -SEPARACION_VALLAS;
 
   while (cursor < PISTA_MM) {
     cursor += prng.rango(GAP_MIN, GAP_MAX);
@@ -86,6 +105,15 @@ export function generarPista(seed: number): Pista {
       tipo = TIPO_LODO;
     } else {
       tipo = TIPO_RAMPA;
+    }
+
+    // Vallas demasiado seguidas: se convierten en rampa.
+    if (tipo === TIPO_VALLA && cursor - posUltimaValla < SEPARACION_VALLAS) {
+      tipo = TIPO_RAMPA;
+    }
+
+    if (tipo === TIPO_VALLA) {
+      posUltimaValla = cursor;
     }
 
     const largo = tipo === TIPO_LODO ? LARGO_LODO : 0;

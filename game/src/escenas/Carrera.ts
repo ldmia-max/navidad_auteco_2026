@@ -62,6 +62,17 @@ const MAX_TICKS_POR_FRAME = 8;
 /** Cuánto dura en pantalla el "+50" de un bonus. */
 const TICKS_FLOTANTE = 45;
 
+/**
+ * Cuánto se queda la pantalla congelada al acabarse el tiempo.
+ *
+ * Sin esta pausa el reloj se leía como "0:01": el último segundo de carrera
+ * muestra 0:01 durante sesenta ticks y el 0:00 solo existe en el tick 5400,
+ * que pasaba directo al podio sin que diera tiempo de verlo. Ahora ese
+ * fotograma se sostiene un momento, con el reloj en 0:00 y la moto de vuelta
+ * en el suelo, y de ahí se va al podio.
+ */
+const MS_CONGELADO_FINAL = 1200;
+
 export interface DatosCarrera {
   seed: number;
   token: string;
@@ -75,6 +86,7 @@ export interface ResultadoCarrera {
   nombre: string;
   distancia: number;
   items: number;
+  rampas: number;
   caidas: number;
   sobrecalentamientos: number;
   entradas: string;
@@ -125,6 +137,7 @@ export class Carrera extends Phaser.Scene {
 
   // Para disparar sonidos cuando algo cambia entre un tick y el siguiente.
   private itemsPrevios = 0;
+  private rampasPrevias = 0;
   private caidasPrevias = 0;
   private sobrecalentamientosPrevios = 0;
   private enAirePrevio = false;
@@ -160,6 +173,7 @@ export class Carrera extends Phaser.Scene {
     this.cuadrosCambio = 0;
 
     this.itemsPrevios = 0;
+    this.rampasPrevias = 0;
     this.caidasPrevias = 0;
     this.sobrecalentamientosPrevios = 0;
     this.enAirePrevio = false;
@@ -245,7 +259,6 @@ export class Carrera extends Phaser.Scene {
     // Rótulos flotantes del bonus. Se reciclan; nunca coinciden muchos a la vez.
     for (let i = 0; i < 4; i++) {
       const t = new TextoPixel(this, -100, -100, p.crema, 'centro');
-      t.set(this.tema.textos.bonus);
       t.setVisible(false);
       t.setDepth(12);
       this.flotantes.push({ texto: t, ticks: 0, x: 0, y: 0 });
@@ -393,7 +406,13 @@ export class Carrera extends Phaser.Scene {
     if (e.items !== this.itemsPrevios) {
       sonido.recogerItem();
       this.itemsPrevios = e.items;
-      this.lanzarFlotante();
+      this.lanzarFlotante(this.tema.textos.bonus);
+    }
+
+    // Cada rampa saltada suma un metro y lo anuncia igual que el bonus.
+    if (e.rampas !== this.rampasPrevias) {
+      this.rampasPrevias = e.rampas;
+      this.lanzarFlotante(this.tema.textos.bonusRampa);
     }
 
     if (e.caidas !== this.caidasPrevias) {
@@ -449,6 +468,27 @@ export class Carrera extends Phaser.Scene {
 
   private pintarMoto(): void {
     const e = this.estado;
+
+    /*
+     * Se acabó el tiempo: la moto vuelve al suelo, derecha y en su pose
+     * normal. Dejar el fotograma final con el piloto por el aire o tumbado
+     * parece que la carrera se cortó a media maniobra.
+     */
+    if (this.terminada) {
+      const yFinal = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
+
+      this.moto.setTexture(TEX.moto);
+      this.moto.setAngle(0);
+      this.moto.setAlpha(1);
+      this.moto.setPosition(MOTO_X, yFinal);
+      this.sombra.setVisible(false);
+
+      for (const h of this.humo) {
+        h.setVisible(false);
+      }
+
+      return;
+    }
 
     // Interpolación visual entre carriles. La física ya está en el nuevo.
     if (this.cuadrosCambio > 0) {
@@ -580,16 +620,27 @@ export class Carrera extends Phaser.Scene {
    * reutiliza el más viejo: con cuatro sobra, porque los bonus están a 200 m
    * unos de otros.
    */
-  private lanzarFlotante(): void {
+  private lanzarFlotante(texto: string): void {
     const libre =
       this.flotantes.find((f) => f.ticks === 0) ??
       this.flotantes.reduce((a, b) => (a.ticks > b.ticks ? a : b));
 
     const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
+    let y = yCarril - 26;
+
+    /*
+     * Un bonus y una rampa pueden caer en el mismo tick. Si los dos rótulos
+     * salieran del mismo sitio se taparían y no se leería ninguno, así que el
+     * segundo arranca una línea más arriba.
+     */
+    while (this.flotantes.some((f) => f !== libre && f.ticks > 0 && Math.abs(f.y - y) < 9)) {
+      y -= 9;
+    }
 
     libre.ticks = TICKS_FLOTANTE;
     libre.x = MOTO_X;
-    libre.y = yCarril - 26;
+    libre.y = y;
+    libre.texto.set(texto);
     libre.texto.setVisible(true);
   }
 
@@ -666,15 +717,19 @@ export class Carrera extends Phaser.Scene {
 
     const e = this.estado;
 
-    this.datos.alTerminar({
+    const resultado: ResultadoCarrera = {
       token: this.datos.token,
       nombre: this.datos.nombre,
       distancia: distanciaMetros(e),
       items: e.items,
+      rampas: e.rampas,
       caidas: e.caidas,
       sobrecalentamientos: e.sobrecalentamientos,
       entradas: codificar(this.registro),
       ticks: e.tick,
-    });
+    };
+
+    // El podio espera a que se vea el último fotograma con el reloj en 0:00.
+    this.time.delayedCall(MS_CONGELADO_FINAL, () => this.datos.alTerminar(resultado));
   }
 }

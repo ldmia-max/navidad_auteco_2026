@@ -69,6 +69,8 @@ export interface Textos {
   unidadMetros: string;
   /** Lo que sube flotando al recoger un bonus. */
   bonus: string;
+  /** Lo que sube flotando al saltar una rampa. */
+  bonusRampa: string;
 }
 
 export interface Tema {
@@ -123,6 +125,7 @@ export const TEMA_POR_DEFECTO: Tema = {
     podioGracias: 'GRACIAS POR PARTICIPAR',
     unidadMetros: 'M',
     bonus: '+50',
+    bonusRampa: '+1',
   },
 };
 
