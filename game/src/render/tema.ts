@@ -28,10 +28,14 @@ export interface Paleta {
   grisClaro: number;
   amarillo: number;
   piel: number;
-  /** Azul del chasis de la moto, tal como lo dibujó el diseño. */
+  /** Azul del casco y el chasis, tal como lo dibujó el diseño. */
   azulMoto: number;
+  /** Rojo del diseño de la moto. Más encendido que el rojo del manual TVS. */
+  rojoMoto: number;
   /** Plata de la horquilla y el escape. */
   plata: number;
+  /** Plata clara de los reflejos. */
+  plataClara: number;
   /** Azul de las letras del logo TVS del bonus. */
   azulLogo: number;
 
@@ -87,8 +91,10 @@ export const TEMA_POR_DEFECTO: Tema = {
     grisClaro: 0x9a9a9a,
     amarillo: 0xf5c518,
     piel: 0xe8b38a,
-    azulMoto: 0x3f48cc,
-    plata: 0xc3c3c3,
+    azulMoto: 0x0070c0,
+    rojoMoto: 0xff0000,
+    plata: 0xa6a6a6,
+    plataClara: 0xe0e0e0,
     azulLogo: 0x156082,
 
     cielo: 0x4a90d9,

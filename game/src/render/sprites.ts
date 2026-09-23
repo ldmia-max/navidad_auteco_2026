@@ -14,51 +14,49 @@ import type { Sprite } from './pixeles';
 // ---------------------------------------------------------------------------
 // Moto y piloto, vista lateral, mirando a la derecha. Lienzo de 24×24.
 //
-// 24×24 es el TAMAÑO DE DISEÑO del proyecto: las poses nuevas se dibujan
-// directamente en esa matriz y entran sin remuestrear, que es lo único que
-// garantiza que no se distorsionen. Ver docs/arte-y-sonido.md.
+// Las dos primeras poses vienen de los diseños del cliente e importan a su
+// TAMAÑO NATIVO: llegan dibujadas en la matriz de 24×24 del proyecto, con un
+// encaje del 100 %, así que cada píxel dibujado es un píxel del juego y no se
+// pierde ninguno. Ver docs/arte-y-sonido.md.
 //
-// Las dos primeras poses llegaron a otra escala y hubo que ajustarlas al
-// importar. Lo que se compara para igualarlas no es el lienzo, que cambia con
-// el giro, sino la distancia entre los centros de las ruedas: 13,7 píxeles la
-// moto rodando y 13,8 la del salto.
+//   npm run arte:importar -- ../imagenes_apoyo/normal.png MOTO //     --tamano 24x24 --fondo auto --offset -4,-4 //     --mapa "ff9f00=.,ffffff=w,000000=n,0070c0=B,ff0000=e,a6a6a6=t,e0e0e0=T"
 //
-//   MOTO     conductor_y_moto_nuevo_diseño.png  --tamano 24x23 --offset 6,2
-//   WHEELIE  conductor_y_moto_salto_2.png       --tamano 25x24 --offset 3,0
+//   ... y lo mismo con Salto.png para MOTO_WHEELIE.
 //
-//   --fondo auto --mapa "ff9f00=.,ffffff=w,3f48cc=B,c3c3c3=t,d02a16=r,000000=n"
+// No se retocan a mano: si hay que cambiar algo, se cambia el PNG y se vuelve
+// a importar.
 //
 // Las tres van alineadas por abajo y tienen que medir lo mismo: la escena las
 // dibuja con origen (0.5, 1) sobre la línea del carril, y un cambio de tamaño
 // haría saltar la moto al cambiar de pose.
 // ---------------------------------------------------------------------------
 
-/** Rodando normal. */
+/** Rodando normal. Casco azul, para distinguirlo del traje blanco. */
 export const MOTO: Sprite = [
   '........................',
   '........................',
-  '........................',
-  '..........wwwww.........',
-  '.........wwwwww.........',
-  '.........wwwnnn.........',
-  '.........wwwnnn.........',
-  '.........wwwwww.........',
-  '.........nrrwww.........',
-  '........wwrrr...........',
-  '.......wwwrrw...........',
-  '.......wwwrrrrr.n.......',
-  '.......wwwwrrrnrn.......',
-  '.......wwww...ttn.......',
+  '..........BBBB..........',
+  '.........BBBBBB.........',
+  '.........BBBnnn.........',
+  '.........BBBBnn.........',
+  '........nnBBBBB.........',
+  '.......wwweeBBB.........',
+  '......wwwweee...........',
+  '......wwwweew...........',
+  '......wwwweeeee.n.......',
+  '......wwwwweeenen.......',
+  '......wwwww...ttn.......',
   '....BBBwwwww.BBtBBBB....',
   '.......nnwwwwBBtt.......',
   '....nnBBBnwwwBBBttnn....',
   '...nn.BBBnwwwBB.nt.nn...',
-  '..nn..BB.trrrn.nnt..nn..',
-  '..n..n..ttrrrn.n.tn..n..',
-  '..n..tttt.rrrr.n..t..n..',
-  '..nn...nn..rr..nn...nn..',
-  '...nn.nnn.......nn.nn...',
+  '..nn..BB.teeen.nnt..nn..',
+  '..n..n..tteeen.n.tn..n..',
+  '..n..tttt.eeee.n..t..n..',
+  '..nn...nn..nn..nn...nn..',
+  '...nn.nn........nn.nn...',
   '....nnn..........nnn....',
+  '........................',
 ];
 
 /**
@@ -66,30 +64,30 @@ export const MOTO: Sprite = [
  * se mantiene así todo el vuelo y vuelve a la normal al tocar el suelo.
  */
 export const MOTO_WHEELIE: Sprite = [
-  '....wwwww...............',
-  '...wwwwwww..............',
-  '...wwwwwww..............',
-  '...wwwwnnn..............',
-  '...wwwwwww..............',
-  '...nnrwwww.n............',
-  '...nnrrw.r.nn..B........',
-  '...wwrrrrrntnBBB........',
-  '...wwwrrrrtttB..nnn.....',
-  '...wwwwrr.BBttttnnnn....',
-  '...wwwww..BBBBtt....n...',
-  '....wwwwwwwBBBnntn..n...',
-  '....wwwwwwwBBBnntt..n...',
-  '....Bwnwwwwwn.nn....n...',
-  '...BBnBBnwwrrn.nn..nn...',
-  '..B..BBBnrrrrr.nnnnnn...',
-  '...nnBBB.trrrr....n.....',
-  '...nn.BBtt.rnn..........',
-  '...n..n.tt..............',
-  '...n..tttn..............',
-  '...n.....n..............',
-  '...nn...nn..............',
-  '....nnnnnn..............',
-  '.......n................',
+  '...BBBB.................',
+  '..BBBBBB................',
+  '..BBBnnn................',
+  '..BBBBnn................',
+  '...BBBBB..n....B........',
+  '..nwwBBB..en..B.........',
+  '..wweew..entnB..nnn.....',
+  '..wweeewee.Btttnn.nn....',
+  '..wwweeee..BBBtt...nn...',
+  '...wwweewwwwB.nttn..n...',
+  '...wwwwwwwwww.n..t..n...',
+  '....wwwwwwBww.nn...nn...',
+  '.....wwwnnBee..nn.nn....',
+  '.....BnnBBBee...nnn.....',
+  '....B..BBtteee..........',
+  '...B..BBtt..............',
+  '.....nnBtn..............',
+  '....nn..tnn.............',
+  '....n..nt.n.............',
+  '....n..tt.n.............',
+  '....nn...nn.............',
+  '.....nn.nn..............',
+  '......nnn...............',
+  '........................',
 ];
 
 /** Piloto en el suelo y la moto tumbada. Derivada; falta su diseño. */
@@ -109,10 +107,10 @@ export const MOTO_CAIDA: Sprite = [
   '.wwwnnnw................',
   '.wwwnnnw...BBBBBB.......',
   '..wwwww..BBBBttBBBB.....',
-  '..rrrrr.BBBtt....BB.....',
-  '.rrrrrrr................',
-  '.rrrrr..nnn.......nnn...',
-  '..rrr..nnnnn.....nnnnn..',
+  '..eeeee.BBBtt....BB.....',
+  '.eeeeeee................',
+  '.eeeee..nnn.......nnn...',
+  '..eee..nnnnn.....nnnnn..',
   '..w.w.nn.t.nn...nn.t.nn.',
   '......nn...nn...nn...nn.',
   '......nn.t.nn...nn.t.nn.',

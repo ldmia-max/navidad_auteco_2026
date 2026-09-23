@@ -17,8 +17,10 @@
     "piel": "#E8B38A",
 
     "_comentarioMoto": "Colores del diseño de la moto. azulMoto es el azul del chasis; para pasarlo al azul del manual TVS basta con poner #1F3A72.",
-    "azulMoto": "#3F48CC",
-    "plata": "#C3C3C3",
+    "azulMoto": "#0070C0",
+    "rojoMoto": "#FF0000",
+    "plata": "#A6A6A6",
+    "plataClara": "#E0E0E0",
     "azulLogo": "#156082",
 
     "cielo": "#4A90D9",
