@@ -12,62 +12,80 @@
 import type { Sprite } from './pixeles';
 
 // ---------------------------------------------------------------------------
-// Moto doble propósito con piloto, vista lateral, mirando a la derecha. 24×20.
+// Moto y piloto, vista lateral, mirando a la derecha. 24×23.
 //
-// Sigue la referencia de imagenes_apoyo/conductor_y_moto.png: casco rojo con
-// banda blanca, torso blanco con mangas rojas, chasis rojo y ruedas negras con
-// llanta clara. El piloto va de pie sobre los estribos, inclinado adelante.
+// MOTO viene del diseño del cliente
+// (imagenes_apoyo/conductor_y_moto_nuevo_diseño.png), importado píxel por
+// píxel con `npm run arte:importar`:
+//
+//   npm run arte:importar -- ../imagenes_apoyo/conductor_y_moto_nuevo_diseño.png \
+//     MOTO --tamano 24x23 --fondo auto --offset 6,2 \
+//     --mapa "ff9f00=.,ffffff=w,3f48cc=B,c3c3c3=t,d02a16=r,000000=n"
+//
+// No se retocó a mano: si hay que cambiarlo, se cambia el PNG y se vuelve a
+// importar. Las otras dos poses se derivaron de esta conservando sus formas y
+// colores, porque el diseño solo traía la de rodar.
 // ---------------------------------------------------------------------------
 
-/** Rodando normal. */
+/** Rodando normal. Importado del diseño, sin retoques. */
 export const MOTO: Sprite = [
-  '.........wwwww..........',
-  '........wwwwwww.........',
-  '........wrrrrrrw........',
-  '........wnnkkkrw........',
-  '.........wkkkw..........',
-  '.........rwwwr..........',
-  '.......rrwwwwwr.........',
-  '......rrrwwwwww....rr...',
-  '.....rrrwwwwwwwrrrrrr...',
-  '.....rrwwwwwwwwrr..ww...',
-  '....rrrwwwwwwww....ww...',
-  '....rrrrwwwwww.....w....',
-  '...rrrrrrwwrrrr....w....',
-  '..rrrrrrrrrrrrrrrrww....',
-  '...nnn...rrrrr...nnn....',
-  '..nnnnn.rrrrrrr.nnnnn...',
-  '.nnGGGnn.......nnGGGnn..',
-  '.nnGGGnn.......nnGGGnn..',
-  '..nnnnn.........nnnnn...',
-  '...nnn...........nnn....',
+  '........................',
+  '..........wwwww.........',
+  '.........wwwwww.........',
+  '.........wwwnnn.........',
+  '.........wwwnnn.........',
+  '.........wwwwww.........',
+  '.........nrrwww.........',
+  '........wwrrr...........',
+  '.......wwwrrw...........',
+  '.......wwwrrrrr.n.......',
+  '.......wwwwrrrnrn.......',
+  '.......wwww...ttn.......',
+  '....BBBwwwww.BBtBBBB....',
+  '.......nnwwwwBBtt.......',
+  '....nnBBBnwwwBBBttnn....',
+  '...nn.BBBnwwwBB.nt.nn...',
+  '..nn..BB.trrrn.nnt..nn..',
+  '..n..n..ttrrrn.n.tn..n..',
+  '..n..tttt.rrrr.n..t..n..',
+  '..nn...nn..rr..nn...nn..',
+  '...nn.nnn.......nn.nn...',
+  '....nnn..........nnn....',
+  '........................',
 ];
 
-/** Rueda delantera levantada al salir de una rampa. */
+/**
+ * Rueda delantera levantada al salir de una rampa.
+ *
+ * Misma moto con el tren delantero alzado y el piloto echado atrás.
+ */
 export const MOTO_WHEELIE: Sprite = [
-  '.........wwwww..........',
-  '........wwwwwww.........',
-  '........wrrrrrrw...nnn..',
-  '........wnnkkkrw..nnnnn.',
-  '.........wkkkw...nnGGGnn',
-  '.........rwwwr...nnGGGnn',
-  '.......rrwwwwwr...nnnnn.',
-  '......rrrwwwwww....nnn..',
-  '.....rrrwwwwwwwrrr......',
-  '.....rrwwwwwwwwrrww.....',
-  '....rrrwwwwwwww..ww.....',
-  '....rrrrwwwwww..ww......',
-  '...rrrrrrrrrrrrrr.......',
-  '..rrrrrrrrrrrrrr........',
-  '...nnn...rrrrr..........',
-  '..nnnnn.rrrrr...........',
-  '.nnGGGnn................',
-  '.nnGGGnn................',
-  '..nnnnn.................',
-  '...nnn..................',
+  '........................',
+  '..........wwwww.........',
+  '.........wwwwww.........',
+  '.........wwwnnn...nnn...',
+  '.........wwwnnn..nnnnn..',
+  '.........wwwwww.nntttnn.',
+  '.........nrrwww.nntttnn.',
+  '........wwrrr...nntttnn.',
+  '.......wwwrrw....nnnnn..',
+  '.......wwwrrrrr...nnn...',
+  '.......wwwwrrrnrn.......',
+  '.......wwww...ttn.......',
+  '....BBBwwwww.BBtBBB.....',
+  '.......nnwwwwBBtt.......',
+  '....nnBBBnwwwBBBtt......',
+  '...nn.BBBnwwwBB.nt......',
+  '..nn..BB.trrrn.nn.......',
+  '..n..n..ttrrrn.n........',
+  '..n..tttt.rrrr..........',
+  '..nn...nn..rr...........',
+  '...nn.nnn...............',
+  '....nnn.................',
+  '........................',
 ];
 
-/** Piloto en el suelo. La moto tumbada y el casco a un lado. */
+/** Piloto en el suelo y la moto tumbada. */
 export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
@@ -78,17 +96,20 @@ export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
   '........................',
-  '...rrrr.................',
-  '..rrwwrr.....rrrrrr.....',
-  '..rwkkwr...rrrrrrrrrr...',
-  '...wwww..rrrrrrrrrrrrr..',
-  '.wwwwww.................',
-  'wwwwwwww................',
-  '.wwrrww..nnn.......nnn..',
-  '..rrrr..nnnnn.....nnnnn.',
-  '..r..r.nnGGGnn...nnGGGnn',
-  '.......nnnnnnn...nnnnnnn',
+  '...wwwww................',
+  '..wwwnnnw...............',
+  '..wwwnnnw...BBBBBB......',
+  '...wwwww..BBBBttBBBB....',
+  '...rrrrr.BBBtt....BB....',
+  '..rrrrrrr...............',
+  '..rrrrr..nnn.......nnn..',
+  '...rrr..nnnnn.....nnnnn.',
+  '...w.w.nn.t.nn...nn.t.nn',
+  '.......nn...nn...nn...nn',
+  '.......nn.t.nn...nn.t.nn',
   '........nnnnn.....nnnnn.',
+  '.........nnn.......nnn..',
+  '........................',
 ];
 
 /** Humo del motor sobrecalentado. 8×8, se anima con alfa y escala. */

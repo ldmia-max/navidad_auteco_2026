@@ -44,6 +44,8 @@ export const LEYENDA: Record<string, keyof Paleta | null> = {
   M: 'lodoClaro',
   y: 'amarillo',
   k: 'piel',
+  B: 'azulMoto',
+  t: 'plata',
   s: 'cielo',
   S: 'cieloAlto',
 };

@@ -16,6 +16,10 @@
     "amarillo": "#F5C518",
     "piel": "#E8B38A",
 
+    "_comentarioMoto": "Colores del diseño de la moto. azulMoto es el azul del chasis; para pasarlo al azul del manual TVS basta con poner #1F3A72.",
+    "azulMoto": "#3F48CC",
+    "plata": "#C3C3C3",
+
     "cielo": "#4A90D9",
     "cieloAlto": "#2F6FB5",
     "verde": "#3AA93A",

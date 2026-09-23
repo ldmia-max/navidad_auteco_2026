@@ -66,6 +66,30 @@ obliga a decidir si se agrega al tema.
 transparente. Exportado como RGB o RGBA de 8 bits, que es lo que sale por
 defecto de cualquier editor de pixel art.
 
+**Si el diseño llega ampliado y comprimido**, que es lo habitual, hay tres
+opciones que lo resuelven:
+
+| Opción | Para qué |
+|---|---|
+| `--tamano 24x23` | Tamaño del sprite de salida |
+| `--fondo auto` | Detecta el color de lienzo y lo vuelve transparente |
+| `--offset 6,2` | Dónde empieza la rejilla, desde el origen de la imagen |
+| `--mapa "ffffff=w,3f48cc=B,..."` | Limita el emparejado a los colores con que se dibujó |
+
+Lo que más cuesta acertar es la rejilla. Si se desplaza medio píxel, las líneas
+de un solo píxel —los radios de una rueda, la horquilla— caen entre dos celdas
+y el voto mayoritario las borra. La forma de encontrarla es buscar el encaje
+que deja las celdas más uniformes: la rejilla correcta da celdas de un solo
+color, porque cada celda es un píxel del dibujo original.
+
+Para el diseño de la moto, ese encaje resultó ser 24×23 celdas de 10,00 px con
+origen en (6, 2), con un 98,3 % de uniformidad.
+
+El `--mapa` importa más de lo que parece. Sin él, un borde entre el naranja del
+lienzo y el negro de una rueda produce un marrón intermedio que la paleta
+empareja con "pista" o "piel", y el sprite aparece salpicado de colores que
+nadie dibujó.
+
 ### Verlo sin abrir el navegador
 
 ```bash

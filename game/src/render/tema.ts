@@ -28,6 +28,10 @@ export interface Paleta {
   grisClaro: number;
   amarillo: number;
   piel: number;
+  /** Azul del chasis de la moto, tal como lo dibujó el diseño. */
+  azulMoto: number;
+  /** Plata de la horquilla y el escape. */
+  plata: number;
 
   // Escenario
   cielo: number;
@@ -79,6 +83,8 @@ export const TEMA_POR_DEFECTO: Tema = {
     grisClaro: 0x9a9a9a,
     amarillo: 0xf5c518,
     piel: 0xe8b38a,
+    azulMoto: 0x3f48cc,
+    plata: 0xc3c3c3,
 
     cielo: 0x4a90d9,
     cieloAlto: 0x2f6fb5,
