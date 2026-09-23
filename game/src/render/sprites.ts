@@ -19,14 +19,14 @@ import type { Sprite } from './pixeles';
 // cambia el PNG y se vuelve a importar.
 //
 //   MOTO     conductor_y_moto_nuevo_diseño.png  --tamano 24x23 --offset 6,2
-//   WHEELIE  conductor_y_moto_salto.png         --tamano 23x26 --offset 2,-4
+//   WHEELIE  conductor_y_moto_salto_2.png       --tamano 25x24 --offset 3,0
 //
 //   --fondo auto --mapa "ff9f00=.,ffffff=w,3f48cc=B,c3c3c3=t,d02a16=r,000000=n"
 //
-// El salto se importa a 23×26 y no a su rejilla natural de 28×31 porque el
-// diseño está dibujado a mayor escala: a 28×31 su distancia entre ejes era de
-// 16,6 píxeles frente a los 13,7 de la moto rodando, un 21 % más grande, y en
-// pleno salto la moto crecía. A 23×26 quedan en 13,9 y 13,7.
+// El tamaño de importación del salto no es su rejilla natural sino el que hace
+// que las dos poses midan lo mismo. Lo que se compara no es el lienzo, que
+// cambia con el giro, sino la distancia entre los centros de las ruedas:
+// 13,8 píxeles el salto y 13,7 la moto rodando.
 //
 // Las tres comparten lienzo y van alineadas por abajo. Tienen que medir lo
 // mismo: la escena las dibuja con origen (0.5, 1) sobre la línea del carril, y
@@ -63,30 +63,30 @@ export const MOTO: Sprite = [
 
 /** En el aire, girada 35°, como en el diseño del salto. */
 export const MOTO_WHEELIE: Sprite = [
-  '....www...............',
   '...wwwww..............',
   '..wwwwwww.............',
-  '..wwwwnnn.............',
+  '..wwwwwww.............',
   '..wwwwnnn.............',
   '..wwwwwww.............',
-  '..nrrnwww.n...........',
-  '..nrrr..rrnn.BB.......',
-  '..wwrrrrrntnBB........',
-  '..wwwrrrrtttt.nnnnn...',
-  '..wwwww..BBtttt..nnn..',
-  '..wwwwww.BBBBnt....n..',
-  '...wwwwwwwBBBnntn..nn.',
-  '...wwwwwwwwB.n.....n..',
-  '...Bwnnwwwrnn.n...nn..',
-  '.BB.BBBnwrrrr.nnnnnn..',
-  '...nBBBttrrrr....n....',
-  '..nnBBBttrrrn.........',
-  '..nn.B.tt.............',
-  '..nn.nttnn............',
-  '..n..tt.n.............',
+  '..nnrwwww.n...........',
+  '..nnrrw.r.nn..B.......',
+  '..wwrrrrrntnBBB.......',
+  '..wwwrrrrtttB..nnn....',
+  '..wwwwrr.BBttttnnnn...',
+  '..wwwww..BBBBtt....n..',
+  '...wwwwwwwBBBnntn..n..',
+  '...wwwwwwwBBBnntt..n..',
+  '...Bwnwwwwwn.nn....n..',
+  '..BBnBBnwwrrn.nn..nn..',
+  '.B..BBBnrrrrr.nnnnnn..',
+  '..nnBBB.trrrr....n....',
+  '..nn.BBtt.rnn.........',
+  '..n..n.tt.............',
+  '..n..tttn.............',
+  '..n.....n.............',
   '..nn...nn.............',
   '...nnnnnn.............',
-  '....nnnn..............',
+  '......n...............',
 ];
 
 /** Piloto en el suelo y la moto tumbada. Derivada; falta su diseño. */
