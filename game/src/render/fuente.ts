@@ -146,15 +146,22 @@ export function pintarTexto(
 export class TextoPixel {
   private g: Phaser.GameObjects.Graphics;
   private ultimo = '\u0000';
+  private ancho = 0;
 
+  /*
+   * El texto se dibuja siempre en el origen del Graphics y la posición se
+   * aplica al objeto. Así mover un rótulo no obliga a repintarlo, que es lo
+   * que hace falta para los "+50" que suben flotando al recoger un bonus.
+   */
   constructor(
     escena: Phaser.Scene,
-    private x: number,
-    private y: number,
+    x: number,
+    y: number,
     private color: number,
     private alineacion: 'izquierda' | 'centro' | 'derecha' = 'izquierda'
   ) {
     this.g = escena.add.graphics();
+    this.g.setPosition(x, y);
   }
 
   set(texto: string): void {
@@ -162,18 +169,31 @@ export class TextoPixel {
       return;
     }
     this.ultimo = texto;
+    this.ancho = anchoTexto(texto);
 
     this.g.clear();
 
-    const ancho = anchoTexto(texto);
-    const x =
+    const dx =
       this.alineacion === 'centro'
-        ? this.x - Math.floor(ancho / 2)
+        ? -Math.floor(this.ancho / 2)
         : this.alineacion === 'derecha'
-          ? this.x - ancho
-          : this.x;
+          ? -this.ancho
+          : 0;
 
-    pintarTexto(this.g, texto, x, this.y, this.color);
+    pintarTexto(this.g, texto, dx, 0, this.color);
+  }
+
+  /** Ancho en píxeles del texto actual. */
+  get anchoActual(): number {
+    return this.ancho;
+  }
+
+  mover(x: number, y: number): void {
+    this.g.setPosition(x, y);
+  }
+
+  setAlpha(alfa: number): void {
+    this.g.setAlpha(alfa);
   }
 
   setVisible(visible: boolean): void {

@@ -290,15 +290,70 @@ if (fondoPedido === 'auto') {
   };
 }
 
-/** Un color cuenta como fondo si está razonablemente cerca del elegido. */
-function esFondo(r: number, g: number, b: number, a: number): boolean {
-  if (a < 128) {
-    return true;
-  }
+/** Un color coincide con el fondo elegido. */
+function colorDeFondo(r: number, g: number, b: number): boolean {
   if (!fondo) {
     return false;
   }
   return distancia(r, g, b, (fondo.r << 16) | (fondo.g << 8) | fondo.b) < 3000;
+}
+
+/**
+ * Marca como fondo solo lo que está CONECTADO al borde de la imagen.
+ *
+ * Quitar todos los píxeles de un color deja agujeros: el bonus TVS es una
+ * placa blanca sobre lienzo blanco, y borrar "el blanco" se llevaba también el
+ * interior de la placa. Una inundación desde el borde distingue el lienzo del
+ * blanco encerrado por el contorno rojo.
+ */
+const mascaraFondo = new Uint8Array(img.ancho * img.alto);
+
+if (fondo) {
+  const cola: number[] = [];
+  const encolar = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= img.ancho || y >= img.alto) return;
+    const p = y * img.ancho + x;
+    if (mascaraFondo[p]) return;
+    const i = p * 4;
+    if (img.px[i + 3] >= 128 && !colorDeFondo(img.px[i], img.px[i + 1], img.px[i + 2])) return;
+    mascaraFondo[p] = 1;
+    cola.push(p);
+  };
+
+  for (let x = 0; x < img.ancho; x++) {
+    encolar(x, 0);
+    encolar(x, img.alto - 1);
+  }
+  for (let y = 0; y < img.alto; y++) {
+    encolar(0, y);
+    encolar(img.ancho - 1, y);
+  }
+
+  while (cola.length > 0) {
+    const p = cola.pop() as number;
+    const x = p % img.ancho;
+    const y = (p - x) / img.ancho;
+    encolar(x + 1, y);
+    encolar(x - 1, y);
+    encolar(x, y + 1);
+    encolar(x, y - 1);
+  }
+
+  let cuantos = 0;
+  for (const v of mascaraFondo) cuantos += v;
+  console.log(
+    `Fondo conectado al borde: ${cuantos} px ` +
+      `(${((cuantos * 100) / mascaraFondo.length).toFixed(0)}% de la imagen)`
+  );
+}
+
+/** Si un píxel concreto es fondo: transparente, o lienzo pegado al borde. */
+function esFondo(x: number, y: number): boolean {
+  const i = (y * img.ancho + x) * 4;
+  if (img.px[i + 3] < 128) {
+    return true;
+  }
+  return mascaraFondo[y * img.ancho + x] === 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -319,10 +374,7 @@ let recX1 = img.ancho - 1;
 let recY1 = img.alto - 1;
 
 if (fondo) {
-  const esDelFondo = (x: number, y: number) => {
-    const i = (y * img.ancho + x) * 4;
-    return esFondo(img.px[i], img.px[i + 1], img.px[i + 2], img.px[i + 3]);
-  };
+  const esDelFondo = (x: number, y: number) => esFondo(x, y);
 
   const medioY = Math.floor(img.alto / 2);
   const medioX = Math.floor(img.ancho / 2);
@@ -406,10 +458,10 @@ for (let cy = 0; cy < altoSalida; cy++) {
         }
 
         const i = (y * img.ancho + x) * 4;
-        const [r, g, b, a] = [img.px[i], img.px[i + 1], img.px[i + 2], img.px[i + 3]];
+        const [r, g, b] = [img.px[i], img.px[i + 1], img.px[i + 2]];
         total++;
 
-        if (esFondo(r, g, b, a)) {
+        if (esFondo(x, y)) {
           votosFondo++;
           continue;
         }

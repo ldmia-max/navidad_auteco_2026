@@ -14,6 +14,7 @@ import Phaser from 'phaser';
 import { anchoTexto, pintarTexto } from './fuente';
 import { crearTextura, pintar, validar } from './pixeles';
 import * as S from './sprites';
+import { CARRILES_VISUALES, CARRIL_ALTO, PISTA_ALTO } from './medidas';
 import type { Paleta, Tema } from './tema';
 
 export const TEX = {
@@ -47,16 +48,9 @@ export const TEX = {
 /** Ancho de las franjas que se repiten. Múltiplo del ancho de pantalla. */
 const FRANJA = 320;
 
-/**
- * Alto de la pista y de cada carril.
- *
- * Carriles de 16 px: con los 13 anteriores la moto, de 20 px, ocupaba carril y
- * medio y costaba saber en cuál estaba. En el original la moto y el carril
- * miden casi lo mismo.
- */
-export const PISTA_ALTO = 64;
-export const CARRILES_VISUALES = 4;
-export const CARRIL_ALTO = PISTA_ALTO / CARRILES_VISUALES;
+// Las medidas viven en medidas.ts, que no importa Phaser y por eso puede
+// usarse desde el banco de pruebas.
+export { CARRILES_VISUALES, CARRIL_ALTO, PISTA_ALTO } from './medidas';
 
 function graficos(escena: Phaser.Scene): Phaser.GameObjects.Graphics {
   return escena.make.graphics({ x: 0, y: 0 }, false);

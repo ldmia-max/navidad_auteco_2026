@@ -19,6 +19,7 @@
     "_comentarioMoto": "Colores del diseño de la moto. azulMoto es el azul del chasis; para pasarlo al azul del manual TVS basta con poner #1F3A72.",
     "azulMoto": "#3F48CC",
     "plata": "#C3C3C3",
+    "azulLogo": "#156082",
 
     "cielo": "#4A90D9",
     "cieloAlto": "#2F6FB5",
@@ -45,6 +46,7 @@
     "cuentaYa": "YA!",
     "podioTitulo": "CONCURSO TVS",
     "podioGracias": "GRACIAS POR PARTICIPAR",
-    "unidadMetros": "M"
+    "unidadMetros": "M",
+    "bonus": "+50"
   }
 }

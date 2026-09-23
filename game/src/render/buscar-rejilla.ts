@@ -216,7 +216,8 @@ for (let W = 16; W <= 32; W++) {
       for (let oy = -4; oy <= 10; oy++) {
         const cw = (img.ancho - ox) / W;
         const ch = (img.alto - oy) / H;
-        if (cw < 5 || cw > 16 || ch < 5 || ch > 16) continue;
+        // Rango amplio: un diseño puede venir ampliado 8 veces o 40.
+        if (cw < 3 || cw > 48 || ch < 3 || ch > 48) continue;
 
         const s = puntuar(ox, oy, W, H, cw, ch);
         if (s > mejor.s) {

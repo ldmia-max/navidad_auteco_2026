@@ -11,6 +11,7 @@
  */
 
 import { anchoTexto, normalizar } from './fuente';
+import { CARRIL_ALTO } from './medidas';
 import { LEYENDA, validar } from './pixeles';
 import * as S from './sprites';
 import { TEMA_POR_DEFECTO, fusionarTema } from './tema';
@@ -68,10 +69,17 @@ const medidas = (s: readonly string[]) => `${s[0].length}×${s.length}`;
 comprobar('la moto y el wheelie miden igual', medidas(S.MOTO) === medidas(S.MOTO_WHEELIE), medidas(S.MOTO));
 comprobar('la moto y la caída miden igual', medidas(S.MOTO) === medidas(S.MOTO_CAIDA), medidas(S.MOTO_CAIDA));
 
-// Los obstáculos tienen que caber en un carril de 13 px de alto sin taparlo
-// todo, y el logo tiene que verse dentro del carril.
-comprobar('el logo TVS cabe en un carril', S.ITEM_TVS.length <= 14, `${S.ITEM_TVS.length} px de alto`);
-comprobar('la valla no tapa media pista', S.VALLA.length <= 16, `${S.VALLA.length} px de alto`);
+// El bonus no puede sobresalir del carril, o se confundiria con el de al lado.
+comprobar(
+  'el bonus TVS cabe en un carril',
+  S.ITEM_TVS.length <= CARRIL_ALTO,
+  `${S.ITEM_TVS.length} px de alto, carril de ${CARRIL_ALTO}`
+);
+comprobar(
+  'la valla no tapa dos carriles',
+  S.VALLA.length <= CARRIL_ALTO,
+  `${S.VALLA.length} px de alto`
+);
 
 // ===========================================================================
 console.log('\n=== Leyenda de colores ===');

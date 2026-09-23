@@ -245,7 +245,27 @@ Por eso el panel del juego se sale del ancho máximo de lectura de la página
 
 ---
 
-## 6. El salto
+## 6. Avisos y rótulos flotantes
+
+**El aviso del motor** va en letras rojas sobre una caja negra, y parpadea. La
+caja hace falta: el rojo solo no se lee ni sobre el verde del césped ni sobre
+la pista naranja.
+
+Los dos avisos parpadean, pero a distinta velocidad. El de motor parado, al
+doble: cuando ya no se puede hacer nada, el aviso tiene que verse más urgente
+que cuando todavía hay tiempo de soltar el turbo.
+
+**Al recoger un bonus** sube un `+50` flotando desde la moto, como las monedas
+del Mario: sube catorce píxeles en tres cuartos de segundo y se desvanece en la
+segunda mitad del recorrido. Hay cuatro rótulos que se reciclan, de sobra
+porque los bonus están a unos 200 m unos de otros.
+
+El texto sale de `theme.json`, así que cambiar el `+50` por otra cosa no obliga
+a recompilar.
+
+---
+
+## 7. El salto
 
 La moto sube a la rampa girada, **se mantiene girada todo el vuelo** y vuelve a
 la posición normal al tocar el suelo. La pose de salto se muestra tal como se
@@ -262,7 +282,7 @@ encima de lo que venga y se cae de pie con un pequeño impulso.
 
 ---
 
-## 7. Cambio de carril
+## 8. Cambio de carril
 
 La moto se desliza entre carriles durante 7 cuadros y se inclina mientras lo
 hace, como en el original.
@@ -278,7 +298,7 @@ simulación.
 
 ---
 
-## 8. Dos diseños tienen que estar a la misma escala
+## 9. Dos diseños tienen que estar a la misma escala
 
 Cuando llegan varias poses del mismo objeto dibujadas por separado, casi nunca
 vienen al mismo tamaño. Es lo que pasó con la moto: la pose de salto, a su
@@ -302,7 +322,7 @@ del salto ya inclinada hacia abajo.
 
 ---
 
-## 9. Errores que ya se cometieron
+## 10. Errores que ya se cometieron
 
 Quedan anotados porque son fáciles de repetir:
 
@@ -319,6 +339,10 @@ Quedan anotados porque son fáciles de repetir:
 - **Estimar un ángulo a ojo.** El salto parecía de 45° y era de 35,6°. Medirlo
   cuesta un minuto y evita que la moto salga del salto ya cabeceando.
 - **Dar por hecho que dos diseños vienen a la misma escala.** No vienen.
+- **Quitar un color de fondo en toda la imagen.** El bonus TVS es una placa
+  blanca sobre lienzo blanco: borrar "el blanco" se llevaba también el interior
+  de la placa. El importador inunda desde el borde, así distingue el lienzo del
+  blanco encerrado por el contorno.
 
 Casi todos se detectan mirando `npm run arte:png`. Conviene hacerlo antes de
 dar por bueno un cambio de arte.

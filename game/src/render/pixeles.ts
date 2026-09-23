@@ -46,6 +46,7 @@ export const LEYENDA: Record<string, keyof Paleta | null> = {
   k: 'piel',
   B: 'azulMoto',
   t: 'plata',
+  l: 'azulLogo',
   s: 'cielo',
   S: 'cieloAlto',
 };

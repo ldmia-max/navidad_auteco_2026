@@ -197,26 +197,31 @@ export const VALLA: Sprite = [
 ];
 
 /**
- * Logo TVS coleccionable. 14×14.
+ * Bonus TVS coleccionable. 18×16.
  *
- * La letra del logo sobre una placa blanca, sin el caballo, como se pidió. La
- * T va con la inclinación del original.
+ * Importado del diseño del cliente (imagenes_apoyo/Bonus_TVS.png), que llega
+ * en una rejilla de 22×19 con un encaje del 100 %. Se reduce a 18×16 para que
+ * quepa en un carril, que mide 16 px, sin que las letras dejen de leerse.
+ *
+ *   npm run arte:importar -- ../imagenes_apoyo/Bonus_TVS.png ITEM_TVS  *     --tamano 18x16 --fondo auto --offset -4,-4  *     --mapa "ffffff=w,ff0000=r,156082=l"
  */
 export const ITEM_TVS: Sprite = [
-  '...wwwwwwww...',
-  '..wwwwwwwwww..',
-  '.wwwwwwwwwwww.',
-  'wwwwwwwwwwwwww',
-  'ww..aaaaaaa.ww',
-  'ww.aaaaaaaa.ww',
-  'ww....aaa...ww',
-  'ww....aaa...ww',
-  'ww...aaa....ww',
-  'ww...aaa....ww',
-  'wwww.aa...wwww',
-  '.wwwwwwwwwwww.',
-  '..wwwwwwwwww..',
-  '...wwwwwwww...',
+  '..................',
+  '.....rrrrrrrr.....',
+  '....rwwwwwwwwr....',
+  '...rrwwwwwwwwwr...',
+  '.rrrwwwwwwwwwwrrr.',
+  '.rwwwwwwwwwwwwwwr.',
+  '.rwlllwlwwwwlllwr.',
+  '.rwwlwwlwwwwlwwwr.',
+  '.rwwlwwwlwlwwwlwr.',
+  '.rwwlwwwwlwwlllwr.',
+  '.rwwwwwwwwwwwwwwr.',
+  '.rrrwwwwwwwwwwrrr.',
+  '...rrwwwwwwwwrr...',
+  '....rrwwwwwwwr....',
+  '.....rrrrrrrr.....',
+  '..................',
 ];
 
 /** Sombra de la moto en el aire. 14×4. */

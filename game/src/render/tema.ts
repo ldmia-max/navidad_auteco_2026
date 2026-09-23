@@ -32,6 +32,8 @@ export interface Paleta {
   azulMoto: number;
   /** Plata de la horquilla y el escape. */
   plata: number;
+  /** Azul de las letras del logo TVS del bonus. */
+  azulLogo: number;
 
   // Escenario
   cielo: number;
@@ -61,6 +63,8 @@ export interface Textos {
   podioTitulo: string;
   podioGracias: string;
   unidadMetros: string;
+  /** Lo que sube flotando al recoger un bonus. */
+  bonus: string;
 }
 
 export interface Tema {
@@ -85,6 +89,7 @@ export const TEMA_POR_DEFECTO: Tema = {
     piel: 0xe8b38a,
     azulMoto: 0x3f48cc,
     plata: 0xc3c3c3,
+    azulLogo: 0x156082,
 
     cielo: 0x4a90d9,
     cieloAlto: 0x2f6fb5,
@@ -111,6 +116,7 @@ export const TEMA_POR_DEFECTO: Tema = {
     podioTitulo: 'CONCURSO TVS',
     podioGracias: 'GRACIAS POR PARTICIPAR',
     unidadMetros: 'M',
+    bonus: '+50',
   },
 };
 

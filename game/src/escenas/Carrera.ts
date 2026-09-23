@@ -24,17 +24,10 @@ import { generarPista, type Pista } from '../sim/pista';
 import { crearEstado, distanciaMetros, paso, segundosRestantes, type Estado } from '../sim/simulacion';
 import { TextoPixel } from '../render/fuente';
 import type { Tema } from '../render/tema';
-import { CARRIL_ALTO, PISTA_ALTO, TEX, crearPanel, crearTexturas } from '../render/texturas';
+import { ALTO, ANCHO, CARRIL_ALTO, PANEL_ALTO, PANEL_Y, PISTA_ALTO, PISTA_Y } from '../render/medidas';
+import { TEX, crearPanel, crearTexturas } from '../render/texturas';
 
-export const ANCHO = 320;
-export const ALTO = 180;
-
-/** Dónde empieza la pista en vertical. */
-const PISTA_Y = 82;
-
-/** Panel inferior. */
-const PANEL_Y = PISTA_Y + PISTA_ALTO;
-const PANEL_ALTO = ALTO - PANEL_Y;
+export { ALTO, ANCHO };
 
 /** La moto se queda quieta en pantalla y el mundo se mueve. */
 const MOTO_X = 74;
@@ -65,6 +58,9 @@ const CUADROS_CAMBIO_CARRIL = 7;
  * exactamente 5400 ticks: lo que se estira es el reloj de pared, no la carrera.
  */
 const MAX_TICKS_POR_FRAME = 8;
+
+/** Cuánto dura en pantalla el "+50" de un bonus. */
+const TICKS_FLOTANTE = 45;
 
 export interface DatosCarrera {
   seed: number;
@@ -116,7 +112,11 @@ export class Carrera extends Phaser.Scene {
   private textoTiempo!: TextoPixel;
   private barraTemp!: Phaser.GameObjects.Rectangle;
   private avisoMotor!: TextoPixel;
+  private avisoFondo!: Phaser.GameObjects.Rectangle;
   private textoCuenta!: TextoPixel;
+
+  /** Rótulos "+50" que suben flotando al recoger un bonus. */
+  private flotantes: Array<{ texto: TextoPixel; ticks: number; x: number; y: number }> = [];
 
   // Interpolación visual del cambio de carril.
   private carrilDibujado = 1;
@@ -153,6 +153,7 @@ export class Carrera extends Phaser.Scene {
     this.obstaculos = [];
     this.items = [];
     this.humo = [];
+    this.flotantes = [];
 
     this.carrilDibujado = this.estado.carril;
     this.carrilAnterior = this.estado.carril;
@@ -229,9 +230,26 @@ export class Carrera extends Phaser.Scene {
     this.add.rectangle(cx - 31, PANEL_Y + 14, 62, 8, p.tempFria).setOrigin(0, 0);
     this.barraTemp = this.add.rectangle(cx - 31, PANEL_Y + 14, 0, 8, p.tempCaliente).setOrigin(0, 0);
 
-    this.avisoMotor = new TextoPixel(this, cx, PISTA_Y - 12, p.blanco, 'centro');
+    /*
+     * Aviso del motor: letras rojas sobre una caja negra.
+     * El rojo solo no se leería sobre el verde del césped ni sobre la pista.
+     */
+    this.avisoFondo = this.add.rectangle(cx, PISTA_Y - 13, 10, 11, p.negro).setOrigin(0.5, 0);
+    this.avisoFondo.setDepth(9);
+    this.avisoFondo.setVisible(false);
+
+    this.avisoMotor = new TextoPixel(this, cx, PISTA_Y - 11, p.rojo, 'centro');
     this.avisoMotor.setVisible(false);
     this.avisoMotor.setDepth(10);
+
+    // Rótulos flotantes del bonus. Se reciclan; nunca coinciden muchos a la vez.
+    for (let i = 0; i < 4; i++) {
+      const t = new TextoPixel(this, -100, -100, p.crema, 'centro');
+      t.set(this.tema.textos.bonus);
+      t.setVisible(false);
+      t.setDepth(12);
+      this.flotantes.push({ texto: t, ticks: 0, x: 0, y: 0 });
+    }
   }
 
   private construirControles(): void {
@@ -375,6 +393,7 @@ export class Carrera extends Phaser.Scene {
     if (e.items !== this.itemsPrevios) {
       sonido.recogerItem();
       this.itemsPrevios = e.items;
+      this.lanzarFlotante();
     }
 
     if (e.caidas !== this.caidasPrevias) {
@@ -424,6 +443,7 @@ export class Carrera extends Phaser.Scene {
 
     this.pintarMoto();
     this.pintarPista();
+    this.pintarFlotantes();
     this.pintarPanel();
   }
 
@@ -553,6 +573,45 @@ export class Carrera extends Phaser.Scene {
     }
   }
 
+  /**
+   * Suelta un "+50" sobre la moto, como las monedas del Mario.
+   *
+   * Sube unos píxeles mientras se desvanece. Si no hay ninguno libre se
+   * reutiliza el más viejo: con cuatro sobra, porque los bonus están a 200 m
+   * unos de otros.
+   */
+  private lanzarFlotante(): void {
+    const libre =
+      this.flotantes.find((f) => f.ticks === 0) ??
+      this.flotantes.reduce((a, b) => (a.ticks > b.ticks ? a : b));
+
+    const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
+
+    libre.ticks = TICKS_FLOTANTE;
+    libre.x = MOTO_X;
+    libre.y = yCarril - 26;
+    libre.texto.setVisible(true);
+  }
+
+  private pintarFlotantes(): void {
+    for (const f of this.flotantes) {
+      if (f.ticks <= 0) {
+        continue;
+      }
+
+      f.ticks--;
+      const avance = 1 - f.ticks / TICKS_FLOTANTE;
+
+      f.texto.mover(f.x, Math.round(f.y - avance * 14));
+      // Opaco durante la primera mitad y luego se desvanece.
+      f.texto.setAlpha(avance < 0.5 ? 1 : 2 - avance * 2);
+
+      if (f.ticks === 0) {
+        f.texto.setVisible(false);
+      }
+    }
+  }
+
   private pintarPanel(): void {
     const e = this.estado;
     const t = this.tema.textos;
@@ -564,15 +623,29 @@ export class Carrera extends Phaser.Scene {
 
     this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * 62);
 
+    /*
+     * Los dos avisos parpadean. El de motor parado, al doble de velocidad:
+     * cuando ya no se puede hacer nada, el aviso tiene que verse más urgente
+     * que cuando todavía hay tiempo de soltar el turbo.
+     */
     if (e.sobrecalentado > 0) {
-      this.avisoMotor.setVisible(true);
       this.avisoMotor.set(t.avisoSobrecalentado);
+      this.mostrarAviso(Math.floor(e.tick / 5) % 2 === 0);
     } else if (e.temp > TEMP_MAX * 0.8) {
-      // Parpadea, para distinguirlo del aviso fijo de motor parado.
       this.avisoMotor.set(t.avisoCaliente);
-      this.avisoMotor.setVisible(Math.floor(e.tick / 10) % 2 === 0);
+      this.mostrarAviso(Math.floor(e.tick / 10) % 2 === 0);
     } else {
-      this.avisoMotor.setVisible(false);
+      this.mostrarAviso(false);
+    }
+  }
+
+  /** Enseña u oculta el aviso del motor con su caja de fondo. */
+  private mostrarAviso(visible: boolean): void {
+    this.avisoMotor.setVisible(visible);
+    this.avisoFondo.setVisible(visible);
+
+    if (visible) {
+      this.avisoFondo.width = this.avisoMotor.anchoActual + 6;
     }
   }
 
