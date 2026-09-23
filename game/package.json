@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "sim": "tsx src/sim/banco-pruebas.ts",
     "arte": "tsx src/render/banco-arte.ts",
-    "arte:png": "tsx src/render/exportar-png.ts"
+    "arte:png": "tsx src/render/exportar-png.ts",
+    "arte:importar": "tsx src/render/importar-png.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"

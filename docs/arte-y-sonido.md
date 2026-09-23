@@ -44,6 +44,28 @@ de la leyenda y que se respeten los tamaños de los que depende el juego (por
 ejemplo, la moto y el wheelie tienen que medir igual o la moto daría un salto
 al cambiar de textura).
 
+### Traer un diseño desde un PNG
+
+Cuando alguien entrega un diseño hecho en un editor de pixel art, no se
+transcribe a ojo:
+
+```bash
+cd game && npm run arte:importar -- ruta/al/diseño.png MOTO
+```
+
+Lee la imagen píxel por píxel, empareja cada color con el más cercano de la
+paleta e imprime el bloque listo para pegar en `sprites.ts`. Así el sprite
+queda exactamente como el diseño, no como una interpretación de él.
+
+Avisa de dos cosas que arruinan un sprite: que la imagen traiga demasiados
+colores (señal de que se dibujó grande y se redujo, y los bordes quedaron con
+antialias) y que algún color no tenga equivalente cercano en la paleta, lo que
+obliga a decidir si se agrega al tema.
+
+**Qué entregar:** PNG a tamaño real, sin antialias, con colores planos y fondo
+transparente. Exportado como RGB o RGBA de 8 bits, que es lo que sale por
+defecto de cualquier editor de pixel art.
+
 ### Verlo sin abrir el navegador
 
 ```bash
