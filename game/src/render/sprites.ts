@@ -197,31 +197,32 @@ export const VALLA: Sprite = [
 ];
 
 /**
- * Bonus TVS coleccionable. 18×16.
+ * Bonus TVS coleccionable. 19×16.
  *
- * Importado del diseño del cliente (imagenes_apoyo/Bonus_TVS.png), que llega
- * en una rejilla de 22×19 con un encaje del 100 %. Se reduce a 18×16 para que
- * quepa en un carril, que mide 16 px, sin que las letras dejen de leerse.
+ * Importado del diseño del cliente (imagenes_apoyo/Bonus_TVS_2.png) a su
+ * tamaño nativo: el diseño llega en una rejilla de 19×16 con un encaje del
+ * 100 %, y 16 px es justo el alto de un carril, así que entra sin remuestrear
+ * y no se pierde ni un píxel.
  *
- *   npm run arte:importar -- ../imagenes_apoyo/Bonus_TVS.png ITEM_TVS  *     --tamano 18x16 --fondo auto --offset -4,-4  *     --mapa "ffffff=w,ff0000=r,156082=l"
+ *   npm run arte:importar -- ../imagenes_apoyo/Bonus_TVS_2.png ITEM_TVS  *     --tamano 19x16 --fondo auto --offset -4,-4  *     --mapa "ffffff=w,ff0000=r,156082=l"
  */
 export const ITEM_TVS: Sprite = [
-  '..................',
-  '.....rrrrrrrr.....',
-  '....rwwwwwwwwr....',
-  '...rrwwwwwwwwwr...',
-  '.rrrwwwwwwwwwwrrr.',
-  '.rwwwwwwwwwwwwwwr.',
-  '.rwlllwlwwwwlllwr.',
-  '.rwwlwwlwwwwlwwwr.',
-  '.rwwlwwwlwlwwwlwr.',
-  '.rwwlwwwwlwwlllwr.',
-  '.rwwwwwwwwwwwwwwr.',
-  '.rrrwwwwwwwwwwrrr.',
-  '...rrwwwwwwwwrr...',
-  '....rrwwwwwwwr....',
-  '.....rrrrrrrr.....',
-  '..................',
+  '...................',
+  '....rrrrrrrrrrr....',
+  '....rwwwwwwwwwr....',
+  '...rrwwwwwwwwwrr...',
+  '.rrrwwwwwwwwwwwrrr.',
+  '.rwwwwwwwwwwwwwwwr.',
+  '.rwlllwlwwwlwlllwr.',
+  '.rwwlwwlwwwlwlwwwr.',
+  '.rwwlwwwlwlwwwwlwr.',
+  '.rwwlwwwwlwwwlllwr.',
+  '.rwwwwwwwwwwwwwwwr.',
+  '.rrrwwwwwwwwwwwwrr.',
+  '...rrwwwwwwwwwwrr..',
+  '....rrwwwwwwwwrr...',
+  '.....rrrrrrrrrr....',
+  '...................',
 ];
 
 /** Sombra de la moto en el aire. 14×4. */
