@@ -62,37 +62,16 @@ export const GRAVEDAD = 25000;
 /** Impulso vertical al pisar una rampa, en milésimas de la velocidad. */
 export const IMPULSO_POR_MIL = 260;
 
-/** Cuánto gira la moto por tick mientras está en el aire. */
-export const PITCH_POR_TICK = 25;
-
 /**
- * Con cuánta inclinación sale la moto de una rampa, en decigrados.
+ * Premio por aterrizar.
  *
- * Coincide con la inclinación que trae dibujada la pose de salto, para que al
- * despegar se vea exactamente como el diseño. Antes salía a cero y la escena
- * tenía que enderezar el dibujo, con lo que la moto aparecía horizontal y
- * alargada en pleno salto.
+ * El salto no tiene control de inclinación: la moto sale de la rampa girada,
+ * se mantiene así todo el vuelo y cae de pie. Hubo una versión con ángulo de
+ * aterrizaje, y se quitó porque el dibujo del salto tiene que verse fijo
+ * durante el vuelo: si el ángulo no se puede ver, castigar por él produce
+ * caídas que el jugador no entiende, y con un solo intento eso no se puede
+ * permitir.
  */
-export const PITCH_LANZAMIENTO = 350;
-
-/**
- * Cuánto se endereza la moto por tick cuando el jugador no toca nada.
- *
- * Sin esto, salir de la rampa a 45° condenaría a caerse a quien no sepa que
- * hay que corregir, y en un concurso de un solo intento con público que nunca
- * ha jugado eso no es dificultad, es una trampa. Enderezándose sola, quien no
- * hace nada aterriza bien; quien quiera puede aguantar el morro arriba o
- * bajarlo antes, que es donde está la habilidad.
- */
-export const PITCH_AUTONIVELA = 25;
-
-/** Tope de inclinación: ±90,0°. */
-export const PITCH_MAX = 900;
-
-/** Ventana de aterrizaje limpio: ±15,0°. */
-export const PITCH_ATERRIZAJE_OK = 150;
-
-/** Premio por aterrizar plano. */
 export const BOOST_ATERRIZAJE = 1500;
 
 // ---------------------------------------------------------------------------
@@ -110,8 +89,18 @@ export const LODO_POR_MIL = 600;
 /** Metros que suma cada logo TVS recogido. */
 export const ITEM_METROS = 50;
 
-/** Los primeros 300 m van limpios, para que el jugador se acomode. */
-export const ARRANQUE_LIMPIO_MM = 300_000;
+/**
+ * Tramo limpio del arranque.
+ *
+ * El primer obstáculo no cae aquí sino tras el primer hueco, que mide entre 18
+ * y 45 m: con 30 m de arranque limpio, aparece entre los 48 y los 75 m. Y
+ * arrancando de cero la moto está en 45 m al tercer segundo y en 67 al cuarto,
+ * así que el primer obstáculo llega entre el segundo 3 y el 4.
+ *
+ * Los 300 m de la primera versión dejaban trece segundos sin que pasara nada,
+ * que en una carrera de noventa es una eternidad.
+ */
+export const ARRANQUE_LIMPIO_MM = 30_000;
 
 /**
  * Cuánta pista se genera. Por encima del tope de plausibilidad (3100 m) para

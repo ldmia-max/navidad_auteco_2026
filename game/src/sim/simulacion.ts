@@ -25,11 +25,6 @@ import {
   IMPULSO_POR_MIL,
   ITEM_METROS,
   LODO_POR_MIL,
-  PITCH_ATERRIZAJE_OK,
-  PITCH_AUTONIVELA,
-  PITCH_LANZAMIENTO,
-  PITCH_MAX,
-  PITCH_POR_TICK,
   TEMP_MAX,
   TEMP_NORMAL,
   TEMP_SUELTO,
@@ -68,8 +63,6 @@ export interface Estado {
   altura: number;
   /** Velocidad vertical, en mm/s. */
   velY: number;
-  /** Inclinación en el aire, en decigrados. */
-  inclinacion: number;
   /** Logos TVS recogidos. */
   items: number;
   /** Veces que se fue al suelo. */
@@ -96,7 +89,6 @@ export function crearEstado(): Estado {
     enAire: false,
     altura: 0,
     velY: 0,
-    inclinacion: 0,
     items: 0,
     caidas: 0,
     sobrecalentamientos: 0,
@@ -158,28 +150,13 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
   }
 
   /*
-   * Vuelo y aterrizaje.
+   * Vuelo.
    *
-   * Arriba y abajo hacen dos cosas según dónde esté la moto: en el suelo
-   * cambian de carril, en el aire enderezan. Es como funciona el original y
-   * deja el mando en dos botones y una cruz, que es lo que cabe en la pantalla
-   * de un celular.
+   * En el aire no hay nada que controlar: la moto sale girada de la rampa, se
+   * mantiene así y cae de pie con un pequeño impulso. El salto es una
+   * oportunidad —se pasa por encima de lo que venga— y no un riesgo.
    */
   if (estado.enAire) {
-    const subir = tiene(entrada, BIT_ARRIBA);
-    const bajar = tiene(entrada, BIT_ABAJO);
-
-    if (bajar) {
-      estado.inclinacion = Math.max(-PITCH_MAX, estado.inclinacion - PITCH_POR_TICK);
-    } else if (subir) {
-      estado.inclinacion = Math.min(PITCH_MAX, estado.inclinacion + PITCH_POR_TICK);
-    } else if (estado.inclinacion > 0) {
-      // Sin tocar nada la moto se endereza sola.
-      estado.inclinacion = Math.max(0, estado.inclinacion - PITCH_AUTONIVELA);
-    } else if (estado.inclinacion < 0) {
-      estado.inclinacion = Math.min(0, estado.inclinacion + PITCH_AUTONIVELA);
-    }
-
     estado.velY -= div(GRAVEDAD, TPS);
     estado.altura += div(estado.velY, TPS);
 
@@ -187,16 +164,7 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
       estado.altura = 0;
       estado.enAire = false;
       estado.velY = 0;
-
-      if (Math.abs(estado.inclinacion) <= PITCH_ATERRIZAJE_OK) {
-        estado.vel = Math.min(V_MAX_TURBO, estado.vel + BOOST_ATERRIZAJE);
-      } else {
-        estado.caido = TICKS_CAIDA;
-        estado.caidas++;
-        estado.vel = 0;
-      }
-
-      estado.inclinacion = 0;
+      estado.vel = Math.min(V_MAX_TURBO, estado.vel + BOOST_ATERRIZAJE);
     }
   }
 
@@ -276,9 +244,6 @@ function avanzar(estado: Estado, pista: Pista): void {
       estado.enAire = true;
       estado.velY = div(estado.vel * IMPULSO_POR_MIL, 1000);
       estado.altura = 1;
-      // La rampa levanta el morro: así se ve al despegar y hay que bajarlo
-      // antes de aterrizar, o dejar que se enderece solo.
-      estado.inclinacion = PITCH_LANZAMIENTO;
     } else if (obs.tipo === TIPO_LODO) {
       estado.lodoHasta = obs.pos + obs.largo;
     } else if (obs.tipo === TIPO_VALLA) {

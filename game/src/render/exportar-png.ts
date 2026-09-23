@@ -14,7 +14,7 @@
 
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { anchoTexto, pintarTexto as pintarTextoFuente } from './fuente';
+import { pintarTexto as pintarTextoFuente } from './fuente';
 import { LEYENDA } from './pixeles';
 import * as S from './sprites';
 import { TEMA_POR_DEFECTO, type Paleta } from './tema';
@@ -458,54 +458,7 @@ function maquetaPodio(): Lienzo {
 const destino = new URL('../../salida-arte/', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 mkdirSync(destino, { recursive: true });
 
-/**
- * Cómo se ve la pose de salto a lo largo del vuelo.
- *
- * La escena la gira restándole los 45° que trae dibujada, así que al despegar
- * se ve como el diseño y al enderezarse queda horizontal, que es la señal de
- * aterrizaje limpio. Esta tira permite comprobarlo sin abrir el navegador.
- */
-function tiraSalto(): Lienzo {
-  const ancho = S.MOTO_WHEELIE[0].length;
-  const alto = S.MOTO_WHEELIE.length;
-
-  const base = new Lienzo(ancho, alto);
-  base.sprite(S.MOTO_WHEELIE, P, 0, 0);
-
-  // Inclinación en decigrados y el ángulo que aplica la escena.
-  const momentos: Array<[string, number]> = [
-    ['DESPEGUE', 350],
-    ['SUBIENDO', 250],
-    ['MEDIO', 150],
-    ['PLANO', 0],
-    ['MORRO ABAJO', -300],
-  ];
-
-  // La celda tiene que caber la etiqueta más larga, o los textos se solapan.
-  const celda = Math.max(ancho + 4, ...momentos.map(([e]) => anchoTexto(e) + 4));
-  const l = new Lienzo(celda * momentos.length, alto + 12, 0x303030);
-
-  momentos.forEach(([etiqueta, incl], i) => {
-    const girada = base.rotar(-incl / 10 + 35);
-    for (let y = 0; y < alto; y++) {
-      for (let x = 0; x < ancho; x++) {
-        const j = (y * ancho + x) * 4;
-        if (girada.datos[j + 3] === 0) continue;
-        l.punto(
-          (girada.datos[j] << 16) | (girada.datos[j + 1] << 8) | girada.datos[j + 2],
-          i * celda + Math.floor((celda - ancho) / 2) + x,
-          y
-        );
-      }
-    }
-    l.texto(etiqueta, i * celda + 1, alto + 1, 0xffffff);
-  });
-
-  return l;
-}
-
 const salidas: Array<[string, Lienzo, number]> = [
-  ['salto.png', tiraSalto(), 4],
   ['sprites.png', hojaSprites(), 4],
   ['pantalla-carrera.png', maquetaPantalla(), 3],
   ['pantalla-podio.png', maquetaPodio(), 3],

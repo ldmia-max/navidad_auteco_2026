@@ -44,6 +44,36 @@ de la leyenda y que se respeten los tamaños de los que depende el juego (por
 ejemplo, la moto y el wheelie tienen que medir igual o la moto daría un salto
 al cambiar de textura).
 
+### La matriz de diseño: 24×24
+
+**Las poses de la moto se dibujan en una matriz de 24 × 24 píxeles.** Un diseño
+entregado en esa matriz entra sin remuestrear, y eso es lo único que garantiza
+que no se distorsione: cada píxel dibujado es un píxel del juego.
+
+| | |
+|---|---|
+| Matriz | **24 de ancho × 24 de alto** |
+| Apoyo | Las ruedas tocan el borde **inferior**; las tres poses se alinean por abajo |
+| Distancia entre ejes | **~14 px** entre los centros de las dos ruedas |
+| Colores | Los seis del diseño: blanco, azul `#3F48CC`, plata `#C3C3C3`, rojo `#D02A16`, negro y el fondo |
+| Fondo | Transparente, o un color plano que no aparezca en la moto |
+
+Para exportar hay dos formas válidas:
+
+- **A tamaño real**, un PNG de 24×24. Es la mejor: no hay nada que interpretar.
+- **Ampliado por un múltiplo exacto** y con vecino más cercano, nunca con
+  suavizado. A ×10 son 240×240. Sirve para dibujar cómodo, y el importador lo
+  reduce sin perder nada porque la rejilla cae justa.
+
+Lo que hay que evitar es ampliar por un factor no entero o guardar en un
+formato que comprima con pérdida: ahí es donde aparecen los cientos de colores
+intermedios y las líneas de un píxel se pierden.
+
+**Por qué importa la distancia entre ejes.** Las dos primeras poses llegaron
+dibujadas a escalas distintas y la de salto salía un 21 % más grande, así que
+la moto crecía al despegar. El lienzo no sirve para comparar, porque cambia con
+el giro; la distancia entre los centros de las ruedas sí.
+
 ### Traer un diseño desde un PNG
 
 Cuando alguien entrega un diseño hecho en un editor de pixel art, no se
@@ -215,7 +245,24 @@ Por eso el panel del juego se sale del ancho máximo de lectura de la página
 
 ---
 
-## 6. Cambio de carril
+## 6. El salto
+
+La moto sube a la rampa girada, **se mantiene girada todo el vuelo** y vuelve a
+la posición normal al tocar el suelo. La pose de salto se muestra tal como se
+dibujó, sin girarla más.
+
+No hay control de inclinación en el aire. Hubo una versión con ángulo de
+aterrizaje —presionar arriba y abajo para enderezar antes de caer— y se quitó
+al fijar el dibujo durante el vuelo: si el ángulo no se puede ver, castigar por
+él produce caídas que el jugador no entiende, y con un solo intento eso no se
+puede permitir.
+
+El salto queda entonces como una oportunidad, no como un riesgo: se pasa por
+encima de lo que venga y se cae de pie con un pequeño impulso.
+
+---
+
+## 7. Cambio de carril
 
 La moto se desliza entre carriles durante 7 cuadros y se inclina mientras lo
 hace, como en el original.
@@ -231,7 +278,7 @@ simulación.
 
 ---
 
-## 7. Dos diseños tienen que estar a la misma escala
+## 8. Dos diseños tienen que estar a la misma escala
 
 Cuando llegan varias poses del mismo objeto dibujadas por separado, casi nunca
 vienen al mismo tamaño. Es lo que pasó con la moto: la pose de salto, a su
@@ -255,7 +302,7 @@ del salto ya inclinada hacia abajo.
 
 ---
 
-## 8. Errores que ya se cometieron
+## 9. Errores que ya se cometieron
 
 Quedan anotados porque son fáciles de repetir:
 

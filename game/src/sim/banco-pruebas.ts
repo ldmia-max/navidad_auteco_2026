@@ -12,7 +12,7 @@
  * No depende de Phaser ni del navegador.
  */
 
-import { ITEM_METROS, TOTAL_TICKS, TPS } from './constantes';
+import { ARRANQUE_LIMPIO_MM, ITEM_METROS, TOTAL_TICKS, TPS } from './constantes';
 import { BIT_ACELERA, BIT_TURBO, codificar, decodificar, registroVacio } from './entradas';
 import { generarPista } from './pista';
 import { Prng } from './prng';
@@ -101,8 +101,9 @@ comprobar(
   pista1.obstaculos.every((o, i) => i === 0 || o.pos >= pista1.obstaculos[i - 1].pos)
 );
 comprobar(
-  'los primeros 300 m van limpios',
-  pista1.obstaculos.every((o) => o.pos >= 300_000)
+  `los primeros ${ARRANQUE_LIMPIO_MM / 1000} m van limpios`,
+  pista1.obstaculos.every((o) => o.pos >= ARRANQUE_LIMPIO_MM),
+  `primer obstáculo en ${Math.min(...pista1.obstaculos.map((o) => o.pos)) / 1000} m`
 );
 
 /*
