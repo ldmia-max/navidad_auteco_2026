@@ -51,7 +51,7 @@ export const LEYENDA: Record<string, keyof Paleta | null> = {
   S: 'cieloAlto',
 
   // Moto y piloto
-  C: 'grisMoto',
+  B: 'azulMoto',
   e: 'rojoMoto',
   t: 'plata',
   T: 'plataClara',

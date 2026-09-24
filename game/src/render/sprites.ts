@@ -19,7 +19,7 @@ import type { Sprite } from './pixeles';
 // así que cada píxel dibujado es un píxel del juego y no se pierde ninguno.
 // Ver docs/arte-y-sonido.md.
 //
-//   npm run arte:importar -- ../imagenes_apoyo/piloto_nuevo.png MOTO //     --tamano 24x24 --fondo auto --offset -4,-4 //     --mapa "ff9f00=.,000000=n,808080=C,ffffff=w,ff0000=e,a6a6a6=t,ffff00=f"
+//   npm run arte:importar -- ../imagenes_apoyo/piloto_nuevo.png MOTO //     --tamano 24x24 --fondo auto --offset -4,-4 //     --mapa "ff9f00=.,000000=n,ff0000=e,ffffff=w,0070c0=B,a6a6a6=t,ff6f00=O,ffff00=f"
 //
 // No se retoca a mano: si hay que cambiar algo, se cambia el PNG y se vuelve
 // a importar.
@@ -32,29 +32,29 @@ import type { Sprite } from './pixeles';
 // tamaño haría saltar la moto al cambiar de pose.
 // ---------------------------------------------------------------------------
 
-/** Moto deportiva rodando. Chasis y casco grises, traje blanco. */
+/** Moto deportiva rodando. Casco y carenado rojos, traje blanco y azul. */
 export const MOTO: Sprite = [
   '........................',
   '........................',
   '........................',
-  '..........CCCC..........',
-  '.........CCCCCC.........',
-  '.........CCCnnn.........',
-  '.........CCCCnn.........',
-  '.........nCCCCC.........',
-  '........wweeCCC.........',
-  '.......wwwee............',
-  '.......wwwee...nn.......',
-  '......wwwweeeee.n.......',
-  '...eCCwwwwweeenenC......',
-  '....CCCwwwwwCCCtCCf.....',
-  '......CwwwwwCCCttCC.....',
-  '...nnnCCCwwwwCCCttCnn...',
-  '..nn.nnCCCwwwCC..tt.nn..',
-  '.nn.ttnnCCwwwnn.nnt..nn.',
-  '.n..nttnCCeeenn.n.tn..n.',
-  '.n....tttCeeen..n..t..n.',
-  '.nn...nntteeee..nn...nn.',
+  '..........eeee..........',
+  '.........eeeeee.........',
+  '.........eeennn.........',
+  '.........eeeenn.........',
+  '.........neeeee.........',
+  '........wwBBeee.........',
+  '.......wwwBB............',
+  '.......wwwBB...nn.......',
+  '......wwwwBBBBB.n.......',
+  '...eOewwwwwBBBnBne......',
+  '....eeewwwwweeeteef.....',
+  '......ewwwwweeettee.....',
+  '...nnneeewwwweeettenn...',
+  '..nn.nneeewwwee..tt.nn..',
+  '.nn.ttnnenwwwnn.nnt..nn.',
+  '.n..nttnenBBBnn.n.tn..n.',
+  '.n....tttnBBBn..n..t..n.',
+  '.nn...nnttBBBB..nn...nn.',
   '..nn.nn..........nn.nn..',
   '...nnn............nnn...',
   '........................',
@@ -64,12 +64,12 @@ export const MOTO: Sprite = [
  * Piloto en el suelo y la moto tumbada. 24×24.
  *
  * DERIVADA, no viene de un diseño: es la única pose que no mandó el cliente.
- * Se compuso con los colores de la moto deportiva —casco y chasis grises,
- * traje blanco, rojo del carenado— para que se lea como el mismo piloto.
+ * Se recolorea cada vez que cambia el diseño de la moto, para que se lea como
+ * el mismo piloto; ahora va con el casco y el carenado rojos y el traje blanco
+ * y azul.
  *
- * Las ruedas van aplastadas, más anchas que altas. Con ruedas redondas, como
- * en la primera versión, la moto seguía pareciendo de pie y el jugador no
- * entendía por qué no avanzaba.
+ * Las ruedas van aplastadas, más anchas que altas. Con ruedas redondas la moto
+ * seguía pareciendo de pie y el jugador no entendía por qué no avanzaba.
  */
 export const MOTO_CAIDA: Sprite = [
   '........................',
@@ -86,14 +86,14 @@ export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
   '........................',
-  '..CCCC..................',
-  '.CCnnCC.................',
-  '.CCnnCC....CCCCCCCCCC...',
-  '..CCCC....CttttttttttC..',
-  '.wwwwww..CCeeeeeeeeeeCC.',
-  'wwwwwwww.CCCCCCCCCCCCCC.',
+  '..eeee..................',
+  '.eennee.................',
+  '.eennee....eeeeeeeeee...',
+  '..eeee....ettttttttte...',
+  '.wwwwww..BBeeeeeeeeeeBB.',
+  'wwwwwwww.eeeeeeeeeeeeee.',
   '.wwwww..nnnnnn....nnnnnn',
-  '..eee...nn..nn....nn..nn',
+  '..BBB...nn..nn....nn..nn',
   '..w.w...nnnnnn....nnnnnn',
   '........................',
 ];
@@ -191,21 +191,21 @@ export const CONO: Sprite = [
  *
  * Importada del diseño del cliente, recortada para caber en un carril:
  *
- *   npm run arte:importar -- ../imagenes_apoyo/Llave_Bonus.png ITEM_LLAVE  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,ffdb01=Y,747474=C,ff9f00=j,ffef8f=Z"
+ *   npm run arte:importar -- ../imagenes_apoyo/Llave_Bonus.png ITEM_LLAVE  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,ffdb01=Y,000000=n,ff9f00=j,ffef8f=Z"
  *
  * Sustituye al logo TVS y vale lo mismo: +50 m.
  */
 export const ITEM_LLAVE: Sprite = [
-  '...CCCC...........',
-  '..CYYYYC..........',
-  '.CYYYYYYC.........',
-  'CYYYjjYYYCCCCCCCC.',
-  'CZYj..jYYYYYYYYYZC',
-  'CZYj..jYYYYYjjjjYC',
-  'CZYYjjYYYCCYYYYYYC',
-  '.CZYYYYYC..jCjCjC.',
-  '..CZYYYC..........',
-  '...CCCC...........',
+  '...nnnn...........',
+  '..nYYYYn..........',
+  '.nYYYYYYn.........',
+  'nYYYjjYYYnnnnnnnn.',
+  'nZYj..jYYYYYYYYYZn',
+  'nZYj..jYYYYYjjjjYn',
+  'nZYYjjYYYnnYYYYYYn',
+  '.nZYYYYYn..jnjnjn.',
+  '..nZYYYn..........',
+  '...nnnn...........',
 ];
 
 // ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@
     "piel": "#E8B38A",
 
     "_comentarioMoto": "Colores del diseño de la moto deportiva que mandó el cliente. Cambiarlos aquí recolorea la moto sin tocar el dibujo.",
-    "grisMoto": "#808080",
+    "azulMoto": "#0070C0",
     "rojoMoto": "#FF0000",
     "plata": "#A6A6A6",
     "plataClara": "#E0E0E0",
@@ -29,7 +29,7 @@
     "amarilloLlaveClaro": "#FFEF8F",
     "naranjaLlave": "#FF9F00",
 
-    "_comentarioCono": "Cono de vía: el único obstáculo que tumba.",
+    "_comentarioCono": "Cono de vía: el único obstáculo que tumba. naranjaCono es además el puño izquierdo de la moto, que el diseño trae en ese mismo hexadecimal.",
     "naranjaCono": "#FF6F00",
     "naranjaConoOscuro": "#D25A00",
 
@@ -43,7 +43,7 @@
     "verdeOscuro": "#227722",
     "verdeClaro": "#5FC75F",
 
-    "_comentarioPista": "Asfalto del autódromo. pistaBorde es la junta al pie de cada carril. Ojo al aclararlo: el chasis de la moto es #808080 y un asfalto parecido la haria desaparecer sobre la pista.",
+    "_comentarioPista": "Asfalto del autódromo. pistaBorde es la junta al pie de cada carril.",
     "pista": "#5E5E5E",
     "pistaAlt": "#686868",
     "pistaBorde": "#3E3E3E",

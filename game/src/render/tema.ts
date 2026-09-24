@@ -28,8 +28,8 @@ export interface Paleta {
   grisClaro: number;
   amarillo: number;
   piel: number;
-  /** Gris del chasis y el casco de la moto deportiva. */
-  grisMoto: number;
+  /** Azul del traje y el chasis de la moto deportiva. */
+  azulMoto: number;
   /** Rojo del diseño de la moto. Más encendido que el rojo del manual TVS. */
   rojoMoto: number;
   /** Plata de la horquilla y el escape. */
@@ -44,7 +44,10 @@ export interface Paleta {
   amarilloLlaveClaro: number;
   naranjaLlave: number;
 
-  // Cono de vía
+  /**
+   * Naranja del cono de vía. También el puño izquierdo de la moto, que el
+   * diseño trae en ese mismo hexadecimal exacto.
+   */
   naranjaCono: number;
   naranjaConoOscuro: number;
 
@@ -61,9 +64,10 @@ export interface Paleta {
   /**
    * Asfalto del carril.
    *
-   * Tiene un techo: el chasis de la moto es #808080, así que un asfalto que
-   * se le acerque haría desaparecer a la moto sobre la pista. De ahí que no
-   * pase de #686868 ni con el carril alterno.
+   * Tiene un techo: cuanto más se aclare, menos se despega la moto de la
+   * pista. Con el diseño gris llegó a ser crítico —el chasis era #808080— y
+   * con el rojo y azul de ahora hay más margen, pero el criterio sigue siendo
+   * el mismo: la moto tiene que verse de un vistazo.
    */
   pista: number;
   /** Asfalto del carril alterno, apenas más claro. */
@@ -117,7 +121,7 @@ export const TEMA_POR_DEFECTO: Tema = {
     grisClaro: 0x9a9a9a,
     amarillo: 0xf5c518,
     piel: 0xe8b38a,
-    grisMoto: 0x808080,
+    azulMoto: 0x0070c0,
     rojoMoto: 0xff0000,
     plata: 0xa6a6a6,
     plataClara: 0xe0e0e0,
