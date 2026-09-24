@@ -172,37 +172,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div id="ntvs-game-root" class="ntvs-game-root"></div>
 
 		<!--
-			Mando en pantalla. Va debajo del lienzo, como el control de una
-			consola: cruceta a la izquierda, acelerador y turbo a la derecha.
+			Mando en pantalla, según imagenes_apoyo/control.png.
 
-			Antes los controles eran cuatro cuadrantes invisibles sobre el
-			propio juego y no había forma de adivinarlos. Con un solo intento
-			por persona, adivinar no es una opción.
+			Carcasa clara con el panel negro dentro: cruceta a la izquierda,
+			rejilla decorativa al centro y las dos acciones a la derecha.
 
-			Los botones son <button> de verdad, así que el teclado los alcanza
-			con Tab y el lector de pantalla los anuncia.
+			Antes los controles eran cuatro cuadrantes invisibles sobre el propio
+			juego y no había forma de adivinarlos. Con un solo intento por
+			persona, adivinar no es una opción.
+
+			Los botones son <button> de verdad, así que el teclado los alcanza con
+			Tab y el lector de pantalla los anuncia. La rejilla del centro es
+			adorno y va oculta para quien no la ve.
 		-->
 		<div class="ntvs-mando" id="ntvs-mando" hidden>
-			<div class="ntvs-mando__cruceta">
-				<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="arriba"
-					aria-label="<?php esc_attr_e( 'Subir de carril', 'navidad-tvs' ); ?>">
-					<span aria-hidden="true">&#9650;</span>
-				</button>
-				<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="abajo"
-					aria-label="<?php esc_attr_e( 'Bajar de carril', 'navidad-tvs' ); ?>">
-					<span aria-hidden="true">&#9660;</span>
-				</button>
-			</div>
+			<div class="ntvs-mando__panel">
 
-			<div class="ntvs-mando__acciones">
-				<button class="ntvs-btn ntvs-btn--turbo" type="button" data-mando="turbo"
-					aria-label="<?php esc_attr_e( 'Turbo', 'navidad-tvs' ); ?>">
-					<?php esc_html_e( 'TURBO', 'navidad-tvs' ); ?>
-				</button>
-				<button class="ntvs-btn ntvs-btn--acelera" type="button" data-mando="acelera"
-					aria-label="<?php esc_attr_e( 'Acelerar', 'navidad-tvs' ); ?>">
-					<?php esc_html_e( 'ACELERAR', 'navidad-tvs' ); ?>
-				</button>
+				<div class="ntvs-mando__cruceta">
+					<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="arriba"
+						aria-label="<?php esc_attr_e( 'Subir de carril', 'navidad-tvs' ); ?>">
+						<span class="ntvs-flecha ntvs-flecha--arriba" aria-hidden="true"></span>
+					</button>
+					<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="abajo"
+						aria-label="<?php esc_attr_e( 'Bajar de carril', 'navidad-tvs' ); ?>">
+						<span class="ntvs-flecha ntvs-flecha--abajo" aria-hidden="true"></span>
+					</button>
+				</div>
+
+				<div class="ntvs-mando__rejilla" aria-hidden="true">
+					<span class="ntvs-ranura"></span>
+					<span class="ntvs-ranura"></span>
+					<span class="ntvs-ranura"></span>
+					<span class="ntvs-ranura"></span>
+					<span class="ntvs-ranura ntvs-ranura--marca"><?php esc_html_e( 'CONTROL', 'navidad-tvs' ); ?></span>
+				</div>
+
+				<div class="ntvs-mando__acciones">
+					<button class="ntvs-btn ntvs-btn--turbo" type="button" data-mando="turbo"
+						aria-label="<?php esc_attr_e( 'Turbo', 'navidad-tvs' ); ?>">
+						<?php esc_html_e( 'TURBO', 'navidad-tvs' ); ?>
+					</button>
+					<button class="ntvs-btn ntvs-btn--acelera" type="button" data-mando="acelera"
+						aria-label="<?php esc_attr_e( 'Acelerar', 'navidad-tvs' ); ?>">
+						<?php esc_html_e( 'ACELERAR', 'navidad-tvs' ); ?>
+					</button>
+				</div>
+
 			</div>
 		</div>
 

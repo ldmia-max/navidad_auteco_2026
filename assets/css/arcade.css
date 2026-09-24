@@ -361,41 +361,90 @@
 /* --- Mando en pantalla ---------------------------------------------------- */
 
 /*
- * Va debajo del lienzo, como el control de una consola: cruceta a la izquierda
- * y acciones a la derecha. Antes los controles eran cuatro cuadrantes
- * invisibles sobre el propio juego, y el participante tenía que adivinarlos en
- * su único intento.
+ * Sigue el diseño de imagenes_apoyo/control.png: carcasa clara con un panel
+ * negro dentro, cruceta a la izquierda, rejilla al centro y las dos acciones a
+ * la derecha.
  *
- * Los tamaños no bajan de 56 px. El mínimo cómodo para un dedo son 44, pero
- * aquí se pulsa a ciegas y en movimiento, mirando la pista y no el botón.
+ * Todo se mide en múltiplos de --m, un módulo que crece con el ancho de la
+ * pantalla. Así el mando entero se escala con un solo número y conserva sus
+ * proporciones desde un teléfono estrecho hasta un escritorio, sin una cascada
+ * de media queries que ajusten pieza por pieza.
+ *
+ * El mínimo de --m no es arbitrario: por debajo de 11 px los botones de
+ * dirección bajarían de los 44 px de alto que necesita un dedo, y aquí se
+ * pulsan a ciegas, mirando la pista y no el botón.
  */
 .ntvs-mando {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
+	--m: clamp(11px, 3.4vw, 16px);
+	--mando-carcasa: #e8edf0;
+	--mando-panel: #1c1c1c;
+	--mando-turbo: #1f73c4;
+	--mando-acelera: #2e9e4f;
+
 	width: 100%;
-	max-width: 520px;
-	margin: 14px auto 0;
-	padding: 0 4px;
+	max-width: calc(var(--m) * 32);
+	margin: calc(var(--m) * 1) auto 0;
+	padding: calc(var(--m) * 0.6);
+	background: var(--mando-carcasa);
+	border: 2px solid #2a2a2a;
+	border-radius: calc(var(--m) * 2.2);
+
 	/* Sin esto, arrastrar el dedo sobre un botón hace scroll de la página. */
 	touch-action: none;
 	user-select: none;
 	-webkit-user-select: none;
 }
 
-.ntvs-mando__cruceta {
+.ntvs-mando__panel {
 	display: flex;
-	flex-direction: column;
-	gap: 10px;
+	align-items: center;
+	justify-content: space-between;
+	gap: calc(var(--m) * 0.9);
+	padding: calc(var(--m) * 1.3);
+	background: var(--mando-panel);
+	border-radius: calc(var(--m) * 1.6);
 }
 
+.ntvs-mando__cruceta,
 .ntvs-mando__acciones {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-end;
-	gap: 10px;
+	gap: calc(var(--m) * 1);
+	flex: 0 0 auto;
 }
+
+/* --- Rejilla del centro. Es adorno del diseño, no hace nada. -------------- */
+
+.ntvs-mando__rejilla {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: calc(var(--m) * 0.45);
+	min-width: calc(var(--m) * 4);
+}
+
+.ntvs-ranura {
+	display: block;
+	height: calc(var(--m) * 1.35);
+	background: var(--mando-carcasa);
+	border-radius: calc(var(--m) * 0.45);
+}
+
+.ntvs-ranura--marca {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--ntvs-fuente);
+	font-size: calc(var(--m) * 0.85);
+	font-weight: 700;
+	letter-spacing: 1px;
+	color: var(--ntvs-rojo);
+	/* Que la palabra no se parta ni desborde en pantallas estrechas. */
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* --- Botones -------------------------------------------------------------- */
 
 .ntvs-btn {
 	display: flex;
@@ -404,59 +453,77 @@
 	font-family: var(--ntvs-fuente);
 	font-weight: 700;
 	letter-spacing: 1px;
-	color: var(--ntvs-blanco);
-	border: 3px solid var(--ntvs-blanco);
-	border-radius: 0;
-	box-shadow: 4px 4px 0 var(--ntvs-azul-profundo);
+	border: none;
 	cursor: pointer;
 	touch-action: none;
-	/* El resaltado azul de Android al tocar estropea el aspecto de consola. */
+	/* El resaltado azul de Android al tocar estropea el aspecto del mando. */
 	-webkit-tap-highlight-color: transparent;
 }
 
-.ntvs-btn--activo {
-	transform: translate(3px, 3px);
-	box-shadow: 1px 1px 0 var(--ntvs-azul-profundo);
-	filter: brightness(1.25);
+.ntvs-btn:focus-visible {
+	outline: 3px solid var(--ntvs-blanco);
+	outline-offset: 2px;
 }
 
 .ntvs-btn--dir {
-	width: 76px;
-	height: 56px;
-	font-size: 20px;
-	background: var(--ntvs-azul);
+	width: calc(var(--m) * 5);
+	height: calc(var(--m) * 4);
+	background: var(--mando-carcasa);
+	border-radius: calc(var(--m) * 0.8);
+}
+
+/*
+ * Triángulos de borde CSS y no un carácter ▲: el glifo cambia de forma y de
+ * tamaño según la tipografía que tenga instalada cada teléfono, y el diseño
+ * pide el mismo triángulo en todos.
+ */
+.ntvs-flecha {
+	display: block;
+	width: 0;
+	height: 0;
+	border-left: calc(var(--m) * 1.15) solid transparent;
+	border-right: calc(var(--m) * 1.15) solid transparent;
+}
+
+.ntvs-flecha--arriba {
+	border-bottom: calc(var(--m) * 1.35) solid #111;
+}
+
+.ntvs-flecha--abajo {
+	border-top: calc(var(--m) * 1.35) solid #111;
+}
+
+.ntvs-btn--turbo,
+.ntvs-btn--acelera {
+	width: calc(var(--m) * 10.6);
+	color: var(--ntvs-blanco);
+	font-size: calc(var(--m) * 1);
+	border-radius: calc(var(--m) * 0.9);
+	/* El reborde claro del diseño, que separa el botón del panel negro. */
+	box-shadow: 0 0 0 calc(var(--m) * 0.22) var(--mando-carcasa);
 }
 
 .ntvs-btn--turbo {
-	width: 108px;
-	height: 56px;
-	font-size: 13px;
-	background: var(--ntvs-rojo);
+	height: calc(var(--m) * 3.4);
+	background: var(--mando-turbo);
 }
 
 .ntvs-btn--acelera {
-	width: 148px;
-	height: 66px;
-	font-size: 15px;
-	background: var(--ntvs-verde-oscuro);
+	height: calc(var(--m) * 3.9);
+	background: var(--mando-acelera);
 }
 
-@media (max-width: 400px) {
-	.ntvs-mando {
-		gap: 10px;
-	}
+/*
+ * El pulsado tiene que verse: se juega a ciegas y sin una señal no hay forma
+ * de saber si el botón respondió o si el dedo resbaló.
+ */
+.ntvs-btn--activo {
+	filter: brightness(1.3);
+	transform: translateY(calc(var(--m) * 0.12));
+}
 
-	.ntvs-btn--dir {
-		width: 66px;
-	}
-
-	.ntvs-btn--turbo {
-		width: 92px;
-	}
-
-	.ntvs-btn--acelera {
-		width: 124px;
-	}
+.ntvs-btn--dir.ntvs-btn--activo {
+	background: #b9c4cc;
 }
 
 @media (prefers-reduced-motion: reduce) {

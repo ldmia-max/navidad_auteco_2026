@@ -61,11 +61,18 @@ class NavidadTVS_Paginas {
 	 * @return void
 	 */
 	public function registrar_assets() {
+		/*
+		 * La fecha del archivo y no solo la versión del plugin: entre dos
+		 * versiones la hoja se edita muchas veces y el navegador serviría la
+		 * copia vieja bajo el mismo ?ver=.
+		 */
+		$fecha = @filemtime( NAVIDAD_TVS_PATH . 'assets/css/publico.css' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
 		wp_register_style(
 			'navidad-tvs-publico',
 			NAVIDAD_TVS_URL . 'assets/css/publico.css',
 			array(),
-			NAVIDAD_TVS_VERSION
+			$fecha ? NAVIDAD_TVS_VERSION . '.' . $fecha : NAVIDAD_TVS_VERSION
 		);
 	}
 

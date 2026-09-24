@@ -77,14 +77,14 @@ class NavidadTVS_Shortcode {
 			'navidad-tvs-arcade',
 			NAVIDAD_TVS_URL . 'assets/css/arcade.css',
 			array(),
-			NAVIDAD_TVS_VERSION
+			self::version_asset( 'assets/css/arcade.css' )
 		);
 
 		wp_register_script(
 			'navidad-tvs-acceso',
 			NAVIDAD_TVS_URL . 'assets/js/acceso.js',
 			array(),
-			NAVIDAD_TVS_VERSION,
+			self::version_asset( 'assets/js/acceso.js' ),
 			true
 		);
 	}
@@ -95,6 +95,27 @@ class NavidadTVS_Shortcode {
 	 * @param array $atributos Atributos del shortcode.
 	 * @return string
 	 */
+	/**
+	 * Versión con la que se cachea un archivo de assets.
+	 *
+	 * No basta con NAVIDAD_TVS_VERSION. Entre dos versiones del plugin la hoja
+	 * de estilos y el JavaScript se editan decenas de veces, y el navegador
+	 * sirve la copia vieja bajo el mismo ?ver=. Revisar un cambio de diseño y
+	 * ver el anterior hace perder el tiempo a quien revisa y lleva a buscar el
+	 * fallo donde no está.
+	 *
+	 * Con la fecha del archivo el problema desaparece en desarrollo y en
+	 * producción: cualquier despliegue la cambia.
+	 *
+	 * @param string $relativa Ruta dentro del plugin.
+	 * @return string
+	 */
+	private static function version_asset( $relativa ) {
+		$fecha = @filemtime( NAVIDAD_TVS_PATH . $relativa ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+		return $fecha ? NAVIDAD_TVS_VERSION . '.' . $fecha : NAVIDAD_TVS_VERSION;
+	}
+
 	/**
 	 * URL de un archivo de assets con un cache buster fiable.
 	 *
@@ -115,14 +136,7 @@ class NavidadTVS_Shortcode {
 	 * @return string
 	 */
 	private static function url_asset( $relativa ) {
-		$version = NAVIDAD_TVS_VERSION;
-		$fecha   = @filemtime( NAVIDAD_TVS_PATH . $relativa ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-
-		if ( $fecha ) {
-			$version .= '.' . $fecha;
-		}
-
-		return NAVIDAD_TVS_URL . $relativa . '?ver=' . rawurlencode( $version );
+		return NAVIDAD_TVS_URL . $relativa . '?ver=' . rawurlencode( self::version_asset( $relativa ) );
 	}
 
 	public function render( $atributos = array() ) {

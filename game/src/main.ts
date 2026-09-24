@@ -34,6 +34,16 @@ let juego: Phaser.Game | null = null;
 const FACTOR_MAXIMO = 6;
 
 /**
+ * Rango del módulo con que se dimensiona el mando. Espejo del clamp de --m en
+ * arcade.css.
+ */
+const MANDO_M_MIN = 11;
+const MANDO_M_MAX = 16;
+
+/** Aire entre el lienzo y el mando, en píxeles CSS. */
+const HOLGURA = 12;
+
+/**
  * Ajusta el tamaño del lienzo a un múltiplo entero del tamaño interno.
  *
  * Escalar por un factor fraccionario mezcla píxeles vecinos y el pixel art
@@ -42,21 +52,44 @@ const FACTOR_MAXIMO = 6;
  *
  * El espacio disponible se mide contra la ventana, no contra el contenedor. El
  * contenedor de la página tiene un ancho máximo pensado para leer texto y
- * dejaba el juego clavado en ×2, o sea 640×360 en un monitor de 1920: había
- * que forzar la vista para distinguir al piloto.
+ * dejaba el juego clavado en ×2 en un monitor de 1920: había que forzar la
+ * vista para distinguir al piloto.
+ *
+ * ---------------------------------------------------------------------------
+ * EL REPARTO CON EL MANDO
+ *
+ * El mando vive debajo del lienzo y ocupa alto de verdad, así que hay que
+ * descontarlo. Lo delicado es el orden en que se reparte.
+ *
+ * La primera versión medía el mando y le daba al lienzo lo que sobrara. Como
+ * el lienzo solo crece de 200 en 200, un mando 77 px más alto le costó un
+ * escalón entero: en un escritorio pasó de 600 a 400 px de lado. Setenta y
+ * siete píxeles de mando se comieron doscientos de juego.
+ *
+ * Ahora es al revés, que es la prioridad correcta. Primero se calcula el mayor
+ * múltiplo que entra suponiendo el mando en su tamaño MÍNIMO, y después el
+ * mando se estira para ocupar lo que haya quedado libre. El mando sí puede
+ * crecer de forma continua; el lienzo no.
+ * ---------------------------------------------------------------------------
  */
 function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void {
-  /*
-   * El mando vive debajo del lienzo y ocupa alto de verdad. Si no se descuenta,
-   * en un teléfono el juego se escala hasta llenar la pantalla y los botones
-   * quedan fuera de la vista, que es justo lo contrario de lo que se buscaba
-   * al sacarlos del lienzo.
-   *
-   * Se mide en vez de reservar un número fijo: los botones cambian de tamaño
-   * con el ancho de la pantalla.
-   */
   const mando = document.getElementById('ntvs-mando');
-  const altoMando = mando && !mando.hidden ? mando.offsetHeight + 24 : 0;
+  const conMando = mando !== null && !mando.hidden;
+
+  /*
+   * El alto del mando se mide, no se calcula: depende de la hoja de estilos, y
+   * repetir aquí sus proporciones sería otra copia que se desincroniza sola.
+   * Se pone en el mínimo, se mide, y de ahí sale cuánto ocupa por cada píxel
+   * de módulo.
+   */
+  let altoPorModulo = 0;
+  let altoMinMando = 0;
+
+  if (conMando && mando) {
+    mando.style.setProperty('--m', `${MANDO_M_MIN}px`);
+    altoPorModulo = mando.offsetHeight / MANDO_M_MIN;
+    altoMinMando = mando.offsetHeight + HOLGURA;
+  }
 
   /*
    * Margen pequeño a propósito. innerHeight ya descuenta la barra del
@@ -64,7 +97,7 @@ function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void
    * por unos pocos píxeles de diferencia.
    */
   const dispoAncho = Math.max(window.innerWidth - 8, ANCHO);
-  const dispoAlto = Math.max(window.innerHeight - 8 - altoMando, ALTO);
+  const dispoAlto = Math.max(window.innerHeight - 8 - altoMinMando, ALTO);
 
   const factor = Math.min(
     FACTOR_MAXIMO,
@@ -80,6 +113,21 @@ function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void
 
   // El panel que lo contiene tiene que dejarle sitio.
   contenedor.style.width = '100%';
+
+  // Lo que sobró, para el mando.
+  if (conMando && mando && altoPorModulo > 0) {
+    const sobra = window.innerHeight - 8 - ALTO * factor - HOLGURA;
+
+    const m = Math.min(
+      MANDO_M_MAX,
+      // El ancho también manda: en un teléfono estrecho el mando no puede
+      // crecer aunque sobre alto. Es el mismo 3,4vw del clamp de la hoja.
+      window.innerWidth * 0.034,
+      Math.max(MANDO_M_MIN, sobra / altoPorModulo)
+    );
+
+    mando.style.setProperty('--m', `${Math.max(MANDO_M_MIN, m)}px`);
+  }
 }
 
 /**
