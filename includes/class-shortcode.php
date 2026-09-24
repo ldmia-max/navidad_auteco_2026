@@ -95,6 +95,36 @@ class NavidadTVS_Shortcode {
 	 * @param array $atributos Atributos del shortcode.
 	 * @return string
 	 */
+	/**
+	 * URL de un archivo de assets con un cache buster fiable.
+	 *
+	 * El bundle y el tema no se encolan con wp_enqueue_script(): los pide el
+	 * JavaScript, así que hay que ponerles la versión a mano.
+	 *
+	 * No basta con NAVIDAD_TVS_VERSION. Entre dos versiones del plugin el
+	 * bundle se recompila decenas de veces y theme.json se edita a mano, y el
+	 * navegador sirve la copia vieja bajo el mismo ?ver=. El resultado es un
+	 * juego a medio actualizar —sprites nuevos con los colores y los textos
+	 * viejos— que parece un error del código y no lo es. Ya pasó una vez.
+	 *
+	 * Con la fecha del archivo el problema desaparece en desarrollo y en
+	 * producción: cualquier despliegue la cambia. La versión se conserva
+	 * delante para que la URL siga diciendo de qué release viene.
+	 *
+	 * @param string $relativa Ruta dentro del plugin.
+	 * @return string
+	 */
+	private static function url_asset( $relativa ) {
+		$version = NAVIDAD_TVS_VERSION;
+		$fecha   = @filemtime( NAVIDAD_TVS_PATH . $relativa ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+		if ( $fecha ) {
+			$version .= '.' . $fecha;
+		}
+
+		return NAVIDAD_TVS_URL . $relativa . '?ver=' . rawurlencode( $version );
+	}
+
 	public function render( $atributos = array() ) {
 		$this->activo = true;
 
@@ -127,13 +157,13 @@ class NavidadTVS_Shortcode {
 				 * mientras el participante lee las instrucciones, así que para
 				 * cuando pulsa "Iniciar carrera" ya está listo.
 				 */
-				'urlJuego'        => NAVIDAD_TVS_URL . 'assets/game/juego.js?ver=' . NAVIDAD_TVS_VERSION,
+				'urlJuego'        => self::url_asset( 'assets/game/juego.js' ),
 				/*
 				 * Colores y textos del juego. Se puede editar el archivo sin
 				 * recompilar el bundle: sirve para ajustar el cartel de la
 				 * tribuna o un color de marca sin tocar TypeScript.
 				 */
-				'urlTema'         => NAVIDAD_TVS_URL . 'assets/game/theme.json?ver=' . NAVIDAD_TVS_VERSION,
+				'urlTema'         => self::url_asset( 'assets/game/theme.json' ),
 				'turnstileKey'    => $site_key,
 				'textos'         => array(
 					'validando'     => __( 'Validando…', 'navidad-tvs' ),

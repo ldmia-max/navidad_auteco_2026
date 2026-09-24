@@ -345,14 +345,22 @@ function maquetaPantalla(): Lienzo {
     }
   }
 
-  // Obstáculos de muestra, uno de cada tipo.
-  l.sprite(S.IMPULSOR, P, 140, PISTA_Y + CARRIL_ALTO * 2 + 4);
-  l.sprite(S.CONO, P, 210, PISTA_Y + CARRIL_ALTO * 2 - S.CONO.length);
-  l.sprite(S.ACEITE, P, 250, PISTA_Y + CARRIL_ALTO * 3 + 4);
-  l.sprite(S.ITEM_LLAVE, P, 180, PISTA_Y + CARRIL_ALTO * 0 + 3);
+  /*
+   * Todo se apoya en el centro del carril, igual que en la escena: los que se
+   * pisan (moto, cono) con su base ahí, y los planos (impulsor, aceite, llave)
+   * centrados sobre esa línea.
+   */
+  const apoyo = (carril: number) => PISTA_Y + carril * CARRIL_ALTO + CARRIL_ALTO / 2;
+  const centrado = (sprite: readonly string[], carril: number) =>
+    apoyo(carril) - Math.floor(sprite.length / 2);
 
-  // Moto en el segundo carril.
-  l.sprite(S.MOTO, P, 63, PISTA_Y + CARRIL_ALTO * 2 + CARRIL_ALTO - S.MOTO.length);
+  l.sprite(S.IMPULSOR, P, 140, centrado(S.IMPULSOR, 2));
+  l.sprite(S.CONO, P, 210, apoyo(1) - S.CONO.length);
+  l.sprite(S.ACEITE, P, 250, centrado(S.ACEITE, 3));
+  l.sprite(S.ITEM_LLAVE, P, 180, centrado(S.ITEM_LLAVE, 0));
+
+  // Moto en el tercer carril.
+  l.sprite(S.MOTO, P, 63, apoyo(2) - S.MOTO.length);
 
   // Panel inferior.
   const panelY = PISTA_Y + PISTA_ALTO;

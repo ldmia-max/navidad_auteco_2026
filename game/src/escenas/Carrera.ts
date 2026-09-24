@@ -32,6 +32,21 @@ export { ALTO, ANCHO };
 /** La moto se queda quieta en pantalla y el mundo se mueve. */
 const MOTO_X = 74;
 
+/**
+ * Línea sobre la que se apoya todo lo que está en un carril.
+ *
+ * Es el centro del carril, no su borde inferior. Con las ruedas en el borde la
+ * moto parecía ir montada sobre la línea discontinua en vez de dentro del
+ * carril, y quedaba más baja que los impulsores y los charcos, que sí van
+ * centrados. Todo lo que pisa la pista —la moto, el cono— se apoya aquí.
+ *
+ * @param carril Índice del carril, que puede ser fraccionario mientras la moto
+ *               se desliza de uno a otro.
+ */
+function apoyo(carril: number): number {
+  return PISTA_Y + carril * CARRIL_ALTO + CARRIL_ALTO / 2;
+}
+
 /** Píxeles por metro al dibujar. */
 const PX_POR_METRO = 8;
 
@@ -462,7 +477,7 @@ export class Carrera extends Phaser.Scene {
      * parece que la carrera se cortó a media maniobra.
      */
     if (this.terminada) {
-      const yFinal = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
+      const yFinal = apoyo(this.carrilDibujado);
 
       this.moto.setTexture(TEX.moto);
       this.moto.setAngle(0);
@@ -485,7 +500,7 @@ export class Carrera extends Phaser.Scene {
       this.carrilDibujado = e.carril;
     }
 
-    const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
+    const yCarril = apoyo(this.carrilDibujado);
 
     // La moto se inclina mientras cambia de carril, como en el original.
     const inclinacionCarril = this.cuadrosCambio > 0 ? (e.carril - this.carrilAnterior) * 7 : 0;
@@ -546,15 +561,16 @@ export class Carrera extends Phaser.Scene {
 
       const img = this.obstaculos[usados++];
       const x = MOTO_X + div((obs.pos - e.pos) * PX_POR_METRO, 1000);
-      const y = PISTA_Y + obs.carril * CARRIL_ALTO + CARRIL_ALTO;
+      const y = apoyo(obs.carril);
 
       if (obs.tipo === TIPO_IMPULSOR) {
-        // Pintado plano en el centro del carril: es una placa en el suelo.
-        img.setTexture(TEX.impulsor).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
+        // Pintado plano sobre la línea de apoyo: es una placa en el suelo.
+        img.setTexture(TEX.impulsor).setOrigin(0.5, 0.5).setPosition(x, y);
       } else if (obs.tipo === TIPO_ACEITE) {
-        img.setTexture(TEX.aceite).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
+        img.setTexture(TEX.aceite).setOrigin(0.5, 0.5).setPosition(x, y);
       } else {
-        img.setTexture(TEX.cono).setOrigin(0.5, 1).setPosition(x, y + 1);
+        // El cono se apoya en la misma línea que las ruedas de la moto.
+        img.setTexture(TEX.cono).setOrigin(0.5, 1).setPosition(x, y);
       }
 
       img.setVisible(true);
@@ -576,7 +592,7 @@ export class Carrera extends Phaser.Scene {
 
       img.setPosition(
         MOTO_X + div((item.pos - e.pos) * PX_POR_METRO, 1000),
-        PISTA_Y + item.carril * CARRIL_ALTO + CARRIL_ALTO / 2 + flote
+        apoyo(item.carril) + flote
       );
       img.setVisible(true);
     }
@@ -598,8 +614,7 @@ export class Carrera extends Phaser.Scene {
       this.flotantes.find((f) => f.ticks === 0) ??
       this.flotantes.reduce((a, b) => (a.ticks > b.ticks ? a : b));
 
-    const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
-    let y = yCarril - 26;
+    let y = apoyo(this.carrilDibujado) - 26;
 
     /*
      * Un bonus y una rampa pueden caer en el mismo tick. Si los dos rótulos

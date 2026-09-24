@@ -10,6 +10,8 @@
  * No depende de Phaser ni del navegador.
  */
 
+import { readFileSync } from 'node:fs';
+
 import { anchoTexto, normalizar } from './fuente';
 import { CARRIL_ALTO } from './medidas';
 import { LEYENDA, validar } from './pixeles';
@@ -150,6 +152,36 @@ comprobar('y conserva los demás', textoNuevo.textos.rotuloDistancia === 'DIST')
 
 const nulo = fusionarTema(null);
 comprobar('sobrevive a un tema nulo', nulo.paleta.rojo === TEMA_POR_DEFECTO.paleta.rojo);
+
+// ===========================================================================
+console.log('\n=== theme.json ===');
+
+/*
+ * El tema se funde encima de los valores por defecto ignorando lo que no
+ * entiende, que es lo correcto en producción: un archivo mal escrito no puede
+ * dejar el juego sin colores. Pero en el repositorio esa tolerancia esconde
+ * errores. Una clave que ya no existe —un color que se renombró, un texto que
+ * se quitó— se ignora en silencio y el juego sale con el valor por defecto,
+ * que casi nunca es lo que alguien quiso poner ahí.
+ *
+ * El original vive en game/public/; npm run build lo copia a assets/game/.
+ * Editar la copia no sirve de nada, y eso también ya pasó.
+ */
+const rutaTema = new URL('../../public/theme.json', import.meta.url);
+const temaArchivo = JSON.parse(readFileSync(rutaTema, 'utf8')) as Record<string, Record<string, unknown>>;
+
+for (const [seccion, validas] of [
+  ['paleta', Object.keys(TEMA_POR_DEFECTO.paleta)],
+  ['textos', Object.keys(TEMA_POR_DEFECTO.textos)],
+] as Array<[string, string[]]>) {
+  // Las claves que empiezan por guion bajo son comentarios para quien lo edite.
+  const claves = Object.keys(temaArchivo[seccion] ?? {}).filter((k) => !k.startsWith('_'));
+  const sobran = claves.filter((k) => !validas.includes(k));
+  const faltan = validas.filter((k) => !claves.includes(k));
+
+  comprobar(`theme.json no trae claves desconocidas en ${seccion}`, sobran.length === 0, sobran.join(' '));
+  comprobar(`theme.json cubre todo ${seccion}`, faltan.length === 0, faltan.join(' '));
+}
 
 console.log('');
 console.log(fallos === 0 ? 'TODO OK' : `${fallos} FALLO(S)`);

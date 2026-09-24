@@ -1,5 +1,6 @@
 {
   "_ayuda": "Colores y textos del juego. Se puede editar sin recompilar: el juego lo carga al arrancar. Lo que falte o no se entienda usa el valor por defecto. Los colores aceptan #RRGGBB.",
+  "_ojo": "En el repositorio, el original vive en game/public/theme.json y 'npm run build' lo copia a assets/game/. Editar la copia de assets/ no sirve de nada: el siguiente build la pisa. En un servidor de produccion, donde no hay build, si se edita la de assets/.",
 
   "paleta": {
     "azul": "#1F3A72",
@@ -16,39 +17,55 @@
     "amarillo": "#F5C518",
     "piel": "#E8B38A",
 
-    "_comentarioMoto": "Colores del diseño de la moto. azulMoto es el azul del chasis; para pasarlo al azul del manual TVS basta con poner #1F3A72.",
-    "azulMoto": "#0070C0",
+    "_comentarioMoto": "Colores del diseño de la moto deportiva que mandó el cliente. Cambiarlos aquí recolorea la moto sin tocar el dibujo.",
+    "grisMoto": "#808080",
     "rojoMoto": "#FF0000",
     "plata": "#A6A6A6",
     "plataClara": "#E0E0E0",
-    "azulLogo": "#156082",
+    "amarilloFaro": "#FFFF00",
+
+    "_comentarioLlave": "Llave del bonus de +50 m.",
+    "amarilloLlave": "#FFDB01",
+    "amarilloLlaveClaro": "#FFEF8F",
+    "naranjaLlave": "#FF9F00",
+
+    "_comentarioCono": "Cono de vía: el único obstáculo que tumba.",
+    "naranjaCono": "#FF6F00",
+    "naranjaConoOscuro": "#D25A00",
+
+    "_comentarioImpulsor": "Placa impulsora del suelo.",
+    "verdeImpulsor": "#66FF33",
+    "verdeImpulsorOscuro": "#12501A",
 
     "cielo": "#4A90D9",
     "cieloAlto": "#2F6FB5",
     "verde": "#3AA93A",
     "verdeOscuro": "#227722",
     "verdeClaro": "#5FC75F",
-    "pista": "#D98A4A",
-    "pistaAlt": "#C97A3D",
-    "pistaBorde": "#8A5228",
-    "lodo": "#5A3A20",
-    "lodoClaro": "#7A5230",
+
+    "_comentarioPista": "Asfalto del autódromo. pistaBorde es la junta al pie de cada carril. Ojo al aclararlo: el chasis de la moto es #808080 y un asfalto parecido la haria desaparecer sobre la pista.",
+    "pista": "#5E5E5E",
+    "pistaAlt": "#686868",
+    "pistaBorde": "#3E3E3E",
+    "aceite": "#14141C",
+    "aceiteBrillo": "#4A3A6A",
 
     "tempFria": "#3AA93A",
     "tempCaliente": "#E01D2D"
   },
 
   "textos": {
-    "cartelTribuna": "CONCURSO TVS",
+    "cartelTribuna": "NAVIDAD TVS",
     "rotuloDistancia": "DIST",
     "rotuloTemperatura": "TEMP",
     "rotuloTiempo": "TIME",
     "avisoCaliente": "MOTOR CALIENTE",
     "avisoSobrecalentado": "MOTOR SOBRECALENTADO",
     "cuentaYa": "YA!",
-    "podioTitulo": "CONCURSO TVS",
+    "podioTitulo": "NAVIDAD TVS",
     "podioGracias": "GRACIAS POR PARTICIPAR",
     "unidadMetros": "M",
-    "bonus": "+50"
+    "bonus": "+50",
+    "bonusImpulsor": "+1"
   }
 }

@@ -191,8 +191,15 @@ que no se pueda descargar no deja el juego sin colores: lo que no se entienda
 se ignora y se usa el valor por defecto. Quedarse sin jugar por un archivo de
 colores sería absurdo.
 
-El archivo fuente está en `game/public/theme.json` y `npm run build` lo copia a
-`assets/game/`.
+**El original está en `game/public/theme.json`**; `npm run build` lo copia a
+`assets/game/`. Editar la copia de `assets/` dentro del repositorio no sirve de
+nada: el siguiente build la pisa, y el juego sale con sprites nuevos y colores
+viejos, que parece un error del código y no lo es. En un servidor de
+producción, donde no hay build, sí se edita la de `assets/`.
+
+`npm run arte` comprueba que el archivo no traiga claves que la paleta ya no
+conoce ni le falte ninguna. Sin esa comprobación un color renombrado se ignora
+en silencio, porque el juego está hecho para tolerar un tema incompleto.
 
 ---
 
@@ -343,6 +350,11 @@ si algún día llega un diseño fuera de la matriz.
 ## 10. Errores que ya se cometieron
 
 Quedan anotados porque son fáciles de repetir:
+
+- **Editar el theme.json generado.** El original vive en `game/public/` y el
+  build lo copia a `assets/game/`. Al tocar la copia, el juego salió con los
+  sprites nuevos y los colores y textos viejos: parecía un problema de caché y
+  era el build pisando el archivo. Ahora `npm run arte` lo detecta.
 
 - **Rellenar un obstáculo con el color del suelo.** La primera rampa usaba el
   color de la pista y era literalmente invisible sobre ella.

@@ -58,7 +58,13 @@ export interface Paleta {
   verde: number;
   verdeOscuro: number;
   verdeClaro: number;
-  /** Asfalto del carril. */
+  /**
+   * Asfalto del carril.
+   *
+   * Tiene un techo: el chasis de la moto es #808080, así que un asfalto que
+   * se le acerque haría desaparecer a la moto sobre la pista. De ahí que no
+   * pase de #686868 ni con el carril alterno.
+   */
   pista: number;
   /** Asfalto del carril alterno, apenas más claro. */
   pistaAlt: number;
@@ -132,9 +138,9 @@ export const TEMA_POR_DEFECTO: Tema = {
     verde: 0x3aa93a,
     verdeOscuro: 0x227722,
     verdeClaro: 0x5fc75f,
-    pista: 0x4a4a4a,
-    pistaAlt: 0x545454,
-    pistaBorde: 0x2e2e2e,
+    pista: 0x5e5e5e,
+    pistaAlt: 0x686868,
+    pistaBorde: 0x3e3e3e,
     aceite: 0x14141c,
     aceiteBrillo: 0x4a3a6a,
 
