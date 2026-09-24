@@ -13,11 +13,11 @@
 import {
   ARRANQUE_LIMPIO_MM,
   CARRILES,
-  LARGO_LODO,
+  LARGO_ACEITE,
   PISTA_MM,
-  TIPO_LODO,
-  TIPO_RAMPA,
-  TIPO_VALLA,
+  TIPO_ACEITE,
+  TIPO_CONO,
+  TIPO_IMPULSOR,
   div,
 } from './constantes';
 import { Prng } from './prng';
@@ -44,24 +44,24 @@ const GAP_MIN = 11_000;
 const GAP_MAX = 26_000;
 
 /**
- * Separación mínima entre dos grupos que contengan vallas, en mm.
+ * Separación mínima entre dos grupos que contengan conos, en mm.
  *
- * La pista puede ir tan llena como se quiera porque la rampa y el lodo no
- * castigan: la rampa es un premio y el lodo solo frena. La única que tumba es
- * la valla, así que el límite de dificultad se pone sobre ella y no sobre la
- * densidad general.
+ * La pista puede ir tan llena como se quiera porque el impulsor y el aceite no
+ * castigan: el impulsor es un premio y el aceite solo frena. El único que
+ * tumba es el cono, así que el límite de dificultad se pone sobre él y no
+ * sobre la densidad general.
  *
  * Con 30 m de separación, aun yendo a tope de turbo (32 m/s) queda casi un
- * segundo entre una valla y la siguiente, y un cambio de carril cuesta ocho
- * ticks. Una valla que llegara antes no mediría habilidad, y con un solo
- * intento por persona eso no se puede permitir.
+ * segundo entre un cono y el siguiente, y un cambio de carril cuesta ocho
+ * ticks. Un cono que llegara antes no mediría habilidad, y con un solo intento
+ * por persona eso no se puede permitir.
  *
- * Cuando el dado pide una valla demasiado pronto, sale una rampa en su lugar:
+ * Cuando el dado pide un cono demasiado pronto, sale un impulsor en su lugar:
  * la pista sigue igual de poblada y el jugador sale ganando.
  */
-const SEPARACION_VALLAS = 30_000;
+const SEPARACION_CONOS = 30_000;
 
-/** Separación entre logos TVS. Promedio ~200 m, como dice el balanceo. */
+/** Separación entre llaves. Promedio ~200 m, como dice el balanceo. */
 const GAP_ITEM_MIN = 150_000;
 const GAP_ITEM_MAX = 250_000;
 
@@ -78,7 +78,7 @@ export function generarPista(seed: number): Pista {
 
   // --- Obstáculos ---------------------------------------------------------
   let cursor = ARRANQUE_LIMPIO_MM;
-  let posUltimaValla = -SEPARACION_VALLAS;
+  let posUltimoCono = -SEPARACION_CONOS;
 
   while (cursor < PISTA_MM) {
     cursor += prng.rango(GAP_MIN, GAP_MAX);
@@ -88,35 +88,35 @@ export function generarPista(seed: number): Pista {
     }
 
     /*
-     * La dificultad sube con la distancia: al principio casi todo son rampas
-     * y lodo, y las vallas aparecen más adelante. Así los primeros segundos
-     * no castigan a quien nunca ha jugado.
+     * La dificultad sube con la distancia: al principio casi todo son
+     * impulsores y aceite, y los conos aparecen más adelante. Así los
+     * primeros segundos no castigan a quien nunca ha jugado.
      */
     const progresoPorMil = div(cursor * 1000, PISTA_MM);
-    const pesoValla = 100 + div(progresoPorMil * 250, 1000); // 10 % → 35 %
-    const pesoLodo = 350;
+    const pesoCono = 100 + div(progresoPorMil * 250, 1000); // 10 % → 35 %
+    const pesoAceite = 350;
 
     const dado = prng.rango(0, 999);
     let tipo: number;
 
-    if (dado < pesoValla) {
-      tipo = TIPO_VALLA;
-    } else if (dado < pesoValla + pesoLodo) {
-      tipo = TIPO_LODO;
+    if (dado < pesoCono) {
+      tipo = TIPO_CONO;
+    } else if (dado < pesoCono + pesoAceite) {
+      tipo = TIPO_ACEITE;
     } else {
-      tipo = TIPO_RAMPA;
+      tipo = TIPO_IMPULSOR;
     }
 
-    // Vallas demasiado seguidas: se convierten en rampa.
-    if (tipo === TIPO_VALLA && cursor - posUltimaValla < SEPARACION_VALLAS) {
-      tipo = TIPO_RAMPA;
+    // Conos demasiado seguidos: se convierten en impulsor.
+    if (tipo === TIPO_CONO && cursor - posUltimoCono < SEPARACION_CONOS) {
+      tipo = TIPO_IMPULSOR;
     }
 
-    if (tipo === TIPO_VALLA) {
-      posUltimaValla = cursor;
+    if (tipo === TIPO_CONO) {
+      posUltimoCono = cursor;
     }
 
-    const largo = tipo === TIPO_LODO ? LARGO_LODO : 0;
+    const largo = tipo === TIPO_ACEITE ? LARGO_ACEITE : 0;
 
     /*
      * Un grupo ocupa uno o dos carriles. Nunca más: con cuatro carriles, dos
@@ -134,7 +134,7 @@ export function generarPista(seed: number): Pista {
     }
   }
 
-  // --- Logos TVS -----------------------------------------------------------
+  // --- Llaves ---------------------------------------------------------------
   let cursorItem = div(ARRANQUE_LIMPIO_MM, 2);
 
   while (cursorItem < PISTA_MM) {

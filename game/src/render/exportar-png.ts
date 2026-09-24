@@ -211,14 +211,12 @@ const P = TEMA_POR_DEFECTO.paleta;
 function hojaSprites(): Lienzo {
   const items: Array<[string, readonly string[]]> = [
     ['MOTO', S.MOTO],
-    ['WHEELIE', S.MOTO_WHEELIE],
     ['CAIDA', S.MOTO_CAIDA],
-    ['RAMPA', S.RAMPA],
-    ['VALLA', S.VALLA],
-    ['LODO', S.LODO],
-    ['ITEM TVS', S.ITEM_TVS],
+    ['IMPULSOR', S.IMPULSOR],
+    ['CONO', S.CONO],
+    ['ACEITE', S.ACEITE],
+    ['LLAVE', S.ITEM_LLAVE],
     ['HUMO', S.HUMO],
-    ['SOMBRA', S.SOMBRA],
     ['PUBLICO', S.ESPECTADOR],
     ['ANIMANDO', S.ESPECTADOR_ANIMANDO],
     ['LUZ', S.BOMBILLA],
@@ -328,27 +326,30 @@ function maquetaPantalla(): Lienzo {
   }
   l.rect(P.pistaBorde, 0, 80, ANCHO, 2);
 
-  // Pista.
+  // Pista de asfalto. Mismo dibujo que crearPista() en texturas.ts.
   for (let carril = 0; carril < 4; carril++) {
     const y = PISTA_Y + carril * CARRIL_ALTO;
     l.rect(carril % 2 === 0 ? P.pista : P.pistaAlt, 0, y, ANCHO, CARRIL_ALTO);
 
-    for (let x = (carril * 7) % 16; x < ANCHO; x += 16) {
-      l.rect(P.pistaBorde, x, y + 3, 2, 1);
+    for (let x = (carril * 11) % 32; x < ANCHO; x += 32) {
+      l.rect(P.pistaAlt, x, y + 5, 5, 2);
+      l.rect(P.pistaBorde, x + 17, y + 10, 4, 1);
     }
+
+    l.rect(P.pistaBorde, 0, y + CARRIL_ALTO - 1, ANCHO, 1);
 
     if (carril > 0) {
       for (let x = 0; x < ANCHO; x += 16) {
-        l.rect(P.crema, x, y, 9, 1);
+        l.rect(P.blanco, x, y, 9, 1);
       }
     }
   }
 
   // Obstáculos de muestra, uno de cada tipo.
-  l.sprite(S.RAMPA, P, 140, PISTA_Y + CARRIL_ALTO * 2 - 1);
-  l.sprite(S.VALLA, P, 210, PISTA_Y + CARRIL_ALTO * 1 - 1);
-  l.sprite(S.LODO, P, 250, PISTA_Y + CARRIL_ALTO * 3 + 1);
-  l.sprite(S.ITEM_TVS, P, 180, PISTA_Y + CARRIL_ALTO * 0);
+  l.sprite(S.IMPULSOR, P, 140, PISTA_Y + CARRIL_ALTO * 2 + 4);
+  l.sprite(S.CONO, P, 210, PISTA_Y + CARRIL_ALTO * 2 - S.CONO.length);
+  l.sprite(S.ACEITE, P, 250, PISTA_Y + CARRIL_ALTO * 3 + 4);
+  l.sprite(S.ITEM_LLAVE, P, 180, PISTA_Y + CARRIL_ALTO * 0 + 3);
 
   // Moto en el segundo carril.
   l.sprite(S.MOTO, P, 63, PISTA_Y + CARRIL_ALTO * 2 + CARRIL_ALTO - S.MOTO.length);

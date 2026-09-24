@@ -28,16 +28,29 @@ export interface Paleta {
   grisClaro: number;
   amarillo: number;
   piel: number;
-  /** Azul del casco y el chasis, tal como lo dibujó el diseño. */
-  azulMoto: number;
+  /** Gris del chasis y el casco de la moto deportiva. */
+  grisMoto: number;
   /** Rojo del diseño de la moto. Más encendido que el rojo del manual TVS. */
   rojoMoto: number;
   /** Plata de la horquilla y el escape. */
   plata: number;
-  /** Plata clara de los reflejos. */
+  /** Plata clara de los reflejos y de la franja del cono. */
   plataClara: number;
-  /** Azul de las letras del logo TVS del bonus. */
-  azulLogo: number;
+  /** Amarillo del faro. */
+  amarilloFaro: number;
+
+  // Llave del bonus
+  amarilloLlave: number;
+  amarilloLlaveClaro: number;
+  naranjaLlave: number;
+
+  // Cono de vía
+  naranjaCono: number;
+  naranjaConoOscuro: number;
+
+  // Impulsor
+  verdeImpulsor: number;
+  verdeImpulsorOscuro: number;
 
   // Escenario
   cielo: number;
@@ -45,11 +58,16 @@ export interface Paleta {
   verde: number;
   verdeOscuro: number;
   verdeClaro: number;
+  /** Asfalto del carril. */
   pista: number;
+  /** Asfalto del carril alterno, apenas más claro. */
   pistaAlt: number;
+  /** Junta entre carriles y borde de la calzada. */
   pistaBorde: number;
-  lodo: number;
-  lodoClaro: number;
+  /** Negro del charco de aceite. */
+  aceite: number;
+  /** Tornasol del aceite bajo la luz. */
+  aceiteBrillo: number;
 
   // Panel
   tempFria: number;
@@ -69,8 +87,8 @@ export interface Textos {
   unidadMetros: string;
   /** Lo que sube flotando al recoger un bonus. */
   bonus: string;
-  /** Lo que sube flotando al saltar una rampa. */
-  bonusRampa: string;
+  /** Lo que sube flotando al pisar un impulsor. */
+  bonusImpulsor: string;
 }
 
 export interface Tema {
@@ -93,39 +111,49 @@ export const TEMA_POR_DEFECTO: Tema = {
     grisClaro: 0x9a9a9a,
     amarillo: 0xf5c518,
     piel: 0xe8b38a,
-    azulMoto: 0x0070c0,
+    grisMoto: 0x808080,
     rojoMoto: 0xff0000,
     plata: 0xa6a6a6,
     plataClara: 0xe0e0e0,
-    azulLogo: 0x156082,
+    amarilloFaro: 0xffff00,
+
+    amarilloLlave: 0xffdb01,
+    amarilloLlaveClaro: 0xffef8f,
+    naranjaLlave: 0xff9f00,
+
+    naranjaCono: 0xff6f00,
+    naranjaConoOscuro: 0xd25a00,
+
+    verdeImpulsor: 0x66ff33,
+    verdeImpulsorOscuro: 0x12501a,
 
     cielo: 0x4a90d9,
     cieloAlto: 0x2f6fb5,
     verde: 0x3aa93a,
     verdeOscuro: 0x227722,
     verdeClaro: 0x5fc75f,
-    pista: 0xd98a4a,
-    pistaAlt: 0xc97a3d,
-    pistaBorde: 0x8a5228,
-    lodo: 0x5a3a20,
-    lodoClaro: 0x7a5230,
+    pista: 0x4a4a4a,
+    pistaAlt: 0x545454,
+    pistaBorde: 0x2e2e2e,
+    aceite: 0x14141c,
+    aceiteBrillo: 0x4a3a6a,
 
     tempFria: 0x3aa93a,
     tempCaliente: 0xe01d2d,
   },
   textos: {
-    cartelTribuna: 'CONCURSO TVS',
+    cartelTribuna: 'NAVIDAD TVS',
     rotuloDistancia: 'DIST',
     rotuloTemperatura: 'TEMP',
     rotuloTiempo: 'TIME',
     avisoCaliente: 'MOTOR CALIENTE',
     avisoSobrecalentado: 'MOTOR SOBRECALENTADO',
     cuentaYa: 'YA!',
-    podioTitulo: 'CONCURSO TVS',
+    podioTitulo: 'NAVIDAD TVS',
     podioGracias: 'GRACIAS POR PARTICIPAR',
     unidadMetros: 'M',
     bonus: '+50',
-    bonusRampa: '+1',
+    bonusImpulsor: '+1',
   },
 };
 

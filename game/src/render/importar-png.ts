@@ -205,7 +205,7 @@ const opcion = (nombre: string): string | undefined => {
 const [rutaPng, nombre = 'SPRITE'] = posicionales;
 
 if (!rutaPng) {
-  console.error('Uso: npm run arte:importar -- diseño.png NOMBRE [--tamano 25x22] [--fondo auto|#RRGGBB]');
+  console.error('Uso: npm run arte:importar -- diseño.png NOMBRE [--tamano 25x22] [--fondo auto|#RRGGBB] [--recortar]');
   process.exit(1);
 }
 
@@ -508,6 +508,49 @@ for (let cy = 0; cy < altoSalida; cy++) {
   }
 
   filas.push(fila);
+}
+
+// ---------------------------------------------------------------------------
+// Recorte del lienzo vacio
+// ---------------------------------------------------------------------------
+
+/*
+ * Los disenos llegan dibujados en la matriz de 24x24 del proyecto, pero no
+ * todos la llenan: un cono o una llave ocupan la mitad. Esas filas y columnas
+ * enteras de transparente no son parte del dibujo y si estorban, porque el
+ * juego coloca los sprites por su borde y un carril mide 16 px.
+ *
+ * Con --recortar se quitan. No se toca ni un pixel del dibujo: solo desaparece
+ * el marco vacio que lo rodea, asi que sigue siendo exactamente el diseno y no
+ * hace falta retocar el arreglo a mano.
+ */
+if (argv.includes('--recortar')) {
+  const vacia = (fila: string) => /^\.*$/.test(fila);
+
+  let arriba = 0;
+  let abajo = filas.length;
+  while (arriba < abajo && vacia(filas[arriba])) arriba++;
+  while (abajo > arriba && vacia(filas[abajo - 1])) abajo--;
+
+  const recortadas = filas.slice(arriba, abajo);
+
+  let izq = 0;
+  let der = recortadas.length > 0 ? recortadas[0].length : 0;
+  while (izq < der && recortadas.every((f) => f[izq] === '.')) izq++;
+  while (der > izq && recortadas.every((f) => f[der - 1] === '.')) der--;
+
+  filas.length = 0;
+  filas.push(...recortadas.map((f) => f.slice(izq, der)));
+
+  const anchoAntes = anchoSalida;
+  const altoAntes = altoSalida;
+  anchoSalida = der - izq;
+  altoSalida = abajo - arriba;
+
+  console.log(
+    `Marco vacio recortado: de ${anchoAntes}x${altoAntes} a ${anchoSalida}x${altoSalida} ` +
+      `(${izq} col. izq., ${anchoAntes - der} der., ${arriba} filas arriba, ${altoAntes - abajo} abajo)`
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -15,17 +15,15 @@
  */
 
 import {
+  ACEITE_POR_MIL,
   ACEL_NORMAL,
   ACEL_TURBO,
-  BOOST_ATERRIZAJE,
   CARRILES,
   DECEL_SOBRECALENTADO,
   FRICCION,
-  GRAVEDAD,
-  IMPULSO_POR_MIL,
+  IMPULSOR_METROS,
+  IMPULSOR_MMS,
   ITEM_METROS,
-  LODO_POR_MIL,
-  RAMPA_METROS,
   TEMP_MAX,
   TEMP_NORMAL,
   TEMP_SUELTO,
@@ -33,9 +31,9 @@ import {
   TICKS_CAIDA,
   TICKS_SOBRECALENTADO,
   TICKS_CAMBIO_CARRIL,
-  TIPO_LODO,
-  TIPO_RAMPA,
-  TIPO_VALLA,
+  TIPO_ACEITE,
+  TIPO_CONO,
+  TIPO_IMPULSOR,
   TPS,
   V_MAX_NORMAL,
   V_MAX_TURBO,
@@ -59,21 +57,16 @@ export interface Estado {
   sobrecalentado: number;
   /** Ticks que faltan de caída. */
   caido: number;
-  enAire: boolean;
-  /** Altura sobre la pista, en mm. */
-  altura: number;
-  /** Velocidad vertical, en mm/s. */
-  velY: number;
-  /** Logos TVS recogidos. */
+  /** Llaves recogidas. */
   items: number;
-  /** Rampas saltadas. */
-  rampas: number;
+  /** Impulsores pisados. */
+  impulsores: number;
   /** Veces que se fue al suelo. */
   caidas: number;
   /** Veces que se caló el motor. */
   sobrecalentamientos: number;
-  /** Hasta qué posición sigue habiendo lodo. */
-  lodoHasta: number;
+  /** Hasta qué posición sigue habiendo aceite. */
+  aceiteHasta: number;
   /** Índices de recorrido de la pista. Nunca retroceden. */
   idxObstaculo: number;
   idxItem: number;
@@ -89,14 +82,11 @@ export function crearEstado(): Estado {
     temp: 0,
     sobrecalentado: 0,
     caido: 0,
-    enAire: false,
-    altura: 0,
-    velY: 0,
     items: 0,
-    rampas: 0,
+    impulsores: 0,
     caidas: 0,
     sobrecalentamientos: 0,
-    lodoHasta: 0,
+    aceiteHasta: 0,
     idxObstaculo: 0,
     idxItem: 0,
   };
@@ -104,7 +94,7 @@ export function crearEstado(): Estado {
 
 /** Distancia que se le muestra al participante y que decide el ranking. */
 export function distanciaMetros(estado: Estado): number {
-  return div(estado.pos, 1000) + estado.items * ITEM_METROS + estado.rampas * RAMPA_METROS;
+  return div(estado.pos, 1000) + estado.items * ITEM_METROS + estado.impulsores * IMPULSOR_METROS;
 }
 
 /** Segundos que quedan de carrera, redondeados hacia arriba. */
@@ -138,12 +128,12 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
     return;
   }
 
-  // --- Cambio de carril, solo con las ruedas en el suelo -------------------
+  // --- Cambio de carril -----------------------------------------------------
   if (estado.esperaCarril > 0) {
     estado.esperaCarril--;
   }
 
-  if (!estado.enAire && estado.esperaCarril === 0) {
+  if (estado.esperaCarril === 0) {
     if (tiene(entrada, BIT_ARRIBA) && estado.carril > 0) {
       estado.carril--;
       estado.esperaCarril = TICKS_CAMBIO_CARRIL;
@@ -153,27 +143,7 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
     }
   }
 
-  /*
-   * Vuelo.
-   *
-   * En el aire no hay nada que controlar: la moto sale girada de la rampa, se
-   * mantiene así y cae de pie con un pequeño impulso. El salto es una
-   * oportunidad —se pasa por encima de lo que venga— y no un riesgo.
-   */
-  if (estado.enAire) {
-    estado.velY -= div(GRAVEDAD, TPS);
-    estado.altura += div(estado.velY, TPS);
-
-    if (estado.altura <= 0) {
-      estado.altura = 0;
-      estado.enAire = false;
-      estado.velY = 0;
-      estado.vel = Math.min(V_MAX_TURBO, estado.vel + BOOST_ATERRIZAJE);
-    }
-  }
-
   // --- Motor ----------------------------------------------------------------
-  // Se puede seguir acelerando en el aire, igual que en el original.
   let vmax: number;
   let acel: number;
 
@@ -222,9 +192,9 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
  * @param pista  Pista generada del seed.
  */
 function avanzar(estado: Estado, pista: Pista): void {
-  // El lodo frena mientras se está encima, sin tocar la velocidad del motor.
-  const enLodo = estado.pos < estado.lodoHasta && !estado.enAire;
-  const efectiva = enLodo ? div(estado.vel * LODO_POR_MIL, 1000) : estado.vel;
+  // El aceite frena mientras se está encima, sin tocar la velocidad del motor.
+  const enAceite = estado.pos < estado.aceiteHasta;
+  const efectiva = enAceite ? div(estado.vel * ACEITE_POR_MIL, 1000) : estado.vel;
 
   estado.pos += div(efectiva, TPS);
 
@@ -239,33 +209,25 @@ function avanzar(estado: Estado, pista: Pista): void {
       continue;
     }
 
-    // En el aire se pasa por encima de todo.
-    if (estado.enAire) {
-      continue;
-    }
-
-    if (obs.tipo === TIPO_RAMPA) {
-      estado.enAire = true;
-      estado.rampas++;
-      estado.velY = div(estado.vel * IMPULSO_POR_MIL, 1000);
-      estado.altura = 1;
-    } else if (obs.tipo === TIPO_LODO) {
-      estado.lodoHasta = obs.pos + obs.largo;
-    } else if (obs.tipo === TIPO_VALLA) {
+    if (obs.tipo === TIPO_IMPULSOR) {
+      estado.impulsores++;
+      estado.vel = Math.min(V_MAX_TURBO, estado.vel + IMPULSOR_MMS);
+    } else if (obs.tipo === TIPO_ACEITE) {
+      estado.aceiteHasta = obs.pos + obs.largo;
+    } else if (obs.tipo === TIPO_CONO) {
       estado.caido = TICKS_CAIDA;
       estado.caidas++;
       estado.vel = 0;
     }
   }
 
-  // --- Logos TVS ------------------------------------------------------------
+  // --- Llaves ---------------------------------------------------------------
   const items = pista.items;
 
   while (estado.idxItem < items.length && items[estado.idxItem].pos <= estado.pos) {
     const item = items[estado.idxItem];
     estado.idxItem++;
 
-    // Se recogen aunque se vaya por el aire: están a la altura del piloto.
     if (item.carril === estado.carril) {
       estado.items++;
     }

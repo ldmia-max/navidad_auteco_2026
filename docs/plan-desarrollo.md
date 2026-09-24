@@ -98,7 +98,7 @@ El juego funciona y es determinista.
   propio.
 - Temperatura del motor: el turbo la sube, soltar o frenar la baja, y al tope
   la moto se detiene unos segundos.
-- Contador de metros de 1 en 1; ítems con el logo TVS suman +50 m.
+- Contador de metros de 1 en 1; las llaves suman +50 m y cada impulsor, +1 m.
 - Cronómetro de 90 s con countdown 3-2-1 tras el botón de iniciar carrera.
 - Controles táctiles y teclado; sin zoom, scroll ni pull-to-refresh.
 - Grabación del log de inputs por tick.
@@ -124,7 +124,7 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
 - Vista del piloto girando al cambiar de carril, como en la referencia.
 - Tribuna con público y cartel del concurso; banderines como luces navideñas.
 - Parallax de 3–4 capas.
-- Ítem coleccionable con la letra del logo TVS.
+- Ítem coleccionable con el diseño de llave.
 - Panel inferior: `DIST` izquierda, `TEMP` centro con barra roja/verde, `TIME`
   derecha, en marco azul con números rojo y blanco.
 - Pantalla final: piloto en podio sobre panel con marco de cuadros, nombre y

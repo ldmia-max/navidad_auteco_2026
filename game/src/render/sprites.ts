@@ -14,83 +14,63 @@ import type { Sprite } from './pixeles';
 // ---------------------------------------------------------------------------
 // Moto y piloto, vista lateral, mirando a la derecha. Lienzo de 24×24.
 //
-// Las dos primeras poses vienen de los diseños del cliente e importan a su
-// TAMAÑO NATIVO: llegan dibujadas en la matriz de 24×24 del proyecto, con un
-// encaje del 100 %, así que cada píxel dibujado es un píxel del juego y no se
-// pierde ninguno. Ver docs/arte-y-sonido.md.
+// La moto rodando viene del diseño del cliente e importa a su TAMAÑO NATIVO:
+// llega dibujada en la matriz de 24×24 del proyecto, con un encaje del 100 %,
+// así que cada píxel dibujado es un píxel del juego y no se pierde ninguno.
+// Ver docs/arte-y-sonido.md.
 //
-//   npm run arte:importar -- ../imagenes_apoyo/normal.png MOTO //     --tamano 24x24 --fondo auto --offset -4,-4 //     --mapa "ff9f00=.,ffffff=w,000000=n,0070c0=B,ff0000=e,a6a6a6=t,e0e0e0=T"
+//   npm run arte:importar -- ../imagenes_apoyo/piloto_nuevo.png MOTO //     --tamano 24x24 --fondo auto --offset -4,-4 //     --mapa "ff9f00=.,000000=n,808080=C,ffffff=w,ff0000=e,a6a6a6=t,ffff00=f"
 //
-//   ... y lo mismo con Salto.png para MOTO_WHEELIE.
-//
-// No se retocan a mano: si hay que cambiar algo, se cambia el PNG y se vuelve
+// No se retoca a mano: si hay que cambiar algo, se cambia el PNG y se vuelve
 // a importar.
 //
-// Las tres van alineadas por abajo y tienen que medir lo mismo: la escena las
-// dibuja con origen (0.5, 1) sobre la línea del carril, y un cambio de tamaño
-// haría saltar la moto al cambiar de pose.
+// Ya no hay pose de salto: los impulsores sustituyeron a las rampas y la moto
+// no despega del suelo en ningún momento.
+//
+// Las dos poses van alineadas por abajo y tienen que medir lo mismo: la escena
+// las dibuja con origen (0.5, 1) sobre la línea del carril, y un cambio de
+// tamaño haría saltar la moto al cambiar de pose.
 // ---------------------------------------------------------------------------
 
-/** Rodando normal. Casco azul, para distinguirlo del traje blanco. */
+/** Moto deportiva rodando. Chasis y casco grises, traje blanco. */
 export const MOTO: Sprite = [
   '........................',
   '........................',
-  '..........BBBB..........',
-  '.........BBBBBBB........',
-  '.........BBBnnn.........',
-  '.........BBBBnn.........',
-  '........nnBBBBB.........',
-  '.......wwweeBBB.........',
-  '......wwwweee...........',
-  '......wwwweew...........',
+  '........................',
+  '..........CCCC..........',
+  '.........CCCCCC.........',
+  '.........CCCnnn.........',
+  '.........CCCCnn.........',
+  '.........nCCCCC.........',
+  '........wweeCCC.........',
+  '.......wwwee............',
+  '.......wwwee...nn.......',
   '......wwwweeeee.n.......',
-  '......wwwwweeenen.......',
-  '......wwwww...ttn.......',
-  '....BBBwwwww.BBtBBBB....',
-  '.......nnwwwwBBtt.......',
-  '....nnBBBnwwwBBBttnn....',
-  '...nn.BBBnwwwBB.nt.nn...',
-  '..nn..BB.teeen.nnt..nn..',
-  '..n..n..tteeen.n.tn..n..',
-  '..n..tttt.eeee.n..t..n..',
-  '..nn...nn..nn..nn...nn..',
-  '...nn.nn........nn.nn...',
-  '....nnn..........nnn....',
+  '...eCCwwwwweeenenC......',
+  '....CCCwwwwwCCCtCCf.....',
+  '......CwwwwwCCCttCC.....',
+  '...nnnCCCwwwwCCCttCnn...',
+  '..nn.nnCCCwwwCC..tt.nn..',
+  '.nn.ttnnCCwwwnn.nnt..nn.',
+  '.n..nttnCCeeenn.n.tn..n.',
+  '.n....tttCeeen..n..t..n.',
+  '.nn...nntteeee..nn...nn.',
+  '..nn.nn..........nn.nn..',
+  '...nnn............nnn...',
   '........................',
 ];
 
 /**
- * En el aire. Se muestra tal cual, sin girarla más: sube a la rampa girada,
- * se mantiene así todo el vuelo y vuelve a la normal al tocar el suelo.
+ * Piloto en el suelo y la moto tumbada. 24×24.
+ *
+ * DERIVADA, no viene de un diseño: es la única pose que no mandó el cliente.
+ * Se compuso con los colores de la moto deportiva —casco y chasis grises,
+ * traje blanco, rojo del carenado— para que se lea como el mismo piloto.
+ *
+ * Las ruedas van aplastadas, más anchas que altas. Con ruedas redondas, como
+ * en la primera versión, la moto seguía pareciendo de pie y el jugador no
+ * entendía por qué no avanzaba.
  */
-export const MOTO_WHEELIE: Sprite = [
-  '...BBBB.................',
-  '..BBBBBBB...............',
-  '..BBBnnn................',
-  '..BBBBnn................',
-  '...BBBBB..n....B........',
-  '..nwwBBB..en..B.........',
-  '..wweew..entnB..nnn.....',
-  '..wweeewee.Btttnn.nn....',
-  '..wwweeee..BBBtt...nn...',
-  '...wwweewwwwB.nttn..n...',
-  '...wwwwwwwwww.n..t..n...',
-  '....wwwwwwBww.nn...nn...',
-  '.....wwwnnBee..nn.nn....',
-  '.....BnnBBBee...nnn.....',
-  '....B..BBtteee..........',
-  '...B..BBtt..............',
-  '.....nnBtn..............',
-  '....nn..tnn.............',
-  '....n..nt.n.............',
-  '....n..tt.n.............',
-  '....nn...nn.............',
-  '.....nn.nn..............',
-  '......nnn...............',
-  '........................',
-];
-
-/** Piloto en el suelo y la moto tumbada. Derivada; falta su diseño. */
 export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
@@ -103,19 +83,19 @@ export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
   '........................',
-  '..wwwww.................',
-  '.wwwnnnw................',
-  '.wwwnnnw...BBBBBB.......',
-  '..wwwww..BBBBttBBBB.....',
-  '..eeeee.BBBtt....BB.....',
-  '.eeeeeee................',
-  '.eeeee..nnn.......nnn...',
-  '..eee..nnnnn.....nnnnn..',
-  '..w.w.nn.t.nn...nn.t.nn.',
-  '......nn...nn...nn...nn.',
-  '......nn.t.nn...nn.t.nn.',
-  '.......nnnnn.....nnnnn..',
-  '........nnn.......nnn...',
+  '........................',
+  '........................',
+  '........................',
+  '..CCCC..................',
+  '.CCnnCC.................',
+  '.CCnnCC....CCCCCCCCCC...',
+  '..CCCC....CttttttttttC..',
+  '.wwwwww..CCeeeeeeeeeeCC.',
+  'wwwwwwww.CCCCCCCCCCCCCC.',
+  '.wwwww..nnnnnn....nnnnnn',
+  '..eee...nn..nn....nn..nn',
+  '..w.w...nnnnnn....nnnnnn',
+  '........................',
 ];
 
 /** Humo del motor sobrecalentado. 8×8, se anima con alfa y escala. */
@@ -135,36 +115,40 @@ export const HUMO: Sprite = [
 // ---------------------------------------------------------------------------
 
 /**
- * Rampa de tierra. 20×14.
+ * Impulsor de pista. 13×8.
  *
- * El cuerpo va en el marrón oscuro del borde de pista y la cara superior en
- * crema. La primera versión rellenaba la rampa con el color de la pista y era
- * literalmente invisible sobre ella.
+ * Importado del diseño del cliente a su tamaño nativo, recortando el marco
+ * vacío de la matriz de 24×24 para que quepa dentro de un carril de 16 px:
+ *
+ *   npm run arte:importar -- ../imagenes_apoyo/impulsador.png IMPULSOR  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,595959=g,66ff33=x,12501a=X"
+ *
+ * Va pintado plano sobre el asfalto: es una placa, no un bulto. Sustituye a la
+ * rampa, y con ella desapareció el salto.
  */
-export const RAMPA: Sprite = [
-  '..................cc',
-  '................ccbb',
-  '..............ccbbbb',
-  '............ccbbbbbb',
-  '..........ccbbbbbbbb',
-  '........ccbbbbbbbbbb',
-  '......ccbbbbbbbbbbbb',
-  '....ccbbbbbbbbbbbbbb',
-  '..ccbbbbbbbbbbbbbbbb',
-  'ccbbbbbbbbbbbbbbbbbb',
-  'bbbbbbbbbbbbbbbbbbbb',
-  'bbnbbbbnbbbbnbbbbnbb',
-  'bbbbbbbbbbbbbbbbbbbb',
-  'nnnnnnnnnnnnnnnnnnnn',
+export const IMPULSOR: Sprite = [
+  '.ggggggggg...',
+  '..gXxxgXxxg..',
+  '...gXxxgXxxg.',
+  '....gXxxgXxxg',
+  '...gXxxgXxxg.',
+  '..gXxxgXxxg..',
+  '.gXxxgXxxg...',
+  'ggggggggg....',
 ];
 
 /**
- * Charco de lodo. 26×9.
+ * Charco de aceite. 26×9.
  *
- * Plano y con salpicaduras claras. La primera versión era casi negra y
- * redonda: sobre la pista naranja parecía un agujero, no barro.
+ * DERIVADO, no viene de un diseño. Conserva píxel por píxel la huella del
+ * charco de lodo al que sustituye —misma forma y mismo tamaño, así que frena
+ * exactamente igual— y solo cambia de color: negro con tornasol violáceo en
+ * vez de marrón.
+ *
+ * El borde claro no es decoración. Sobre la tierra naranja un charco oscuro
+ * se veía solo; sobre el asfalto gris, un charco casi negro y sin contorno
+ * desaparece, y el jugador no puede esquivar lo que no ve.
  */
-export const LODO: Sprite = [
+export const ACEITE: Sprite = [
   '.....MMMMMMMMMMMMMM.......',
   '..MMMmmmmmmmmmmmmmmMMM....',
   '.MMmmmmMmmmmmmMmmmmmmmMM..',
@@ -176,59 +160,52 @@ export const LODO: Sprite = [
   '.....MMMMMMMMMMMMMM.......',
 ];
 
-/** Valla de obra. 12×14. */
-export const VALLA: Sprite = [
-  '............',
-  'wwwwwwwwwwww',
-  'wrrrwwwrrrww',
-  'wwrrrwwwrrrw',
-  'wwwrrrwwwrrr',
-  'rwwwrrrwwwrr',
-  'rrwwwrrrwwwr',
-  'wwwwwwwwwwww',
-  '...ww..ww...',
-  '...ww..ww...',
-  '...ww..ww...',
-  '...ww..ww...',
-  '..nnnnnnnn..',
-  '............',
+/**
+ * Cono de vía. 10×14.
+ *
+ * Importado del diseño del cliente, recortado igual que el impulsor:
+ *
+ *   npm run arte:importar -- ../imagenes_apoyo/cono_via.png CONO  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,ff6f00=O,d9d9d9=T,d25a00=o"
+ *
+ * Es el único obstáculo que tumba. Sustituye a la valla de obra.
+ */
+export const CONO: Sprite = [
+  '....OO....',
+  '....OO....',
+  '...OOOO...',
+  '...TTTT...',
+  '...OOOO...',
+  '..OOOOOO..',
+  '..TTTTTT..',
+  '..OOOOOO..',
+  '.OOOOOOOO.',
+  '.TTTTTTTT.',
+  '.OOOOOOOO.',
+  '.oooooooo.',
+  'OOOOOOOOOO',
+  'OOOOOOOOOO',
 ];
 
 /**
- * Bonus TVS coleccionable. 19×16.
+ * Llave del bonus. 18×10.
  *
- * Importado del diseño del cliente (imagenes_apoyo/Bonus_TVS_2.png) a su
- * tamaño nativo: el diseño llega en una rejilla de 19×16 con un encaje del
- * 100 %, y 16 px es justo el alto de un carril, así que entra sin remuestrear
- * y no se pierde ni un píxel.
+ * Importada del diseño del cliente, recortada para caber en un carril:
  *
- *   npm run arte:importar -- ../imagenes_apoyo/Bonus_TVS_2.png ITEM_TVS  *     --tamano 19x16 --fondo auto --offset -4,-4  *     --mapa "ffffff=w,ff0000=r,156082=l"
+ *   npm run arte:importar -- ../imagenes_apoyo/Llave_Bonus.png ITEM_LLAVE  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,ffdb01=Y,747474=C,ff9f00=j,ffef8f=Z"
+ *
+ * Sustituye al logo TVS y vale lo mismo: +50 m.
  */
-export const ITEM_TVS: Sprite = [
-  '...................',
-  '....rrrrrrrrrrr....',
-  '....rwwwwwwwwwr....',
-  '...rrwwwwwwwwwrr...',
-  '.rrrwwwwwwwwwwwrrr.',
-  '.rwwwwwwwwwwwwwwwr.',
-  '.rwlllwlwwwlwlllwr.',
-  '.rwwlwwlwwwlwlwwwr.',
-  '.rwwlwwwlwlwwwwlwr.',
-  '.rwwlwwwwlwwwlllwr.',
-  '.rwwwwwwwwwwwwwwwr.',
-  '.rrrwwwwwwwwwwwwrr.',
-  '...rrwwwwwwwwwwrr..',
-  '....rrwwwwwwwwrr...',
-  '.....rrrrrrrrrr....',
-  '...................',
-];
-
-/** Sombra de la moto en el aire. 14×4. */
-export const SOMBRA: Sprite = [
-  '...nnnnnnnn...',
-  '.nnnnnnnnnnnn.',
-  '.nnnnnnnnnnnn.',
-  '...nnnnnnnn...',
+export const ITEM_LLAVE: Sprite = [
+  '...CCCC...........',
+  '..CYYYYC..........',
+  '.CYYYYYYC.........',
+  'CYYYjjYYYCCCCCCCC.',
+  'CZYj..jYYYYYYYYYZC',
+  'CZYj..jYYYYYjjjjYC',
+  'CZYYjjYYYCCYYYYYYC',
+  '.CZYYYYYC..jCjCjC.',
+  '..CZYYYC..........',
+  '...CCCC...........',
 ];
 
 // ---------------------------------------------------------------------------

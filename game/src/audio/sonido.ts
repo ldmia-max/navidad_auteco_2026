@@ -240,12 +240,16 @@ export class Sonido {
     this.nota(1568, 0.12, 'square', 0.28, 0.12);
   }
 
-  salto(): void {
-    this.barrido(300, 700, 0.18, 'square', 0.2);
-  }
-
-  aterrizajeLimpio(): void {
-    this.nota(520, 0.08, 'triangle', 0.25);
+  /**
+   * Impulsor pisado.
+   *
+   * Barrido ascendente corto y una nota encima: tiene que oírse como un
+   * empujón, no como el salto que había antes, que subía y se quedaba
+   * colgado esperando el aterrizaje.
+   */
+  impulsor(): void {
+    this.barrido(320, 900, 0.14, 'square', 0.22);
+    this.nota(1046, 0.09, 'triangle', 0.2, 0.05);
   }
 
   caida(): void {

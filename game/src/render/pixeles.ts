@@ -19,8 +19,11 @@ export type Sprite = readonly string[];
 /**
  * Qué color representa cada carácter.
  *
- * Se eligieron letras que recuerdan al color para poder leer los sprites de un
- * vistazo. El punto es transparente.
+ * Los colores del escenario usan letras que los recuerdan (v de verde, n de
+ * negro). Los de los diseños que manda el cliente van agrupados por elemento,
+ * porque cada diseño trae su propia paleta corta y nombrarlos por el color
+ * daría media docena de grises y naranjas indistinguibles. El punto es
+ * transparente.
  */
 export const LEYENDA: Record<string, keyof Paleta | null> = {
   '.': null,
@@ -40,17 +43,32 @@ export const LEYENDA: Record<string, keyof Paleta | null> = {
   p: 'pista',
   P: 'pistaAlt',
   b: 'pistaBorde',
-  m: 'lodo',
-  M: 'lodoClaro',
+  m: 'aceite',
+  M: 'aceiteBrillo',
   y: 'amarillo',
   k: 'piel',
-  B: 'azulMoto',
+  s: 'cielo',
+  S: 'cieloAlto',
+
+  // Moto y piloto
+  C: 'grisMoto',
   e: 'rojoMoto',
   t: 'plata',
   T: 'plataClara',
-  l: 'azulLogo',
-  s: 'cielo',
-  S: 'cieloAlto',
+  f: 'amarilloFaro',
+
+  // Llave del bonus
+  Y: 'amarilloLlave',
+  Z: 'amarilloLlaveClaro',
+  j: 'naranjaLlave',
+
+  // Cono de vía
+  O: 'naranjaCono',
+  o: 'naranjaConoOscuro',
+
+  // Impulsor
+  x: 'verdeImpulsor',
+  X: 'verdeImpulsorOscuro',
 };
 
 /**

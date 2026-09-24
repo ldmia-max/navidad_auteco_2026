@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="ntvs-portada">
 		<div class="ntvs-portada__tribuna" aria-hidden="true">
 			<div class="ntvs-luces"></div>
-			<div class="ntvs-cartel"><?php esc_html_e( 'CONCURSO TVS', 'navidad-tvs' ); ?></div>
+			<div class="ntvs-cartel"><?php esc_html_e( 'NAVIDAD TVS', 'navidad-tvs' ); ?></div>
 		</div>
 		<div class="ntvs-portada__pista" aria-hidden="true"></div>
 		<h1 class="ntvs-titulo"><?php esc_html_e( 'Concurso Navideño', 'navidad-tvs' ); ?></h1>

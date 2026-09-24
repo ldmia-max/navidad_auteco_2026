@@ -54,25 +54,23 @@ export const TICKS_SOBRECALENTADO = 150;
 export const TICKS_CAIDA = 120;
 
 // ---------------------------------------------------------------------------
-// Saltos. Altura en mm, velocidad vertical en mm/s, inclinación en decigrados.
+// Impulsores
 // ---------------------------------------------------------------------------
 
-export const GRAVEDAD = 25000;
-
-/** Impulso vertical al pisar una rampa, en milésimas de la velocidad. */
-export const IMPULSO_POR_MIL = 260;
-
 /**
- * Premio por aterrizar.
+ * Empujón instantáneo al pisar un impulsor, en mm/s.
  *
- * El salto no tiene control de inclinación: la moto sale de la rampa girada,
- * se mantiene así todo el vuelo y cae de pie. Hubo una versión con ángulo de
- * aterrizaje, y se quitó porque el dibujo del salto tiene que verse fijo
- * durante el vuelo: si el ángulo no se puede ver, castigar por él produce
- * caídas que el jugador no entiende, y con un solo intento eso no se puede
- * permitir.
+ * Sustituye a la rampa y al salto. La rampa daba 1500 mm/s al aterrizar y a
+ * cambio dejaba a la moto por el aire dos segundos sin poder esquivar nada; el
+ * impulsor es una placa en el suelo, así que el premio tiene que estar en la
+ * velocidad y no en la inmunidad.
+ *
+ * El empujón puede dejar la moto por encima del techo del acelerador normal:
+ * eso es deliberado. La fricción se la va comiendo poco a poco, así que se
+ * gana un tramo rápido y no una ventaja permanente. El tope sigue siendo el
+ * del turbo, para que encadenar impulsores no dispare la velocidad.
  */
-export const BOOST_ATERRIZAJE = 1500;
+export const IMPULSOR_MMS = 4000;
 
 // ---------------------------------------------------------------------------
 // Pista
@@ -83,22 +81,21 @@ export const CARRILES = 4;
 /** Ticks mínimos entre dos cambios de carril. */
 export const TICKS_CAMBIO_CARRIL = 8;
 
-/** El lodo deja la moto al 60 % mientras se está encima. */
-export const LODO_POR_MIL = 600;
+/** El aceite deja la moto al 60 % mientras se está encima. */
+export const ACEITE_POR_MIL = 600;
 
-/** Metros que suma cada logo TVS recogido. */
+/** Metros que suma cada llave recogida. */
 export const ITEM_METROS = 50;
 
 /**
- * Metros que suma cada rampa saltada.
+ * Metros que suma cada impulsor pisado.
  *
- * Es un premio simbólico, no una fuente de distancia: con treinta y pico de
- * rampas en una carrera buena son unos 35 m sobre más de dos mil. Sirve para
- * que buscar la rampa se sienta recompensado además de por el impulso del
- * aterrizaje, y para que el "+1" que sale volando le diga al jugador que el
- * salto contó.
+ * Es un premio simbólico, no una fuente de distancia: con una veintena de
+ * impulsores en una carrera buena son unos 20 m sobre más de dos mil. Sirve
+ * para que el "+1" que sale volando le diga al jugador que el impulsor contó,
+ * además del empujón que ya nota en la velocidad.
  */
-export const RAMPA_METROS = 1;
+export const IMPULSOR_METROS = 1;
 
 /**
  * Tramo limpio del arranque.
@@ -123,12 +120,12 @@ export const PISTA_MM = 3_600_000;
 // Tipos de obstáculo
 // ---------------------------------------------------------------------------
 
-export const TIPO_RAMPA = 1;
-export const TIPO_LODO = 2;
-export const TIPO_VALLA = 3;
+export const TIPO_IMPULSOR = 1;
+export const TIPO_ACEITE = 2;
+export const TIPO_CONO = 3;
 
-/** Largo del tramo embarrado, en mm. */
-export const LARGO_LODO = 4_000;
+/** Largo del charco de aceite, en mm. */
+export const LARGO_ACEITE = 4_000;
 
 /**
  * División entera truncada hacia cero.

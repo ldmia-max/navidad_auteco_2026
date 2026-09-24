@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="ntvs-portada">
 		<div class="ntvs-portada__tribuna" aria-hidden="true">
 			<div class="ntvs-luces"></div>
-			<div class="ntvs-cartel"><?php esc_html_e( 'CONCURSO TVS', 'navidad-tvs' ); ?></div>
+			<div class="ntvs-cartel"><?php esc_html_e( 'NAVIDAD TVS', 'navidad-tvs' ); ?></div>
 		</div>
 		<div class="ntvs-portada__pista" aria-hidden="true"></div>
 		<h1 class="ntvs-titulo"><?php esc_html_e( 'Concurso Navideño', 'navidad-tvs' ); ?></h1>
@@ -133,16 +133,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e( 'Zona izquierda, arriba o abajo. En el teclado, las flechas.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'En el aire', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Esos mismos controles enderezan la moto. Aterriza plano o te caes.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
 				<strong><?php esc_html_e( 'Temperatura', 'navidad-tvs' ); ?></strong>
 				<?php esc_html_e( 'El turbo la sube. Si llega al tope, el motor se sobrecalienta y la moto se detiene dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble de rápido.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'Logos TVS', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Cada uno que recojas suma 50 metros.', 'navidad-tvs' ); ?>
+				<strong><?php esc_html_e( 'Llaves', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Cada una que recojas suma 50 metros.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Impulsores', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Las flechas verdes del pavimento te dan un empujón y suman 1 metro.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Conos', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Esquívalos cambiando de carril. Si le pegas a uno te caes y pierdes dos segundos.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
+				<strong><?php esc_html_e( 'Charcos de aceite', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'No tumban, pero te frenan mientras los pisas.', 'navidad-tvs' ); ?>
 			</li>
 		</ul>
 
@@ -170,7 +178,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p class="ntvs-resultado__distancia" id="ntvs-res-distancia"></p>
 
 			<ul class="ntvs-resultado__detalle">
-				<li><?php esc_html_e( 'Logos TVS', 'navidad-tvs' ); ?> <span id="ntvs-res-logos"></span></li>
+				<li><?php esc_html_e( 'Llaves', 'navidad-tvs' ); ?> <span id="ntvs-res-logos"></span></li>
 				<li><?php esc_html_e( 'Caídas', 'navidad-tvs' ); ?> <span id="ntvs-res-caidas"></span></li>
 				<li><?php esc_html_e( 'Veces que se sobrecalentó', 'navidad-tvs' ); ?> <span id="ntvs-res-sobrecal"></span></li>
 				<li><?php esc_html_e( 'Registro de la carrera', 'navidad-tvs' ); ?> <span id="ntvs-res-bytes"></span> B</li>

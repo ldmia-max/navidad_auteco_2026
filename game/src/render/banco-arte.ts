@@ -30,14 +30,12 @@ console.log('=== Sprites bien formados ===\n');
 
 const sprites: Array<[string, readonly string[]]> = [
   ['MOTO', S.MOTO],
-  ['MOTO_WHEELIE', S.MOTO_WHEELIE],
   ['MOTO_CAIDA', S.MOTO_CAIDA],
   ['HUMO', S.HUMO],
-  ['SOMBRA', S.SOMBRA],
-  ['RAMPA', S.RAMPA],
-  ['LODO', S.LODO],
-  ['VALLA', S.VALLA],
-  ['ITEM_TVS', S.ITEM_TVS],
+  ['IMPULSOR', S.IMPULSOR],
+  ['ACEITE', S.ACEITE],
+  ['CONO', S.CONO],
+  ['ITEM_LLAVE', S.ITEM_LLAVE],
   ['ESPECTADOR', S.ESPECTADOR],
   ['ESPECTADOR_ANIMANDO', S.ESPECTADOR_ANIMANDO],
   ['BOMBILLA', S.BOMBILLA],
@@ -61,25 +59,30 @@ for (const [nombre, sprite] of sprites) {
 console.log('\n=== Tamaños que el juego da por hechos ===');
 
 /*
- * La moto y sus variantes tienen que medir lo mismo: si no, al cambiar de
- * textura la moto daría un salto en pantalla.
+ * La moto y su caída tienen que medir lo mismo: si no, al cambiar de textura
+ * la moto daría un salto en pantalla.
  */
 const medidas = (s: readonly string[]) => `${s[0].length}×${s.length}`;
 
-comprobar('la moto y el wheelie miden igual', medidas(S.MOTO) === medidas(S.MOTO_WHEELIE), medidas(S.MOTO));
 comprobar('la moto y la caída miden igual', medidas(S.MOTO) === medidas(S.MOTO_CAIDA), medidas(S.MOTO_CAIDA));
 
-// El bonus no puede sobresalir del carril, o se confundiria con el de al lado.
-comprobar(
-  'el bonus TVS cabe en un carril',
-  S.ITEM_TVS.length <= CARRIL_ALTO,
-  `${S.ITEM_TVS.length} px de alto, carril de ${CARRIL_ALTO}`
-);
-comprobar(
-  'la valla no tapa dos carriles',
-  S.VALLA.length <= CARRIL_ALTO,
-  `${S.VALLA.length} px de alto`
-);
+/*
+ * Nada de lo que va sobre la pista puede sobresalir de su carril: se
+ * confundiría con el de al lado y el jugador esquivaría donde no debe. Los
+ * diseños llegan en la matriz de 24×24, más alta que un carril, así que se
+ * importan con --recortar y esto comprueba que el recorte bastó.
+ */
+for (const [nombre, sprite] of [
+  ['ITEM_LLAVE', S.ITEM_LLAVE],
+  ['CONO', S.CONO],
+  ['IMPULSOR', S.IMPULSOR],
+] as Array<[string, readonly string[]]>) {
+  comprobar(
+    `${nombre} cabe en un carril`,
+    sprite.length <= CARRIL_ALTO,
+    `${sprite.length} px de alto, carril de ${CARRIL_ALTO}`
+  );
+}
 
 // ===========================================================================
 console.log('\n=== Leyenda de colores ===');

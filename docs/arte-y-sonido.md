@@ -10,17 +10,20 @@ Todos los sprites viven en [`game/src/render/sprites.ts`](../game/src/render/spr
 como arreglos de texto. Cada carácter es un color:
 
 ```ts
-export const ITEM_TVS: Sprite = [
-  '...wwwwwwww...',
-  '..wwwwwwwwww..',
-  'ww..aaaaaaa.ww',
+export const CONO: Sprite = [
+  '....OO....',
+  '...OOOO...',
+  '...TTTT...',
   ...
 ];
 ```
 
 La correspondencia carácter → color está en `LEYENDA`, dentro de
-[`pixeles.ts`](../game/src/render/pixeles.ts): `w` blanco, `a` azul, `r` rojo,
-`n` negro, `.` transparente, y así.
+[`pixeles.ts`](../game/src/render/pixeles.ts): `w` blanco, `n` negro, `O`
+naranja del cono, `.` transparente, y así. Los colores del escenario usan
+letras que los recuerdan; los de los diseños del cliente van agrupados por
+elemento, porque si no serían media docena de grises y naranjas
+indistinguibles.
 
 Se hizo de esta forma por tres motivos:
 
@@ -40,23 +43,31 @@ cd game && npm run arte
 ```
 
 Eso comprueba que todas las filas midan lo mismo, que no haya caracteres fuera
-de la leyenda y que se respeten los tamaños de los que depende el juego (por
-ejemplo, la moto y el wheelie tienen que medir igual o la moto daría un salto
-al cambiar de textura).
+de la leyenda y que se respeten los tamaños de los que depende el juego: la
+moto y su caída tienen que medir igual o la moto daría un salto al cambiar de
+textura, y nada de lo que va sobre la pista puede pasar de los 16 px que mide
+un carril.
 
 ### La matriz de diseño: 24×24
 
-**Las poses de la moto se dibujan en una matriz de 24 × 24 píxeles.** Un diseño
-entregado en esa matriz entra sin remuestrear, y eso es lo único que garantiza
-que no se distorsione: cada píxel dibujado es un píxel del juego.
+**Todo se dibuja en una matriz de 24 × 24 píxeles**: la moto, el cono, la
+llave, el impulsor. Un diseño entregado en esa matriz entra sin remuestrear, y
+eso es lo único que garantiza que no se distorsione: cada píxel dibujado es un
+píxel del juego.
 
 | | |
 |---|---|
-| Matriz | **24 de ancho × 24 de alto** |
-| Apoyo | Las ruedas tocan el borde **inferior**; las tres poses se alinean por abajo |
+| Matriz | **24 de ancho × 24 de alto**, también para los objetos pequeños |
+| Apoyo de la moto | Las ruedas tocan el borde **inferior**; las poses se alinean por abajo |
 | Distancia entre ejes | **~14 px** entre los centros de las dos ruedas |
-| Colores | Los seis del diseño: blanco, azul `#3F48CC`, plata `#C3C3C3`, rojo `#D02A16`, negro y el fondo |
-| Fondo | Transparente, o un color plano que no aparezca en la moto |
+| Alto útil de lo que va en la pista | **16 px como máximo**, que es lo que mide un carril |
+| Colores | Pocos y planos. Los que no estén en la paleta se agregan al tema |
+| Fondo | Transparente, o un color plano que no aparezca en el dibujo |
+
+Un objeto pequeño no tiene que llenar la matriz: se dibuja centrado y se
+importa con `--recortar`, que quita las filas y columnas de transparente que lo
+rodean sin tocar un solo píxel del dibujo. Así el cono llega como 10×14 y la
+llave como 18×10, y los dos caben en un carril.
 
 Para exportar hay dos formas válidas:
 
@@ -69,10 +80,10 @@ Lo que hay que evitar es ampliar por un factor no entero o guardar en un
 formato que comprima con pérdida: ahí es donde aparecen los cientos de colores
 intermedios y las líneas de un píxel se pierden.
 
-**Por qué importa la distancia entre ejes.** Las dos primeras poses llegaron
-dibujadas a escalas distintas y la de salto salía un 21 % más grande, así que
-la moto crecía al despegar. El lienzo no sirve para comparar, porque cambia con
-el giro; la distancia entre los centros de las ruedas sí.
+**Por qué importa la distancia entre ejes.** Cuando hubo dos poses de moto,
+llegaron dibujadas a escalas distintas y una salía un 21 % más grande, así que
+la moto crecía al cambiar de pose. El lienzo no sirve para comparar, porque
+cambia con la postura; la distancia entre los centros de las ruedas sí.
 
 ### Traer un diseño desde un PNG
 
@@ -101,10 +112,11 @@ opciones que lo resuelven:
 
 | Opción | Para qué |
 |---|---|
-| `--tamano 24x23` | Tamaño del sprite de salida |
+| `--tamano 24x24` | Tamaño del sprite de salida |
 | `--fondo auto` | Detecta el color de lienzo y lo vuelve transparente |
-| `--offset 6,2` | Dónde empieza la rejilla, desde el origen de la imagen |
-| `--mapa "ffffff=w,3f48cc=B,..."` | Limita el emparejado a los colores con que se dibujó |
+| `--offset -4,-4` | Dónde empieza la rejilla, desde el origen de la imagen |
+| `--mapa "ffffff=.,ff6f00=O,..."` | Limita el emparejado a los colores con que se dibujó |
+| `--recortar` | Quita el marco de transparente que rodea al dibujo |
 
 Lo que más cuesta acertar es la rejilla. Si se desplaza medio píxel, las líneas
 de un solo píxel —los radios de una rueda, la horquilla— caen entre dos celdas
@@ -112,8 +124,17 @@ y el voto mayoritario las borra. La forma de encontrarla es buscar el encaje
 que deja las celdas más uniformes: la rejilla correcta da celdas de un solo
 color, porque cada celda es un píxel del dibujo original.
 
-Para el diseño de la moto, ese encaje resultó ser 24×23 celdas de 10,00 px con
-origen en (6, 2), con un 98,3 % de uniformidad.
+Encontrarla no se hace a ojo:
+
+```bash
+cd game && npm run arte:rejilla -- ruta/al/diseño.png
+```
+
+prueba todos los tamaños y desplazamientos posibles, puntúa cada uno por lo
+uniformes que quedan las celdas e imprime el comando de importación ya armado.
+Los cuatro diseños actuales dan **24×24 con origen en (−4, −4) y un 100 % de
+uniformidad**, que es lo que se consigue cuando el diseño se dibuja
+directamente en la matriz del proyecto.
 
 El `--mapa` importa más de lo que parece. Sin él, un borde entre el naranja del
 lienzo y el negro de una rueda produce un marrón intermedio que la paleta
@@ -158,7 +179,7 @@ valores por defecto.
 ```json
 {
   "paleta": { "azul": "#1F3A72", "rojo": "#E01D2D" },
-  "textos": { "cartelTribuna": "CONCURSO TVS" }
+  "textos": { "cartelTribuna": "NAVIDAD TVS" }
 }
 ```
 
@@ -191,7 +212,7 @@ Tres razones:
   no se puede.
 
 Lo que suena: el motor (continuo, sube de tono con la velocidad), la cuenta
-regresiva, recoger un logo, saltar, aterrizar, caerse, el aviso de temperatura,
+regresiva, recoger una llave, pisar un impulsor, caerse, el aviso de temperatura,
 el sobrecalentamiento, el final de carrera y la fanfarria del podio.
 
 **iOS no deja sonar nada fuera de un gesto del usuario.** El contexto de audio
@@ -249,36 +270,39 @@ Por eso el panel del juego se sale del ancho máximo de lectura de la página
 
 **El aviso del motor** va en letras rojas sobre una caja negra, y parpadea. La
 caja hace falta: el rojo solo no se lee ni sobre el verde del césped ni sobre
-la pista naranja.
+el gris del asfalto.
 
 Los dos avisos parpadean, pero a distinta velocidad. El de motor parado, al
 doble: cuando ya no se puede hacer nada, el aviso tiene que verse más urgente
 que cuando todavía hay tiempo de soltar el turbo.
 
-**Al recoger un bonus** sube un `+50` flotando desde la moto, como las monedas
+**Al recoger una llave** sube un `+50` flotando desde la moto, como las monedas
 del Mario: sube catorce píxeles en tres cuartos de segundo y se desvanece en la
-segunda mitad del recorrido. Hay cuatro rótulos que se reciclan, de sobra
-porque los bonus están a unos 200 m unos de otros.
+segunda mitad del recorrido. Los impulsores usan el mismo rótulo con un `+1`.
+Hay cuatro que se reciclan, y si dos coinciden en el mismo tick el segundo sale
+una línea más arriba para que se lean los dos.
 
 El texto sale de `theme.json`, así que cambiar el `+50` por otra cosa no obliga
 a recompilar.
 
 ---
 
-## 7. El salto
+## 7. Los impulsores sustituyeron al salto
 
-La moto sube a la rampa girada, **se mantiene girada todo el vuelo** y vuelve a
-la posición normal al tocar el suelo. La pose de salto se muestra tal como se
-dibujó, sin girarla más.
+Hubo rampas y vuelo. Ya no: las rampas son ahora **impulsores**, placas verdes
+pintadas en el asfalto que dan un empujón de 4 m/s y suman un metro. La moto no
+despega del suelo en ningún momento, así que desaparecieron la pose de salto,
+la sombra, la altura y la gravedad.
 
-No hay control de inclinación en el aire. Hubo una versión con ángulo de
-aterrizaje —presionar arriba y abajo para enderezar antes de caer— y se quitó
-al fijar el dibujo durante el vuelo: si el ángulo no se puede ver, castigar por
-él produce caídas que el jugador no entiende, y con un solo intento eso no se
-puede permitir.
+El cambio vino del cliente y fue estético, pero se cuidó que el balanceo no se
+moviera: los 4 m/s del impulsor valen casi lo mismo que valían el impulso de
+aterrizaje de la rampa más los dos segundos de inmunidad que daba ir por el
+aire. Las marcas de las estrategias automáticas se movieron menos de diez
+metros.
 
-El salto queda entonces como una oportunidad, no como un riesgo: se pasa por
-encima de lo que venga y se cae de pie con un pequeño impulso.
+Lo que sí cambió es que **ya no hay forma de saltarse un obstáculo**: todo se
+esquiva cambiando de carril. Por eso el mínimo de 30 m entre conos, que antes
+era holgado, ahora es la única red de seguridad que tiene el jugador.
 
 ---
 
@@ -301,24 +325,18 @@ simulación.
 ## 9. Dos diseños tienen que estar a la misma escala
 
 Cuando llegan varias poses del mismo objeto dibujadas por separado, casi nunca
-vienen al mismo tamaño. Es lo que pasó con la moto: la pose de salto, a su
-rejilla natural de 28×31, tenía una distancia entre ejes de **16,6 píxeles**
-frente a los **13,7** de la pose de rodar. Un 21 % más grande, y la moto crecía
-en pleno salto.
+vienen al mismo tamaño. Pasó con la moto: una pose, a su rejilla natural de
+28×31, tenía una distancia entre ejes de **16,6 píxeles** frente a los **13,7**
+de la otra. Un 21 % más grande, y la moto crecía al cambiar de pose.
 
-La forma de comprobarlo no es mirar el lienzo, que cambia con el giro, sino
+La forma de comprobarlo no es mirar el lienzo, que cambia con la postura, sino
 medir algo invariante: la distancia entre los centros de las dos ruedas. Se
 localizan con un relleno por inundación sobre los píxeles negros y se toman los
 dos grupos más grandes.
 
-La corrección fue importar el salto a 23×26 en vez de a su rejilla natural, con
-lo que la distancia queda en 13,9. Se pierde algo de detalle al remuestrear,
-pero mucho menos de lo que molesta una moto que cambia de tamaño.
-
-Lo mismo con el **ángulo**: el diseño del salto parecía de 45° a ojo y resultó
-ser de **35,6°** al medirlo entre los ejes. Ese número importa porque la escena
-resta el giro dibujado antes de aplicar el de la física; con 45 la moto salía
-del salto ya inclinada hacia abajo.
+Desde que el cliente dibuja directamente en la matriz de 24×24 el problema no
+ha vuelto a aparecer, porque las dos poses comparten lienzo. Queda anotado por
+si algún día llega un diseño fuera de la matriz.
 
 ---
 
@@ -336,8 +354,8 @@ Quedan anotados porque son fáciles de repetir:
   arena.
 - **`Interpolate.ColorWithColor()` devuelve `{r,g,b,a}`,** no un color
   empaquetado. Pedirle `.color` da `undefined` y la banda sale negra.
-- **Estimar un ángulo a ojo.** El salto parecía de 45° y era de 35,6°. Medirlo
-  cuesta un minuto y evita que la moto salga del salto ya cabeceando.
+- **Estimar a ojo lo que se puede medir.** Una pose de salto parecía de 45° y
+  era de 35,6°. Medirlo cuesta un minuto; interpretarlo, un rediseño.
 - **Dar por hecho que dos diseños vienen a la misma escala.** No vienen.
 - **Quitar un color de fondo en toda la imagen.** El bonus TVS es una placa
   blanca sobre lienzo blanco: borrar "el blanco" se llevaba también el interior

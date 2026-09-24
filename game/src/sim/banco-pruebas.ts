@@ -12,7 +12,7 @@
  * No depende de Phaser ni del navegador.
  */
 
-import { ARRANQUE_LIMPIO_MM, ITEM_METROS, RAMPA_METROS, TIPO_VALLA, TOTAL_TICKS, TPS } from './constantes';
+import { ARRANQUE_LIMPIO_MM, IMPULSOR_METROS, ITEM_METROS, TIPO_CONO, TOTAL_TICKS, TPS } from './constantes';
 import { BIT_ACELERA, BIT_TURBO, codificar, decodificar, registroVacio } from './entradas';
 import { generarPista } from './pista';
 import { Prng } from './prng';
@@ -39,7 +39,7 @@ function registroDe(estrategia: (tick: number) => number): Uint8Array {
 interface Resultado {
   distancia: number;
   items: number;
-  rampas: number;
+  impulsores: number;
   caidas: number;
   sobrecalentamientos: number;
   estado: Estado;
@@ -56,7 +56,7 @@ function correr(seed: number, registro: Uint8Array): Resultado {
   return {
     distancia: distanciaMetros(estado),
     items: estado.items,
-    rampas: estado.rampas,
+    impulsores: estado.impulsores,
     caidas: estado.caidas,
     sobrecalentamientos: estado.sobrecalentamientos,
     estado,
@@ -97,7 +97,7 @@ const pista3 = generarPista(1000);
 comprobar('el mismo seed da la misma pista', JSON.stringify(pista1) === JSON.stringify(pista2));
 comprobar('otro seed da otra pista', JSON.stringify(pista1) !== JSON.stringify(pista3));
 comprobar('hay obstáculos', pista1.obstaculos.length > 0, `${pista1.obstaculos.length} obstáculos`);
-comprobar('hay logos TVS', pista1.items.length > 0, `${pista1.items.length} logos`);
+comprobar('hay llaves', pista1.items.length > 0, `${pista1.items.length} llaves`);
 comprobar(
   'los obstáculos van en orden de posición',
   pista1.obstaculos.every((o, i) => i === 0 || o.pos >= pista1.obstaculos[i - 1].pos)
@@ -123,18 +123,18 @@ const maxBloqueados = Math.max(...Array.from(porPosicion.values(), (s) => s.size
 comprobar('nunca se bloquean los 4 carriles', maxBloqueados <= 2, `máximo bloqueados: ${maxBloqueados}`);
 
 /*
- * La pista va poblada, pero la única que tumba es la valla: el margen de
- * reacción se mide entre vallas, no entre obstáculos. Dos grupos de vallas
+ * La pista va poblada, pero el único que tumba es el cono: el margen de
+ * reacción se mide entre conos, no entre obstáculos. Dos grupos de conos
  * demasiado juntos dejarían al jugador sin tiempo de cambiar de carril.
  */
-const posVallas = Array.from(new Set(pista1.obstaculos.filter((o) => o.tipo === TIPO_VALLA).map((o) => o.pos))).sort(
+const posConos = Array.from(new Set(pista1.obstaculos.filter((o) => o.tipo === TIPO_CONO).map((o) => o.pos))).sort(
   (x, y) => x - y
 );
-const huecoMinVallas = posVallas.length < 2 ? Infinity : Math.min(...posVallas.slice(1).map((v, i) => v - posVallas[i]));
+const huecoMinConos = posConos.length < 2 ? Infinity : Math.min(...posConos.slice(1).map((v, i) => v - posConos[i]));
 comprobar(
-  'entre dos vallas siempre hay margen para esquivar',
-  huecoMinVallas >= 30_000,
-  `${posVallas.length} vallas, la más cercana a ${huecoMinVallas / 1000} m de la anterior`
+  'entre dos conos siempre hay margen para esquivar',
+  huecoMinConos >= 30_000,
+  `${posConos.length} conos, el más cercano a ${huecoMinConos / 1000} m del anterior`
 );
 
 // ===========================================================================
@@ -185,14 +185,14 @@ const estrategias: Array<{ nombre: string; fn: (t: number) => number }> = [
 const seeds = [101, 202, 303, 404, 505, 606, 707, 808];
 const resumen = new Map<string, number>();
 
-console.log('estrategia                        distancia   logos  rampas  caídas  sobrecal.');
-console.log('-----------------------------------------------------------------------------');
+console.log('estrategia                        distancia  llaves  impuls.  caídas  sobrecal.');
+console.log('------------------------------------------------------------------------------');
 
 for (const e of estrategias) {
   const registro = registroDe(e.fn);
   let suma = 0;
   let items = 0;
-  let rampas = 0;
+  let impulsores = 0;
   let caidas = 0;
   let sobrecalentamientos = 0;
 
@@ -200,7 +200,7 @@ for (const e of estrategias) {
     const r = correr(s, registro);
     suma += r.distancia;
     items += r.items;
-    rampas += r.rampas;
+    impulsores += r.impulsores;
     caidas += r.caidas;
     sobrecalentamientos += r.sobrecalentamientos;
   }
@@ -211,7 +211,7 @@ for (const e of estrategias) {
 
   console.log(
     `${e.nombre.padEnd(32)} ${String(media).padStart(6)} m  ${(items / n).toFixed(1).padStart(5)}  ` +
-      `${(rampas / n).toFixed(1).padStart(6)}  ${(caidas / n).toFixed(1).padStart(6)}  ` +
+      `${(impulsores / n).toFixed(1).padStart(7)}  ${(caidas / n).toFixed(1).padStart(6)}  ` +
       `${(sobrecalentamientos / n).toFixed(1).padStart(7)}`
   );
 }
@@ -249,20 +249,20 @@ comprobar(
 );
 
 // ===========================================================================
-console.log('\n=== Aporte de los logos TVS y de las rampas ===');
+console.log('\n=== Aporte de las llaves y de los impulsores ===');
 
 const conLogos = correr(101, registroDe(() => BIT_ACELERA));
 comprobar(
-  'el contador es recorrido + logos + rampas',
+  'el contador es recorrido + llaves + impulsores',
   conLogos.distancia ===
-    Math.trunc(conLogos.estado.pos / 1000) + conLogos.items * ITEM_METROS + conLogos.rampas * RAMPA_METROS,
-  `${conLogos.items} logos = ${conLogos.items * ITEM_METROS} m y ${conLogos.rampas} rampas = ` +
-    `${conLogos.rampas * RAMPA_METROS} m, de ${conLogos.distancia} m`
+    Math.trunc(conLogos.estado.pos / 1000) + conLogos.items * ITEM_METROS + conLogos.impulsores * IMPULSOR_METROS,
+  `${conLogos.items} llaves = ${conLogos.items * ITEM_METROS} m y ${conLogos.impulsores} impulsores = ` +
+    `${conLogos.impulsores * IMPULSOR_METROS} m, de ${conLogos.distancia} m`
 );
 comprobar(
-  'saltar rampas aporta, pero no decide la carrera',
-  conLogos.rampas > 0 && conLogos.rampas * RAMPA_METROS < conLogos.distancia / 20,
-  `${conLogos.rampas * RAMPA_METROS} m de ${conLogos.distancia} m`
+  'los impulsores aportan, pero no deciden la carrera',
+  conLogos.impulsores > 0 && conLogos.impulsores * IMPULSOR_METROS < conLogos.distancia / 20,
+  `${conLogos.impulsores * IMPULSOR_METROS} m de ${conLogos.distancia} m`
 );
 
 // ===========================================================================

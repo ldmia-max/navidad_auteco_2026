@@ -12,10 +12,10 @@ este documento se aplica en los dos lados y se corre la suite de paridad.
 - Carrera de **90 segundos exactos**.
 - Gana quien recorra **más metros**.
 - El contador avanza de 1 en 1 metro.
-- Los ítems con el logo TVS suman **+50 m** directos al contador.
-- Cada **rampa saltada suma +1 m**, con el mismo rótulo flotante que el bonus.
-  Es un premio simbólico —unos 18 m en una carrera buena— que sirve para que el
-  salto se sienta recompensado, no para decidir el ranking.
+- Las **llaves** suman **+50 m** directos al contador.
+- Cada **impulsor pisado suma +1 m**, con el mismo rótulo flotante que la
+  llave. Es un premio simbólico —unos 19 m en una carrera buena— que sirve
+  para que el impulsor se sienta recompensado, no para decidir el ranking.
 - Un solo intento por participante. No hay reintentos.
 - Los **4 mayores del día** son ganadores. Si hay empate, todos los empatados
   reciben premio.
@@ -67,8 +67,7 @@ se usa el módulo.
 |---|---|---|
 | Acelerador normal | `Z` | Mitad derecha, abajo |
 | Turbo | `X` | Mitad derecha, arriba |
-| Cambiar de carril (en el suelo) | `↑` `↓` | Mitad izquierda, arriba/abajo |
-| Enderezar la moto (en el aire) | `↑` `↓` | Mitad izquierda, arriba/abajo |
+| Cambiar de carril | `↑` `↓` | Mitad izquierda, arriba/abajo |
 
 No hay botón de freno, igual que en el original: soltar el acelerador frena por
 fricción y además enfría el motor al doble de velocidad. La moto nunca
@@ -123,25 +122,26 @@ Medido con `cd game && npm run sim`, promediando ocho pistas distintas. Las
 estrategias son automáticas y **no cambian de carril**, así que recogen pocos
 logos y chocan con lo que les toca de frente: son el suelo, no el techo.
 
-| Estrategia | Distancia media | Rampas | Caídas | Veces que se sobrecalienta |
+| Estrategia | Distancia media | Impulsores | Caídas | Veces que se sobrecalienta |
 |---|---|---|---|---|
 | Sin tocar nada | 0 m | 0,0 | 0,0 | 0,0 |
-| Solo acelerador | **1858 m** | 16,5 | 3,5 | 0,0 |
-| Turbo continuo | **1570 m** | 13,6 | 1,8 | 13,1 |
-| Pulsos de 2 s turbo / 3 s normal | **2120 m** | 18,1 | 4,8 | 0,1 |
-| Pulsos de 2 s turbo / 2 s suelto | 2071 m | 17,5 | 4,3 | 0,1 |
-| Pulsos de 1 s turbo / 2 s normal | 2129 m | 18,3 | 4,6 | 0,0 |
+| Solo acelerador | **1867 m** | 16,5 | 3,5 | 0,0 |
+| Turbo continuo | **1535 m** | 14,0 | 2,4 | 12,9 |
+| Pulsos de 2 s turbo / 3 s normal | **2128 m** | 18,9 | 4,9 | 0,1 |
+| Pulsos de 2 s turbo / 2 s suelto | 2067 m | 18,1 | 4,3 | 0,1 |
+| Pulsos de 1 s turbo / 2 s normal | 2124 m | 18,8 | 5,0 | 0,0 |
 
-Abusar del turbo castiga de verdad: 1570 m frente a los 1858 m de no usarlo.
-Dosificarlo sube a 2129 m. Son 271 metros de diferencia entre jugar mal y jugar
-bien, sin contar los logos ni los carriles, y con resolución de 1 metro: espacio
-de sobra para ordenar 150 participantes.
+Abusar del turbo castiga de verdad: 1535 m frente a los 1867 m de no usarlo.
+Dosificarlo sube a 2128 m. Son 261 metros de diferencia entre jugar mal y jugar
+bien, sin contar las llaves ni los carriles, y con resolución de 1 metro:
+espacio de sobra para ordenar 150 participantes.
 
-Al poblar más la pista todas las marcas bajaron alrededor de 100 m respecto de
-la versión anterior, y las caídas subieron de 2 a 4 por carrera. El orden entre
-estrategias, que es lo que sostiene el concurso, no cambió.
+Cambiar las rampas por impulsores movió las marcas menos de diez metros: los
+4 m/s del impulsor valen prácticamente lo mismo que valía el impulso de
+aterrizaje más los dos segundos de inmunidad por el aire. Era lo buscado, para
+no rehacer el balanceo entero por un cambio de estética.
 
-Una carrera completa se simula en **0,18 ms**. Validar las 150 de una jornada
+Una carrera completa se simula en **0,14 ms**. Validar las 150 de una jornada
 cuesta centésimas de segundo, así que en E6 se puede reejecutar el 100 % de las
 partidas y no solo las de los finalistas.
 
@@ -155,42 +155,51 @@ partidas y no solo las de los finalistas.
   entre un cambio y el siguiente.
 - Se generan 3600 m de pista, por encima del tope de plausibilidad, para que
   nadie se quede sin pista ni en una carrera perfecta.
-- Los obstáculos se colocan recorriendo la pista con saltos de 11 a 26 m
+- Los obstáculos se colocan recorriendo la pista con huecos de 11 a 26 m
   sorteados con el PRNG. Los primeros **30 m van limpios**: con el primer hueco
   encima, el primer obstáculo aparece entre el segundo 3 y el 4.
 - **Nunca se bloquean los cuatro carriles a la vez**: un grupo ocupa uno o dos
   como mucho. Si el jugador no tuviera salida, la caída no mediría habilidad y
   el concurso sería impugnable.
-- **Entre dos vallas hay siempre 30 m como mínimo.** La densidad de la pista y
-  su dificultad se regulan por separado: la rampa premia y el lodo solo frena,
-  así que la pista puede ir llena sin ser injusta. La única que tumba es la
-  valla, y ahí sí hace falta margen de reacción: 30 m son casi un segundo
-  yendo a tope de turbo. Cuando el sorteo pide una valla demasiado pronto,
-  sale una rampa en su lugar.
+- **Entre dos conos hay siempre 30 m como mínimo.** La densidad de la pista y
+  su dificultad se regulan por separado: el impulsor premia y el aceite solo
+  frena, así que la pista puede ir llena sin ser injusta. El único que tumba es
+  el cono, y ahí sí hace falta margen de reacción: 30 m son casi un segundo
+  yendo a tope de turbo. Cuando el sorteo pide un cono demasiado pronto, sale
+  un impulsor en su lugar.
 - La dificultad sube con la distancia: la probabilidad de que un obstáculo sea
-  una valla pasa del 10 % al 35 % entre el principio y el final.
+  un cono pasa del 10 % al 35 % entre el principio y el final.
 
 ### Obstáculos
 
 | Obstáculo | Efecto | Recuperación |
 |---|---|---|
-| **Rampa** | Salto, con impulso proporcional a la velocidad, **+1 m** al contador y paso por encima de lo que venga. En el aire no hay nada que controlar | Siempre cae de pie, con +1,5 m/s de premio |
-| **Lodo** | Velocidad al 60 % mientras se está encima | Inmediata al salir |
-| **Valla / bache** | Caída del piloto | 120 ticks (2 s) inmóvil |
+| **Impulsor** | Placa en el suelo: **+4 m/s** de golpe y **+1 m** al contador | — |
+| **Charco de aceite** | Velocidad al 60 % mientras se está encima | Inmediata al salir |
+| **Cono de vía** | Caída del piloto | 120 ticks (2 s) inmóvil |
+
+El impulsor puede dejar la moto por encima del techo del acelerador normal
+(22 m/s). Es deliberado: la fricción se lo va comiendo, así que se gana un
+tramo rápido y no una ventaja permanente. El tope sigue siendo el del turbo
+(32 m/s), para que encadenar impulsores no dispare la velocidad.
+
+**Ya no hay saltos.** Los impulsores sustituyeron a las rampas y la moto no
+despega del suelo en ningún momento: desaparecieron la altura, la gravedad y
+la inmunidad que daba ir por el aire.
 
 La caída es la penalización más cara: 2 segundos parado a 22 m/s son 44 metros
 perdidos, más el tiempo de volver a acelerar.
 
-### Ítems TVS
+### Llaves
 
 - Aparecen en promedio **1 cada 200 m**, en carriles alternados para obligar a
   moverse.
-- Valen **+50 m** cada uno, sumados directo al contador.
-- Se renderizan como la letra del logo TVS, sin el caballo.
+- Valen **+50 m** cada una, sumadas directo al contador.
+- Se dibujan con el diseño de llave que mandó el cliente.
 
-**Recogerlos depende de cambiar de carril.** Las pruebas automáticas, que se
+**Recogerlas depende de cambiar de carril.** Las pruebas automáticas, que se
 quedan siempre en el mismo carril, recogen 2 o 3 por carrera. Sobre una pista de
-3600 m hay unos 17 logos, de los que unos 11 quedan dentro del alcance de una
+3600 m hay unas 17 llaves, de las que unas 11 quedan dentro del alcance de una
 carrera buena. Quien se mueva bien puede llevarse la mayoría: ahí hay unos 400
 metros de diferencia que separan a quien solo acelera de quien además conduce.
 
@@ -206,9 +215,9 @@ metros de diferencia que separan a quien solo acelera de quien además conduce.
    3-2-1** en pantalla. El cronómetro no corre durante el countdown.
 4. Carrera de 90 s. El panel inferior muestra `DIST`, `TEMP` y `TIME`.
 5. Al agotarse el tiempo la pantalla se congela **1,2 s**: el reloj queda en
-   `0:00` y la moto vuelve al suelo en su pose normal, aunque el tiempo se
-   acabara en pleno salto o con el piloto tumbado. Sin esa pausa el último
-   valor legible del reloj era `0:01` y el fotograma de `0:00` pasaba de largo.
+   `0:00` y la moto queda en su pose normal, aunque el tiempo se acabara con
+   el piloto tumbado. Sin esa pausa el último valor legible del reloj era
+   `0:01` y el fotograma de `0:00` pasaba de largo.
 6. El cliente envía el log de inputs. El servidor reejecuta, calcula la
    distancia y la persiste.
 7. Pantalla final: piloto en podio, nombre y distancia recorrida debajo, y el
@@ -228,11 +237,9 @@ Un byte por tick, con los botones como bits:
 | 3 | Abajo |
 | 4–7 | Reservados |
 
-Arriba y abajo hacen dos cosas según dónde esté la moto: en el suelo cambian de
-carril, en el aire la enderezan. El registro guarda **lo que el jugador pulsó**,
-no lo que eso significaba en ese instante; interpretarlo es trabajo de la
-simulación. Así el mismo registro sirve para reejecutar la carrera sin arrastrar
-contexto.
+El registro guarda **lo que el jugador pulsó**, no lo que eso significaba en
+ese instante; interpretarlo es trabajo de la simulación. Así el mismo registro
+sirve para reejecutar la carrera sin arrastrar contexto.
 
 5400 bytes por carrera, comprimidos por repeticiones y codificados en base64. En
 la práctica quedan en unos **160 bytes**, porque los botones cambian pocas veces
@@ -264,5 +271,5 @@ pruebas reales de juego, sobre todo:
   cliente.
 - Duración de la parada por sobrecalentamiento (2,5 s puede resultar muy duro en
   móvil).
-- Separación mínima entre vallas (30 m): es el mando de dificultad real ahora
+- Separación mínima entre conos (30 m): es el mando de dificultad real ahora
   que la densidad general y el castigo van por separado.

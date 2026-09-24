@@ -12,8 +12,8 @@ import Phaser from 'phaser';
 import { sonido } from '../audio/sonido';
 import {
   TEMP_MAX,
-  TIPO_LODO,
-  TIPO_RAMPA,
+  TIPO_ACEITE,
+  TIPO_IMPULSOR,
   TOTAL_TICKS,
   TPS,
   V_MAX_TURBO,
@@ -34,9 +34,6 @@ const MOTO_X = 74;
 
 /** Píxeles por metro al dibujar. */
 const PX_POR_METRO = 8;
-
-/** Cuántos píxeles de altura equivale un milímetro de salto. */
-const PX_POR_MM_ALTURA = 0.012;
 
 /**
  * Cuadros que tarda la moto en deslizarse de un carril al otro.
@@ -86,7 +83,7 @@ export interface ResultadoCarrera {
   nombre: string;
   distancia: number;
   items: number;
-  rampas: number;
+  impulsores: number;
   caidas: number;
   sobrecalentamientos: number;
   entradas: string;
@@ -114,7 +111,6 @@ export class Carrera extends Phaser.Scene {
 
   // Actores
   private moto!: Phaser.GameObjects.Image;
-  private sombra!: Phaser.GameObjects.Image;
   private humo: Phaser.GameObjects.Image[] = [];
   private obstaculos: Phaser.GameObjects.Image[] = [];
   private items: Phaser.GameObjects.Image[] = [];
@@ -137,10 +133,9 @@ export class Carrera extends Phaser.Scene {
 
   // Para disparar sonidos cuando algo cambia entre un tick y el siguiente.
   private itemsPrevios = 0;
-  private rampasPrevias = 0;
+  private impulsoresPrevios = 0;
   private caidasPrevias = 0;
   private sobrecalentamientosPrevios = 0;
-  private enAirePrevio = false;
 
   private teclas?: {
     acelera: Phaser.Input.Keyboard.Key;
@@ -173,10 +168,9 @@ export class Carrera extends Phaser.Scene {
     this.cuadrosCambio = 0;
 
     this.itemsPrevios = 0;
-    this.rampasPrevias = 0;
+    this.impulsoresPrevios = 0;
     this.caidasPrevias = 0;
     this.sobrecalentamientosPrevios = 0;
-    this.enAirePrevio = false;
   }
 
   create(): void {
@@ -217,13 +211,12 @@ export class Carrera extends Phaser.Scene {
   private construirActores(): void {
     // Se crean pocos objetos y se reciclan: en pantalla nunca caben muchos.
     for (let i = 0; i < 14; i++) {
-      this.obstaculos.push(this.add.image(-100, 0, TEX.valla).setOrigin(0.5, 1).setVisible(false));
+      this.obstaculos.push(this.add.image(-100, 0, TEX.cono).setOrigin(0.5, 1).setVisible(false));
     }
     for (let i = 0; i < 6; i++) {
       this.items.push(this.add.image(-100, 0, TEX.item).setOrigin(0.5, 0.5).setVisible(false));
     }
 
-    this.sombra = this.add.image(MOTO_X, 0, TEX.sombra).setOrigin(0.5, 0.5).setVisible(false);
     this.moto = this.add.image(MOTO_X, 0, TEX.moto).setOrigin(0.5, 1);
 
     for (let i = 0; i < 4; i++) {
@@ -409,10 +402,11 @@ export class Carrera extends Phaser.Scene {
       this.lanzarFlotante(this.tema.textos.bonus);
     }
 
-    // Cada rampa saltada suma un metro y lo anuncia igual que el bonus.
-    if (e.rampas !== this.rampasPrevias) {
-      this.rampasPrevias = e.rampas;
-      this.lanzarFlotante(this.tema.textos.bonusRampa);
+    // Cada impulsor pisado suma un metro y lo anuncia igual que el bonus.
+    if (e.impulsores !== this.impulsoresPrevios) {
+      sonido.impulsor();
+      this.impulsoresPrevios = e.impulsores;
+      this.lanzarFlotante(this.tema.textos.bonusImpulsor);
     }
 
     if (e.caidas !== this.caidasPrevias) {
@@ -424,13 +418,6 @@ export class Carrera extends Phaser.Scene {
       sonido.sobrecalentar();
       this.sobrecalentamientosPrevios = e.sobrecalentamientos;
     }
-
-    if (e.enAire && !this.enAirePrevio) {
-      sonido.salto();
-    } else if (!e.enAire && this.enAirePrevio && e.caido === 0) {
-      sonido.aterrizajeLimpio();
-    }
-    this.enAirePrevio = e.enAire;
 
     // Pitido intermitente mientras la temperatura está en zona roja.
     if (e.sobrecalentado === 0 && e.temp > TEMP_MAX * 0.8 && e.tick % 20 === 0) {
@@ -481,7 +468,6 @@ export class Carrera extends Phaser.Scene {
       this.moto.setAngle(0);
       this.moto.setAlpha(1);
       this.moto.setPosition(MOTO_X, yFinal);
-      this.sombra.setVisible(false);
 
       for (const h of this.humo) {
         h.setVisible(false);
@@ -500,7 +486,6 @@ export class Carrera extends Phaser.Scene {
     }
 
     const yCarril = PISTA_Y + this.carrilDibujado * CARRIL_ALTO + CARRIL_ALTO;
-    const alturaPx = e.altura * PX_POR_MM_ALTURA;
 
     // La moto se inclina mientras cambia de carril, como en el original.
     const inclinacionCarril = this.cuadrosCambio > 0 ? (e.carril - this.carrilAnterior) * 7 : 0;
@@ -508,25 +493,12 @@ export class Carrera extends Phaser.Scene {
     if (e.caido > 0) {
       this.moto.setTexture(TEX.motoCaida);
       this.moto.setAngle(0);
-    } else if (e.enAire) {
-      /*
-       * En el aire se muestra la pose de salto tal como se dibujó, sin girarla
-       * más. Sube a la rampa girada, se mantiene girada todo el vuelo y vuelve
-       * a la normal al tocar el suelo.
-       */
-      this.moto.setTexture(TEX.motoWheelie);
-      this.moto.setAngle(0);
     } else {
       this.moto.setTexture(TEX.moto);
       this.moto.setAngle(inclinacionCarril);
     }
 
-    this.moto.setPosition(MOTO_X, yCarril - alturaPx);
-
-    this.sombra.setVisible(e.enAire);
-    if (e.enAire) {
-      this.sombra.setPosition(MOTO_X, yCarril - 1);
-    }
+    this.moto.setPosition(MOTO_X, yCarril);
 
     // Parpadeo mientras se está caído, para que se note por qué no avanza.
     this.moto.setAlpha(e.caido > 0 && Math.floor(e.caido / 6) % 2 === 0 ? 0.45 : 1);
@@ -576,12 +548,13 @@ export class Carrera extends Phaser.Scene {
       const x = MOTO_X + div((obs.pos - e.pos) * PX_POR_METRO, 1000);
       const y = PISTA_Y + obs.carril * CARRIL_ALTO + CARRIL_ALTO;
 
-      if (obs.tipo === TIPO_RAMPA) {
-        img.setTexture(TEX.rampa).setOrigin(0.5, 1).setPosition(x, y + 1);
-      } else if (obs.tipo === TIPO_LODO) {
-        img.setTexture(TEX.lodo).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
+      if (obs.tipo === TIPO_IMPULSOR) {
+        // Pintado plano en el centro del carril: es una placa en el suelo.
+        img.setTexture(TEX.impulsor).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
+      } else if (obs.tipo === TIPO_ACEITE) {
+        img.setTexture(TEX.aceite).setOrigin(0.5, 0.5).setPosition(x, y - CARRIL_ALTO / 2);
       } else {
-        img.setTexture(TEX.valla).setOrigin(0.5, 1).setPosition(x, y + 1);
+        img.setTexture(TEX.cono).setOrigin(0.5, 1).setPosition(x, y + 1);
       }
 
       img.setVisible(true);
@@ -722,7 +695,7 @@ export class Carrera extends Phaser.Scene {
       nombre: this.datos.nombre,
       distancia: distanciaMetros(e),
       items: e.items,
-      rampas: e.rampas,
+      impulsores: e.impulsores,
       caidas: e.caidas,
       sobrecalentamientos: e.sobrecalentamientos,
       entradas: codificar(this.registro),

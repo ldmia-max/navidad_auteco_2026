@@ -19,15 +19,13 @@ import type { Paleta, Tema } from './tema';
 
 export const TEX = {
   moto: 'moto',
-  motoWheelie: 'moto-wheelie',
   motoCaida: 'moto-caida',
   humo: 'humo',
-  sombra: 'sombra',
 
-  rampa: 'rampa',
-  lodo: 'lodo',
-  valla: 'valla',
-  item: 'item-tvs',
+  impulsor: 'impulsor',
+  aceite: 'aceite',
+  cono: 'cono',
+  item: 'item-llave',
 
   cielo: 'cielo',
   nubes: 'nubes',
@@ -96,14 +94,12 @@ export function crearTexturas(escena: Phaser.Scene, tema: Tema): void {
 
   // --- Sprites sueltos -----------------------------------------------------
   crearTextura(escena, TEX.moto, S.MOTO, p);
-  crearTextura(escena, TEX.motoWheelie, S.MOTO_WHEELIE, p);
   crearTextura(escena, TEX.motoCaida, S.MOTO_CAIDA, p);
   crearTextura(escena, TEX.humo, S.HUMO, p);
-  crearTextura(escena, TEX.sombra, S.SOMBRA, p);
-  crearTextura(escena, TEX.rampa, S.RAMPA, p);
-  crearTextura(escena, TEX.lodo, S.LODO, p);
-  crearTextura(escena, TEX.valla, S.VALLA, p);
-  crearTextura(escena, TEX.item, S.ITEM_TVS, p);
+  crearTextura(escena, TEX.impulsor, S.IMPULSOR, p);
+  crearTextura(escena, TEX.aceite, S.ACEITE, p);
+  crearTextura(escena, TEX.cono, S.CONO, p);
+  crearTextura(escena, TEX.item, S.ITEM_LLAVE, p);
   crearTextura(escena, TEX.pilotoPodio, S.PILOTO_PODIO, p);
   crearTextura(escena, TEX.copa, S.COPA, p);
   crearTextura(escena, TEX.estrella, S.ESTRELLA, p);
@@ -304,7 +300,15 @@ function crearCesped(escena: Phaser.Scene, p: Paleta): void {
   g.destroy();
 }
 
-/** La pista: cuatro carriles con sus líneas y textura de tierra. */
+/**
+ * La pista: cuatro carriles de asfalto con sus líneas.
+ *
+ * Es una calle de autódromo, no un camino de tierra. El asfalto es casi plano
+ * a propósito: el grano se insinúa con parches apenas más claros y con la
+ * junta oscura al pie de cada carril, porque un asfalto moteado a la manera de
+ * la grava anterior se lee como ruido y compite con los obstáculos, que son lo
+ * único que el jugador tiene que ver rápido.
+ */
 function crearPista(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
   const ancho = 64;
@@ -313,15 +317,19 @@ function crearPista(escena: Phaser.Scene, p: Paleta): void {
     const y = carril * CARRIL_ALTO;
     rect(g, carril % 2 === 0 ? p.pista : p.pistaAlt, 0, y, ancho, CARRIL_ALTO);
 
-    // Grava: puntos fijos, no aleatorios, para que la franja repita sin costura.
-    for (let x = (carril * 7) % 16; x < ancho; x += 16) {
-      rect(g, p.pistaBorde, x, y + 3, 2, 1);
-      rect(g, p.pista === p.pistaAlt ? p.pista : p.pistaBorde, x + 8, y + 8, 1, 1);
+    // Parches del asfalto: posiciones fijas, no aleatorias, para que la franja
+    // repita sin costura.
+    for (let x = (carril * 11) % 32; x < ancho; x += 32) {
+      rect(g, p.pistaAlt, x, y + 5, 5, 2);
+      rect(g, p.pistaBorde, x + 17, y + 10, 4, 1);
     }
+
+    // Junta al pie del carril, que es lo que da la sensación de calzada.
+    rect(g, p.pistaBorde, 0, y + CARRIL_ALTO - 1, ancho, 1);
   }
 
-  // Líneas discontinuas entre carriles.
-  g.fillStyle(p.crema, 1);
+  // Líneas discontinuas de separación, blancas como las de la vía.
+  g.fillStyle(p.blanco, 1);
   for (let carril = 1; carril < CARRILES_VISUALES; carril++) {
     for (let x = 0; x < ancho; x += 16) {
       g.fillRect(x, carril * CARRIL_ALTO, 9, 1);
