@@ -474,6 +474,49 @@
 	color: var(--ntvs-verde);
 }
 
+/* --- Envío del resultado -------------------------------------------------- */
+
+/*
+ * El intento es único y lo que no llega al servidor no existe, así que este
+ * aviso tiene que ser imposible de no ver: mientras no diga que quedó
+ * registrado, el participante no puede irse.
+ */
+.ntvs-envio {
+	margin: 0 0 12px;
+	padding: 10px 12px;
+	font-size: 13px;
+	line-height: 1.5;
+	font-weight: 700;
+	border: 2px solid transparent;
+}
+
+.ntvs-envio--curso {
+	color: var(--ntvs-crema);
+	border-color: #6b7f9e;
+}
+
+.ntvs-envio--ok {
+	color: var(--ntvs-blanco);
+	background: #145214;
+	border-color: var(--ntvs-verde);
+}
+
+.ntvs-envio--error {
+	color: var(--ntvs-blanco);
+	background: #6b0f18;
+	border-color: var(--ntvs-rojo);
+}
+
+.ntvs-boton--secundario {
+	margin-bottom: 12px;
+	background: var(--ntvs-azul);
+}
+
+.ntvs-boton--secundario:hover:not(:disabled),
+.ntvs-boton--secundario:focus-visible:not(:disabled) {
+	background: #2b4c92;
+}
+
 .ntvs-pendiente--dato {
 	font-size: 10px;
 	color: #6b7f9e;

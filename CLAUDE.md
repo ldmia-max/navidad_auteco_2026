@@ -166,10 +166,28 @@ ciudad_propietario;departamento_propietario;razon_social_establecimiento
 
 ## Tests
 
-No hay suite de PHPUnit. La verificación es manual sobre Docker, más la
-**suite de paridad TypeScript ↔ PHP** (E6), que corre logs de input conocidos
-por las dos implementaciones y compara resultados. Esa sí es obligatoria antes
-de cualquier commit que toque física.
+No hay suite de PHPUnit. La verificación es manual sobre Docker:
+
+```bash
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e1.php
+# ... e2, e3, e4, e6
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
+cd game && npm run sim && npm run arte
+```
+
+La **suite de paridad TypeScript ↔ PHP** vive en `dev/verificar-e6.php` y es
+obligatoria antes de cualquier commit que toque física, en cualquiera de los
+dos lados. Corre 36 carreras conocidas por las dos implementaciones y las
+compara campo por campo.
+
+Los vectores de referencia los genera TypeScript:
+
+```bash
+cd game && npm run sim:vectores      # escribe dev/vectores-paridad.json
+```
+
+**Cambiar la física y no regenerarlos deja la suite comparando contra números
+viejos**, que es la forma exacta en que esto se rompe sin que nadie se entere.
 
 ```bash
 docker exec navidad_tvs_wp tail -f /var/www/html/wp-content/debug.log

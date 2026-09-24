@@ -18,7 +18,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | E3 | Acceso, ventana horaria y sesión | ✅ Completada | 2026-09-22 |
 | E4 | Motor del juego | ✅ Completada | 2026-09-22 |
 | E5 | Arte y estética 16 bits | ✅ Completada | 2026-09-22 |
-| E6 | Validación server-side y score | ⬜ Pendiente | — |
+| E6 | Validación server-side y score | ✅ Completada | 2026-09-24 |
 | E7 | Sitio público | ⬜ Pendiente | — |
 | E8 | Backoffice y ranking | ⬜ Pendiente | — |
 | E9 | Endurecimiento y QA | ⬜ Pendiente | — |
@@ -139,21 +139,51 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
 
 **Revisión:** capturas de cada pantalla antes de integrarlas.
 
-## E6 — Validación server-side y score
+## E6 — Validación server-side y score ✅
 
 Que ningún score llegue sin verificar.
 
-- Endpoints REST en `/wp-json/concurso/v1/`.
-- `seed` y nonce HMAC de un solo uso al iniciar la carrera.
-- Reejecución del replay en PHP con la misma física de punto fijo; el score lo
-  calcula el servidor.
-- Suite de pruebas de paridad TypeScript ↔ PHP sobre logs de input conocidos.
-- Validaciones de plausibilidad como segunda malla.
-- Log de auditoría: seed, inputs, IP, user agent, timestamps.
-- Pantalla de resultado al participante.
+- ✅ `POST /concurso/v1/carrera/terminar`, que recibe el registro de entradas y
+  devuelve la distancia que calculó el servidor.
+- ✅ El `seed` y el nonce de un solo uso ya salían de E3, al pulsar *Iniciar
+  carrera*. Terminar exige que la sesión esté **consumida**: un resultado de una
+  carrera que nunca arrancó se rechaza.
+- ✅ Puerto completo de la física a PHP en `includes/sim/`, entero a entero.
+- ✅ Suite de paridad TypeScript ↔ PHP: 36 carreras (6 pistas × 6 estrategias)
+  comparadas campo por campo y también en 18 posiciones intermedias de cada una.
+- ✅ Segunda malla de plausibilidad: tope de distancia y reloj de la sesión.
+- ✅ Auditoría: seed, registro de entradas, IP, user agent, duración y lo que
+  dijo el cliente, todo en la tabla de scores.
+- ✅ Pantalla de resultado con la distancia oficial y reintento de envío.
 
-**Revisión:** intentar enviar un score falso desde DevTools y verificar el
-rechazo.
+**Revisión hecha:** `dev/probar-endpoint-e6.php` hace lo que haría alguien con
+las DevTools abiertas —mandar el registro real con una distancia inventada de
+99 999 m— y el servidor devuelve la suya. También comprueba el doble envío, el
+reinicio de la carrera y el registro corrupto.
+
+### Cómo se corre
+
+```bash
+cd game && npm run sim:vectores      # regenera los vectores desde TypeScript
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e6.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
+```
+
+**Los vectores hay que regenerarlos cada vez que cambie la física**, y correr
+después la suite de PHP. Es lo único que impide que los dos lados se separen en
+silencio.
+
+### Lo que este diseño sí y no resuelve
+
+Lo que resuelve: nadie puede inventarse metros. El navegador solo puede mandar
+qué botones se pulsaron, y el servidor saca la distancia de ahí con el seed que
+él mismo emitió y no entregó antes de tiempo.
+
+Lo que no: un bot que juegue de verdad, muy bien y muy rápido, produce un
+registro legítimo. Contra eso no hay reejecución que valga; lo que hay es
+Turnstile, el intento único, el padrón cerrado y la ventana de 90 minutos. Si
+en pruebas aparece algo raro, el registro queda guardado y la carrera se puede
+volver a ver entera meses después.
 
 ## E7 — Sitio público
 

@@ -175,7 +175,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="ntvs-panel ntvs-panel--juego" id="ntvs-panel-juego" hidden>
 		<div id="ntvs-game-root" class="ntvs-game-root"></div>
 
-		<!-- Resultado. La pantalla del podio llega en E5 y la validación en E6. -->
+		<!-- Resultado. La distancia que vale es la que confirma el servidor. -->
 		<div class="ntvs-resultado" id="ntvs-resultado" hidden>
 			<p class="ntvs-resultado__titulo"><?php esc_html_e( 'Carrera terminada', 'navidad-tvs' ); ?></p>
 			<p class="ntvs-resultado__nombre" id="ntvs-res-nombre"></p>
@@ -185,14 +185,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<li><?php esc_html_e( 'Llaves', 'navidad-tvs' ); ?> <span id="ntvs-res-logos"></span></li>
 				<li><?php esc_html_e( 'Caídas', 'navidad-tvs' ); ?> <span id="ntvs-res-caidas"></span></li>
 				<li><?php esc_html_e( 'Veces que se sobrecalentó', 'navidad-tvs' ); ?> <span id="ntvs-res-sobrecal"></span></li>
-				<li><?php esc_html_e( 'Registro de la carrera', 'navidad-tvs' ); ?> <span id="ntvs-res-bytes"></span> B</li>
 			</ul>
 
-			<p class="ntvs-resultado__gracias"><?php esc_html_e( '¡Gracias por participar!', 'navidad-tvs' ); ?></p>
+			<!--
+				Estado del envío. Mientras no diga que el resultado quedó
+				registrado, el participante no puede irse tranquilo: el intento
+				es único y lo que no llega al servidor no existe.
+			-->
+			<p class="ntvs-envio" id="ntvs-envio" role="status" aria-live="polite"></p>
 
-			<p class="ntvs-pendiente">
-				<?php esc_html_e( 'Resultado provisional calculado en tu dispositivo. El envío y la validación en el servidor llegan en la etapa E6.', 'navidad-tvs' ); ?>
-			</p>
+			<button class="ntvs-boton ntvs-boton--secundario" type="button" id="ntvs-reintentar" hidden>
+				<?php esc_html_e( 'Reintentar envío', 'navidad-tvs' ); ?>
+			</button>
+
+			<p class="ntvs-resultado__gracias" id="ntvs-res-gracias" hidden><?php esc_html_e( '¡Gracias por participar!', 'navidad-tvs' ); ?></p>
 		</div>
 	</div>
 

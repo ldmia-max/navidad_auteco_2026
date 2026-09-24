@@ -12,7 +12,8 @@
     "arte": "tsx src/render/banco-arte.ts",
     "arte:png": "tsx src/render/exportar-png.ts",
     "arte:importar": "tsx src/render/importar-png.ts",
-    "arte:rejilla": "tsx src/render/buscar-rejilla.ts"
+    "arte:rejilla": "tsx src/render/buscar-rejilla.ts",
+    "sim:vectores": "tsx src/sim/exportar-vectores.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"

@@ -114,21 +114,31 @@ $dir_sim = NAVIDAD_TVS_PATH . 'game/src/sim';
 if ( ! is_dir( $dir_sim ) ) {
 	echo "     (no está el fuente: se omite, el zip de producción no lo lleva)\n";
 } else {
-	$prohibido = array( 'Math.random', 'Date.now', 'performance.now', 'new Date' );
+	$reloj = array( 'Date.now', 'performance.now', 'new Date' );
+
+	/*
+	 * Las herramientas de src/sim/ no son la simulación: el banco de pruebas
+	 * mide cuánto tarda una carrera y el exportador de vectores anota cuándo se
+	 * generó el archivo. Leer el reloj ahí es legítimo.
+	 *
+	 * Math.random NO se les perdona. Si una herramienta sorteara algo, los
+	 * vectores de paridad cambiarían en cada regeneración y el diff dejaría de
+	 * decir nada.
+	 */
+	$herramientas = array( 'banco-pruebas.ts', 'exportar-vectores.ts' );
 
 	foreach ( glob( $dir_sim . '/*.ts' ) as $archivo ) {
 		$nombre    = basename( $archivo );
 		$contenido = file_get_contents( $archivo );
 
-		// El banco de pruebas puede medir tiempos; la simulación no.
-		if ( 'banco-pruebas.ts' === $nombre ) {
-			continue;
-		}
-
 		// Se quitan los comentarios: varios explican precisamente por qué no se
 		// usa Math.random, y nombrarlo no es usarlo.
 		$contenido = preg_replace( '#/\*.*?\*/#s', '', $contenido );
 		$contenido = preg_replace( '#//.*$#m', '', $contenido );
+
+		$prohibido = in_array( $nombre, $herramientas, true )
+			? array( 'Math.random' )
+			: array_merge( array( 'Math.random' ), $reloj );
 
 		foreach ( $prohibido as $patron ) {
 			comprobar( sprintf( '%s sin %s', $nombre, $patron ), 0, substr_count( $contenido, $patron ) );

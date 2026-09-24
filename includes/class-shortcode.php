@@ -150,6 +150,7 @@ class NavidadTVS_Shortcode {
 				'endpointAcceso'  => rest_url( NAVIDAD_TVS_REST_NS . '/acceso' ),
 				'endpointEstado'  => rest_url( NAVIDAD_TVS_REST_NS . '/estado' ),
 				'endpointIniciar' => rest_url( NAVIDAD_TVS_REST_NS . '/carrera/iniciar' ),
+				'endpointTerminar' => rest_url( NAVIDAD_TVS_REST_NS . '/carrera/terminar' ),
 				/*
 				 * El bundle del juego no se encola con la página: pesa bastante
 				 * y quien solo viene a leer los términos no tiene por qué
@@ -175,6 +176,11 @@ class NavidadTVS_Shortcode {
 					'errorRed'      => __( 'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.', 'navidad-tvs' ),
 					'errorServidor' => __( 'El servidor no respondió como esperábamos. Inténtalo de nuevo en unos segundos.', 'navidad-tvs' ),
 					'errorGeneral'  => __( 'Algo salió mal. Recarga la página e inténtalo de nuevo.', 'navidad-tvs' ),
+					'enviando'      => __( 'Enviando tu resultado… no cierres esta página.', 'navidad-tvs' ),
+					'enviado'       => __( 'Resultado registrado. Ya puedes cerrar la página.', 'navidad-tvs' ),
+					'envioFallo'    => __( 'No pudimos enviar tu resultado. Revisa tu conexión y vuelve a intentarlo SIN cerrar esta página.', 'navidad-tvs' ),
+					'envioRechazado' => __( 'El servidor no aceptó el resultado.', 'navidad-tvs' ),
+					'envioNoValido' => __( 'Tu resultado quedó registrado, pero marcado para revisión del organizador.', 'navidad-tvs' ),
 				),
 			)
 		);

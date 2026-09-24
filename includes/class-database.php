@@ -147,6 +147,11 @@ class NavidadTVS_Database {
 	 * inputs guarda el log de entradas comprimido en base64, que es lo que
 	 * permite reejecutar la carrera y auditarla meses después.
 	 *
+	 * distancia_m la calcula SIEMPRE el servidor reejecutando el log.
+	 * distancia_cliente_m es lo que dijo el navegador, y se guarda solo para
+	 * auditar: si las dos no coinciden, o alguien tocó el JavaScript o está
+	 * corriendo una versión vieja del bundle. No decide nada.
+	 *
 	 * @param string $collate Charset y collation de WordPress.
 	 * @return string
 	 */
@@ -163,7 +168,12 @@ class NavidadTVS_Database {
 			fecha_concurso date NOT NULL,
 			distancia_m int(10) unsigned NOT NULL DEFAULT 0,
 			distancia_base_m int(10) unsigned NOT NULL DEFAULT 0,
+			distancia_cliente_m int(10) unsigned NOT NULL DEFAULT 0,
 			items_recogidos smallint(5) unsigned NOT NULL DEFAULT 0,
+			impulsores smallint(5) unsigned NOT NULL DEFAULT 0,
+			caidas smallint(5) unsigned NOT NULL DEFAULT 0,
+			sobrecalentamientos smallint(5) unsigned NOT NULL DEFAULT 0,
+			duracion_s int(10) unsigned NOT NULL DEFAULT 0,
 			seed bigint(20) unsigned NOT NULL,
 			inputs longtext NOT NULL,
 			valido tinyint(1) NOT NULL DEFAULT 1,
@@ -190,7 +200,30 @@ class NavidadTVS_Database {
 	 * @return void
 	 */
 	private function migrar() {
-		// Todavía no hay migraciones: el esquema es el inicial.
+		global $wpdb;
+
+		/*
+		 * E6 añadió columnas de auditoría a scores. dbDelta() ya las crea en
+		 * una instalación limpia, pero en una que venga de una versión
+		 * anterior hay que agregarlas a mano: dbDelta compara el esquema y a
+		 * veces no acierta con los ALTER, y prefiero no depender de eso para
+		 * algo que sostiene el acta de ganadores.
+		 *
+		 * Idempotente: comprueba antes de tocar.
+		 */
+		$nuevas = array(
+			'distancia_cliente_m' => "ADD COLUMN distancia_cliente_m int(10) unsigned NOT NULL DEFAULT 0 AFTER distancia_base_m",
+			'impulsores'          => "ADD COLUMN impulsores smallint(5) unsigned NOT NULL DEFAULT 0 AFTER items_recogidos",
+			'caidas'              => "ADD COLUMN caidas smallint(5) unsigned NOT NULL DEFAULT 0 AFTER impulsores",
+			'sobrecalentamientos' => "ADD COLUMN sobrecalentamientos smallint(5) unsigned NOT NULL DEFAULT 0 AFTER caidas",
+			'duracion_s'          => "ADD COLUMN duracion_s int(10) unsigned NOT NULL DEFAULT 0 AFTER sobrecalentamientos",
+		);
+
+		foreach ( $nuevas as $columna => $clausula ) {
+			if ( ! $this->tiene_columna( $this->tabla_scores, $columna ) ) {
+				$wpdb->query( "ALTER TABLE {$this->tabla_scores} {$clausula}" ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+			}
+		}
 	}
 
 	/**
@@ -632,6 +665,107 @@ class NavidadTVS_Database {
 			},
 			(array) $filas
 		);
+	}
+
+	/**
+	 * Guarda el resultado que calculó el servidor.
+	 *
+	 * Los datos del participante se copian aquí a propósito. El padrón se
+	 * reimporta cada día y algún día se purgará; el acta de ganadores tiene
+	 * que poder leerse meses después sin depender de eso.
+	 *
+	 * participante_id es UNIQUE, así que dos peticiones simultáneas del mismo
+	 * teléfono no pueden dejar dos filas: la segunda choca contra la base de
+	 * datos y devuelve false. Esa es la garantía de un solo intento, no el if
+	 * de más arriba, que siempre tiene una rendija.
+	 *
+	 * @param array $datos Campos del score.
+	 * @return int|false ID de la fila, o false si ya había una.
+	 */
+	public function registrar_score( array $datos ) {
+		global $wpdb;
+
+		$ok = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$this->tabla_scores,
+			array(
+				'participante_id'          => (int) $datos['participante_id'],
+				'sesion_id'                => (int) $datos['sesion_id'],
+				'nombre'                   => (string) $datos['nombre'],
+				'cedula'                   => (string) $datos['cedula'],
+				'telefono'                 => (string) $datos['telefono'],
+				'ciudad_propietario'       => (string) $datos['ciudad_propietario'],
+				'departamento_propietario' => (string) $datos['departamento_propietario'],
+				'fecha_concurso'           => (string) $datos['fecha_concurso'],
+				'distancia_m'              => (int) $datos['distancia_m'],
+				'distancia_base_m'         => (int) $datos['distancia_base_m'],
+				'distancia_cliente_m'      => (int) $datos['distancia_cliente_m'],
+				'items_recogidos'          => (int) $datos['items_recogidos'],
+				'impulsores'               => (int) $datos['impulsores'],
+				'caidas'                   => (int) $datos['caidas'],
+				'sobrecalentamientos'      => (int) $datos['sobrecalentamientos'],
+				'duracion_s'               => (int) $datos['duracion_s'],
+				'seed'                     => (int) $datos['seed'],
+				'inputs'                   => (string) $datos['inputs'],
+				'valido'                   => empty( $datos['valido'] ) ? 0 : 1,
+				'motivo_descalificacion'   => (string) $datos['motivo_descalificacion'],
+				'ip'                       => (string) $datos['ip'],
+				'user_agent'               => substr( (string) $datos['user_agent'], 0, 255 ),
+			),
+			array( '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%s', '%d', '%s', '%s', '%s' )
+		);
+
+		return false === $ok ? false : (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Devuelve el score de un participante, si lo tiene.
+	 *
+	 * @param int $participante_id ID en el padrón.
+	 * @return array|null
+	 */
+	public function score_de( $participante_id ) {
+		global $wpdb;
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_scores} WHERE participante_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$participante_id
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
+	 * Ranking de una jornada, de mayor a menor distancia.
+	 *
+	 * Los empates salen todos: el reglamento premia a los cuatro mayores y, si
+	 * hay empate, a todos los empatados. Por eso no se corta en 4 aquí sino
+	 * que se devuelve la lista y quien la use decide dónde está el corte.
+	 *
+	 * @param string $fecha  Jornada, Y-m-d.
+	 * @param int    $limite Máximo de filas.
+	 * @return array
+	 */
+	public function ranking( $fecha, $limite = 50 ) {
+		global $wpdb;
+
+		$filas = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT nombre, cedula, telefono, ciudad_propietario, departamento_propietario,
+				        distancia_m, items_recogidos, caidas, creado_en
+				   FROM {$this->tabla_scores}
+				  WHERE fecha_concurso = %s AND valido = 1
+				  ORDER BY distancia_m DESC, creado_en ASC
+				  LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$fecha,
+				(int) $limite
+			),
+			ARRAY_A
+		);
+
+		return (array) $filas;
 	}
 
 	/**

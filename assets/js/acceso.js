@@ -337,9 +337,9 @@
 	/**
 	 * Resultado al terminar la carrera.
 	 *
-	 * En E6 esto envía el registro de entradas al servidor, que reejecuta la
-	 * carrera y calcula la distancia oficial. Por ahora solo muestra lo que
-	 * calculó el navegador, que es informativo y no cuenta para nada.
+	 * Lo que el navegador calculó se muestra enseguida, pero es provisional: la
+	 * distancia que cuenta la calcula el servidor reejecutando el registro de
+	 * entradas. Hasta que confirme, el intento no existe.
 	 */
 	function mostrarResultado( resultado ) {
 		var caja = document.getElementById( 'ntvs-resultado' );
@@ -347,26 +347,136 @@
 			return;
 		}
 
-		var pon = function ( id, valor ) {
-			var el = document.getElementById( id );
-			if ( el ) {
-				el.textContent = valor;
-			}
-		};
-
 		pon( 'ntvs-res-nombre', resultado.nombre );
 		pon( 'ntvs-res-distancia', resultado.distancia + ' m' );
 		pon( 'ntvs-res-logos', resultado.items );
 		pon( 'ntvs-res-caidas', resultado.caidas );
 		pon( 'ntvs-res-sobrecal', resultado.sobrecalentamientos );
-		pon( 'ntvs-res-bytes', resultado.entradas.length );
 
 		caja.hidden = false;
 		caja.scrollIntoView( { block: 'start', behavior: 'smooth' } );
 
-		// Queda a mano para poder revisarlo desde la consola mientras E6 no
-		// exista.
-		window.navidadTvsUltimoResultado = resultado;
+		enviarResultado( resultado, 0 );
+	}
+
+	function pon( id, valor ) {
+		var el = document.getElementById( id );
+		if ( el ) {
+			el.textContent = valor;
+		}
+	}
+
+	/**
+	 * Cuántas veces se reintenta solo antes de pedirle al participante que lo
+	 * haga él, y cuánto se espera entre intentos.
+	 *
+	 * Hay un solo intento por persona y lo que no llega al servidor no existe,
+	 * así que un bache de red de dos segundos no puede costar la participación.
+	 * Pero tampoco se puede reintentar indefinidamente en silencio: si la
+	 * conexión está caída de verdad, el participante tiene que enterarse
+	 * mientras todavía está delante de la pantalla.
+	 */
+	var REINTENTOS = 3;
+	var ESPERAS_MS = [ 1500, 4000, 9000 ];
+
+	function enviarResultado( resultado, intento ) {
+		var aviso = document.getElementById( 'ntvs-envio' );
+		var boton = document.getElementById( 'ntvs-reintentar' );
+		var gracias = document.getElementById( 'ntvs-res-gracias' );
+
+		if ( boton ) {
+			boton.hidden = true;
+		}
+
+		if ( aviso ) {
+			aviso.className = 'ntvs-envio ntvs-envio--curso';
+			aviso.textContent = textos.enviando || 'Enviando tu resultado…';
+		}
+
+		if ( ! cfg.endpointTerminar ) {
+			fallo( textos.errorGeneral );
+			return;
+		}
+
+		fetch( cfg.endpointTerminar, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify( {
+				token: resultado.token,
+				entradas: resultado.entradas,
+				distancia: resultado.distancia
+			} )
+		} )
+			.then( function ( respuesta ) {
+				return respuesta.text().then( function ( texto ) {
+					var datos;
+					try {
+						datos = JSON.parse( texto );
+					} catch ( e ) {
+						throw { reintentable: true, mensaje: textos.errorServidor };
+					}
+					if ( ! respuesta.ok ) {
+						/*
+						 * Un 4xx es una decisión del servidor y no va a cambiar
+						 * por reintentar: sesión inválida, ya participó,
+						 * registro corrupto. Un 5xx sí puede ser pasajero.
+						 */
+						throw {
+							reintentable: respuesta.status >= 500,
+							mensaje: datos.message || textos.envioRechazado
+						};
+					}
+					return datos;
+				} );
+			} )
+			.then( function ( oficial ) {
+				// A partir de aquí manda el servidor, no lo que vio la pantalla.
+				pon( 'ntvs-res-distancia', oficial.distancia + ' m' );
+				pon( 'ntvs-res-logos', oficial.llaves );
+				pon( 'ntvs-res-caidas', oficial.caidas );
+
+				if ( aviso ) {
+					aviso.className = 'ntvs-envio ntvs-envio--ok';
+					aviso.textContent = oficial.valido
+						? ( textos.enviado || 'Resultado registrado.' )
+						: ( textos.envioNoValido || 'Resultado registrado para revisión.' );
+				}
+
+				if ( gracias ) {
+					gracias.hidden = false;
+				}
+			} )
+			.catch( function ( error ) {
+				var reintentable = ! error || error.reintentable !== false;
+				var mensaje = ( error && error.mensaje ) ? error.mensaje : textos.envioFallo;
+
+				if ( reintentable && intento < REINTENTOS ) {
+					if ( aviso ) {
+						aviso.textContent = ( textos.enviando || 'Enviando tu resultado…' ) +
+							' (' + ( intento + 2 ) + '/' + ( REINTENTOS + 1 ) + ')';
+					}
+					window.setTimeout( function () {
+						enviarResultado( resultado, intento + 1 );
+					}, ESPERAS_MS[ intento ] );
+					return;
+				}
+
+				fallo( mensaje, reintentable, resultado );
+			} );
+
+		function fallo( mensaje, reintentable, res ) {
+			if ( aviso ) {
+				aviso.className = 'ntvs-envio ntvs-envio--error';
+				aviso.textContent = mensaje || textos.envioFallo;
+			}
+
+			if ( boton && reintentable && res ) {
+				boton.hidden = false;
+				boton.onclick = function () {
+					enviarResultado( res, 0 );
+				};
+			}
+		}
 	}
 
 	revisarOrientacion();

@@ -21,11 +21,16 @@ class NavidadTVS_Rest {
 	/** @var NavidadTVS_Acceso */
 	private $acceso;
 
+	/** @var NavidadTVS_Validador */
+	private $validador;
+
 	/**
-	 * @param NavidadTVS_Acceso $acceso Lógica de acceso.
+	 * @param NavidadTVS_Acceso    $acceso    Lógica de acceso.
+	 * @param NavidadTVS_Validador $validador Reejecución y score.
 	 */
-	public function __construct( $acceso ) {
-		$this->acceso = $acceso;
+	public function __construct( $acceso, $validador ) {
+		$this->acceso    = $acceso;
+		$this->validador = $validador;
 	}
 
 	/**
@@ -90,6 +95,36 @@ class NavidadTVS_Rest {
 			)
 		);
 
+		/*
+		 * El registro puede pasar de los 14 KB en el peor caso imaginable, así
+		 * que va por POST y no por querystring. La ruta no comprueba la
+		 * ventana horaria: quien arrancó a la 1:29 termina después de que
+		 * cierre, y rechazarlo sería quitarle el único intento por jugar tarde.
+		 */
+		register_rest_route(
+			NAVIDAD_TVS_REST_NS,
+			'/carrera/terminar',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'terminar_carrera' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'token'     => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+					'entradas'  => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+					'distancia' => array(
+						'required' => false,
+						'type'     => 'integer',
+					),
+				),
+			)
+		);
+
 		register_rest_route(
 			NAVIDAD_TVS_REST_NS,
 			'/estado',
@@ -134,6 +169,35 @@ class NavidadTVS_Rest {
 	 */
 	public function iniciar_carrera( WP_REST_Request $peticion ) {
 		$resultado = $this->acceso->iniciar_carrera( (string) $peticion->get_param( 'token' ) );
+
+		if ( is_wp_error( $resultado ) ) {
+			return $resultado;
+		}
+
+		return new WP_REST_Response( $resultado, 200 );
+	}
+
+	/**
+	 * POST /concurso/v1/carrera/terminar
+	 *
+	 * Recibe el registro de entradas, reejecuta la carrera y devuelve la
+	 * distancia que calculó el servidor. Nunca la que diga el cliente.
+	 *
+	 * @param WP_REST_Request $peticion Petición.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function terminar_carrera( WP_REST_Request $peticion ) {
+		$resultado = $this->validador->registrar(
+			array(
+				'token'      => (string) $peticion->get_param( 'token' ),
+				'entradas'   => (string) $peticion->get_param( 'entradas' ),
+				'distancia'  => (int) $peticion->get_param( 'distancia' ),
+				'ip'         => NavidadTVS_Rate_Limit::ip(),
+				'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] )
+					? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) )
+					: '',
+			)
+		);
 
 		if ( is_wp_error( $resultado ) ) {
 			return $resultado;
