@@ -19,7 +19,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | E4 | Motor del juego | ✅ Completada | 2026-09-22 |
 | E5 | Arte y estética 16 bits | ✅ Completada | 2026-09-22 |
 | E6 | Validación server-side y score | ✅ Completada | 2026-09-24 |
-| E7 | Sitio público | ⬜ Pendiente | — |
+| E7 | Sitio público | ✅ Completada | 2026-09-24 |
 | E8 | Backoffice y ranking | ⬜ Pendiente | — |
 | E9 | Endurecimiento y QA | ⬜ Pendiente | — |
 | E10 | Despliegue y operación | ⬜ Pendiente | — |
@@ -185,17 +185,49 @@ Turnstile, el intento único, el padrón cerrado y la ventana de 90 minutos. Si
 en pruebas aparece algo raro, el registro queda guardado y la carrera se puede
 volver a ver entera meses después.
 
-## E7 — Sitio público
+## E7 — Sitio público ✅
 
-Las páginas que no son el juego.
+Las páginas que no son el juego. Cuatro shortcodes y un botón en la pantalla de
+configuración que crea las páginas, las publica y las deja asignadas.
 
-- Home con hero, textos del concurso y enlaces a FAQ, T&C y Jugar, con la
-  identidad de auteco.com.co/tvs.
-- FAQ con acordeones agrupados por tema.
-- T&C con cláusulas numeradas.
-- Responsive y accesible.
+| Shortcode | Página |
+|---|---|
+| `[concurso_tvs]` | El juego |
+| `[concurso_tvs_home]` | Portada |
+| `[concurso_tvs_faq]` | Preguntas frecuentes |
+| `[concurso_tvs_terminos]` | Términos y condiciones |
+
+- ✅ Portada con hero, el estado de la jornada, los tres pasos y las cuatro
+  reglas que hay que tener claras antes de jugar.
+- ✅ FAQ con 36 preguntas en 7 grupos, en acordeones `<details>` nativos.
+- ✅ T&C con 18 cláusulas numeradas por CSS.
+- ✅ Responsive y accesible: un solo `h1` por página, secciones etiquetadas,
+  áreas de toque de 44 px, y `prefers-reduced-motion`.
 
 **Revisión:** navegar el sitio en móvil y escritorio.
+
+### Dónde está el texto y por qué
+
+En `includes/class-contenido.php`, no en el editor de WordPress. Se versiona
+con el código, así que se puede saber qué texto exacto aceptó cada participante
+mirando `terminos_version`; y las respuestas del FAQ describen el
+comportamiento del juego, de modo que teniéndolas al lado del código es mucho
+más probable que se actualicen cuando la mecánica cambia. El banco de E7
+comprueba justamente eso: que el FAQ hable de llaves, conos, impulsores y
+aceite, y que **no** hable de rampas, saltos ni logos de TVS.
+
+### Los 15 pendientes del cliente
+
+El texto es un borrador funcional. Lo que falta por decidir va marcado como
+`[pendiente: ...]`, y no es decorativo: el panel de configuración avisa
+mientras quede alguno y `dev/verificar-e7.php` los lista. Son 15: fechas de
+inicio y cierre, correo y WhatsApp de soporte, razón social, NIT y domicilio
+del organizador, descripción y valor del premio, plazos y lugar de entrega,
+canal de anuncio de ganadores, correo del responsable de datos y horario de
+atención.
+
+**Antes de abrir al público hay que reemplazarlos y convertir ese aviso en un
+fallo.** Está en el runbook de E10.
 
 ## E8 — Backoffice y ranking
 

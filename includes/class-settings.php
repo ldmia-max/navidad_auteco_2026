@@ -45,7 +45,11 @@ class NavidadTVS_Settings {
 			// cada participante.
 			'terminos_version'     => '1.0',
 
-			// Páginas del sitio público. Se llenan en E7.
+			// Páginas del sitio público. Las crea el botón de la pantalla de
+			// configuración y se pueden reasignar a mano si el cliente ya
+			// tenía páginas hechas.
+			'pagina_home'          => 0,
+			'pagina_juego'         => 0,
 			'pagina_terminos'      => 0,
 			'pagina_faq'           => 0,
 

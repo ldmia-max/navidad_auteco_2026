@@ -32,6 +32,17 @@ $nombres_dias = array(
 		<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Configuración guardada.', 'navidad-tvs' ); ?></p></div>
 	<?php elseif ( 'horario_invalido' === $aviso ) : ?>
 		<div class="notice notice-error"><p><?php esc_html_e( 'La hora de cierre debe ser posterior a la de apertura. Se conservó la anterior.', 'navidad-tvs' ); ?></p></div>
+	<?php elseif ( 'paginas' === $aviso ) : ?>
+		<div class="notice notice-success is-dismissible"><p>
+			<?php
+			$creadas = isset( $_GET['creadas'] ) ? (int) $_GET['creadas'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			printf(
+				/* translators: %d: cuántas páginas se crearon. */
+				esc_html( _n( 'Se creó %d página. Las que ya existían se reutilizaron.', 'Se crearon %d páginas. Las que ya existían se reutilizaron.', $creadas, 'navidad-tvs' ) ),
+				$creadas
+			);
+			?>
+		</p></div>
 	<?php elseif ( 'sin_dias' === $aviso ) : ?>
 		<div class="notice notice-error"><p><?php esc_html_e( 'Hay que dejar al menos un día hábil. Se conservaron los anteriores.', 'navidad-tvs' ); ?></p></div>
 	<?php endif; ?>
@@ -105,7 +116,44 @@ $nombres_dias = array(
 		</table>
 
 		<h2><?php esc_html_e( 'Páginas', 'navidad-tvs' ); ?></h2>
+		<p class="description">
+			<?php esc_html_e( 'Cada página solo lleva su shortcode; el contenido lo pone el plugin. Si ya tienes páginas hechas, asígnalas aquí en vez de crear otras.', 'navidad-tvs' ); ?>
+		</p>
 		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><label for="pagina_home"><?php esc_html_e( 'Portada del concurso', 'navidad-tvs' ); ?></label></th>
+				<td>
+					<?php
+					wp_dropdown_pages(
+						array(
+							'name'              => 'pagina_home',
+							'id'                => 'pagina_home',
+							'selected'          => (int) $settings->get( 'pagina_home' ),
+							'show_option_none'  => __( '— Sin asignar —', 'navidad-tvs' ),
+							'option_none_value' => 0,
+						)
+					);
+					?>
+					<p class="description"><code>[concurso_tvs_home]</code></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="pagina_juego"><?php esc_html_e( 'Juego', 'navidad-tvs' ); ?></label></th>
+				<td>
+					<?php
+					wp_dropdown_pages(
+						array(
+							'name'              => 'pagina_juego',
+							'id'                => 'pagina_juego',
+							'selected'          => (int) $settings->get( 'pagina_juego' ),
+							'show_option_none'  => __( '— Sin asignar —', 'navidad-tvs' ),
+							'option_none_value' => 0,
+						)
+					);
+					?>
+					<p class="description"><code>[concurso_tvs]</code></p>
+				</td>
+			</tr>
 			<tr>
 				<th scope="row"><label for="pagina_terminos"><?php esc_html_e( 'Términos y condiciones', 'navidad-tvs' ); ?></label></th>
 				<td>
@@ -140,6 +188,27 @@ $nombres_dias = array(
 			</tr>
 		</table>
 
+		<?php
+		$pendientes = NavidadTVS_Contenido::pendientes();
+		if ( ! empty( $pendientes ) ) :
+			?>
+			<div class="notice notice-warning inline">
+				<p>
+					<strong>
+					<?php
+					printf(
+						/* translators: %d: cuántos textos faltan. */
+						esc_html( _n( 'Falta %d dato por definir en los textos legales.', 'Faltan %d datos por definir en los textos legales.', count( $pendientes ), 'navidad-tvs' ) ),
+						count( $pendientes )
+					);
+					?>
+					</strong>
+					<?php esc_html_e( 'Aparecen en la página como «[pendiente: …]». Se cambian en includes/class-contenido.php:', 'navidad-tvs' ); ?>
+				</p>
+				<p><code><?php echo esc_html( implode( ' · ', $pendientes ) ); ?></code></p>
+			</div>
+		<?php endif; ?>
+
 		<h2><?php esc_html_e( 'Cloudflare Turnstile', 'navidad-tvs' ); ?></h2>
 		<p class="description">
 			<?php esc_html_e( 'Opcional. Si se dejan vacías, la verificación se omite; sirve para desarrollo, pero en producción conviene activarla para frenar la enumeración de teléfonos.', 'navidad-tvs' ); ?>
@@ -160,7 +229,38 @@ $nombres_dias = array(
 		<?php submit_button(); ?>
 	</form>
 
-	<h2><?php esc_html_e( 'Cómo publicar la página del juego', 'navidad-tvs' ); ?></h2>
-	<p><?php esc_html_e( 'Crea una página y pega este shortcode. Es la única página que lleva el estilo arcade.', 'navidad-tvs' ); ?></p>
-	<p><code>[<?php echo esc_html( NavidadTVS_Shortcode::TAG ); ?>]</code></p>
+	<hr>
+
+	<h2><?php esc_html_e( 'Crear el sitio del concurso', 'navidad-tvs' ); ?></h2>
+	<p>
+		<?php esc_html_e( 'Crea de una vez las cuatro páginas (portada, juego, preguntas frecuentes y términos), las publica y las deja asignadas aquí arriba. Se puede pulsar varias veces sin miedo: las que ya existan se reutilizan en lugar de duplicarse.', 'navidad-tvs' ); ?>
+	</p>
+
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<input type="hidden" name="action" value="navidad_tvs_crear_paginas">
+		<?php wp_nonce_field( 'navidad_tvs_crear_paginas' ); ?>
+		<?php submit_button( __( 'Crear las páginas que falten', 'navidad-tvs' ), 'secondary' ); ?>
+	</form>
+
+	<h3><?php esc_html_e( 'Los shortcodes, por si prefieres armarlas a mano', 'navidad-tvs' ); ?></h3>
+	<table class="widefat striped" style="max-width:640px">
+		<tbody>
+			<tr>
+				<td><code>[<?php echo esc_html( NavidadTVS_Shortcode::TAG ); ?>]</code></td>
+				<td><?php esc_html_e( 'El juego. Es la única página con estilo arcade.', 'navidad-tvs' ); ?></td>
+			</tr>
+			<tr>
+				<td><code>[<?php echo esc_html( NavidadTVS_Paginas::TAG_HOME ); ?>]</code></td>
+				<td><?php esc_html_e( 'Portada: de qué va el concurso, cómo funciona y el botón de jugar.', 'navidad-tvs' ); ?></td>
+			</tr>
+			<tr>
+				<td><code>[<?php echo esc_html( NavidadTVS_Paginas::TAG_FAQ ); ?>]</code></td>
+				<td><?php esc_html_e( 'Preguntas frecuentes en acordeones.', 'navidad-tvs' ); ?></td>
+			</tr>
+			<tr>
+				<td><code>[<?php echo esc_html( NavidadTVS_Paginas::TAG_TERMINOS ); ?>]</code></td>
+				<td><?php esc_html_e( 'Términos y condiciones con las cláusulas numeradas.', 'navidad-tvs' ); ?></td>
+			</tr>
+		</tbody>
+	</table>
 </div>

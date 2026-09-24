@@ -31,6 +31,7 @@ class NavidadTVS_Admin_Settings {
 	 */
 	public function registrar_hooks() {
 		add_action( 'admin_post_navidad_tvs_guardar_config', array( $this, 'guardar' ) );
+		add_action( 'admin_post_navidad_tvs_crear_paginas', array( $this, 'crear_paginas' ) );
 	}
 
 	/**
@@ -63,6 +64,8 @@ class NavidadTVS_Admin_Settings {
 			'premios_por_jornada'  => max( 1, (int) ( $_POST['premios_por_jornada'] ?? 4 ) ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'concurso_congelado'   => ! empty( $_POST['concurso_congelado'] ),
 			'terminos_version'     => sanitize_text_field( wp_unslash( $_POST['terminos_version'] ?? '1.0' ) ),
+			'pagina_home'          => (int) ( $_POST['pagina_home'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			'pagina_juego'         => (int) ( $_POST['pagina_juego'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'pagina_terminos'      => (int) ( $_POST['pagina_terminos'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'pagina_faq'           => (int) ( $_POST['pagina_faq'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'turnstile_site_key'   => sanitize_text_field( wp_unslash( $_POST['turnstile_site_key'] ?? '' ) ),
@@ -90,6 +93,42 @@ class NavidadTVS_Admin_Settings {
 				array(
 					'page'  => NavidadTVS_Admin::SLUG . '-configuracion',
 					'aviso' => $aviso,
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Crea las cuatro páginas del sitio público y las deja apuntadas.
+	 *
+	 * Es idempotente, así que pulsar el botón dos veces no duplica nada.
+	 *
+	 * @return void
+	 */
+	public function crear_paginas() {
+		if ( ! current_user_can( NavidadTVS_Admin::CAPACIDAD ) ) {
+			wp_die( esc_html__( 'No tienes permisos para crear las páginas.', 'navidad-tvs' ) );
+		}
+
+		check_admin_referer( 'navidad_tvs_crear_paginas' );
+
+		$resultado = NavidadTVS_Paginas::crear_paginas( $this->settings );
+
+		$creadas = 0;
+		foreach ( $resultado as $info ) {
+			if ( ! empty( $info['creada'] ) ) {
+				$creadas++;
+			}
+		}
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'    => NavidadTVS_Admin::SLUG . '-configuracion',
+					'aviso'   => 'paginas',
+					'creadas' => $creadas,
 				),
 				admin_url( 'admin.php' )
 			)
