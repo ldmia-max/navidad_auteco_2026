@@ -84,8 +84,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e( 'La actividad es exclusiva para compradores de la marca TVS.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
-				<strong><?php esc_html_e( 'En horizontal.', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'El juego necesita el celular acostado. Si lo tienes vertical, la pantalla te lo pedirá.', 'navidad-tvs' ); ?>
+				<strong><?php esc_html_e( 'Se juega con el celular como lo tienes.', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'No hay que girarlo: la pantalla del juego es cuadrada y el mando va debajo, con la cruceta a la izquierda y el acelerador a la derecha.', 'navidad-tvs' ); ?>
 			</li>
 		</ul>
 	</section>

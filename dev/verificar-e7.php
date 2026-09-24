@@ -109,7 +109,7 @@ comprobar( 'los términos pintan una cláusula por entrada', count( $clausulas )
  */
 $texto_faq = wp_strip_all_tags( $faq );
 
-foreach ( array( 'llave', 'impulsor', 'cono', 'aceite', 'turbo', '90 segundos' ) as $palabra ) {
+foreach ( array( 'llave', 'impulsor', 'cono', 'aceite', 'turbo', '90 segundos', 'cruceta' ) as $palabra ) {
 	afirmar( sprintf( 'el FAQ habla de %-12s', $palabra ), false !== mb_stripos( $texto_faq, $palabra ) );
 }
 
@@ -117,7 +117,7 @@ foreach ( array( 'llave', 'impulsor', 'cono', 'aceite', 'turbo', '90 segundos' )
  * Con límite de palabra, no como subcadena. Buscar "rampa" suelto encontraba
  * "haga trampa" y fallaba por nada.
  */
-foreach ( array( 'salto', 'rampa', 'logo de TVS', 'barro', 'valla' ) as $vieja ) {
+foreach ( array( 'salto', 'rampa', 'logo de TVS', 'barro', 'valla', 'girarlo', 'posición horizontal' ) as $vieja ) {
 	$hay = (bool) preg_match( '/\b' . preg_quote( $vieja, '/' ) . '/iu', $texto_faq );
 	afirmar( sprintf( 'el FAQ ya no habla de %-12s', $vieja ), ! $hay );
 }

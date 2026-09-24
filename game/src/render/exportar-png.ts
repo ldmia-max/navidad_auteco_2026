@@ -257,17 +257,33 @@ function hojaSprites(): Lienzo {
 // Maqueta de la pantalla
 // ---------------------------------------------------------------------------
 
-const ANCHO = 320;
-const ALTO = 180;
-const PISTA_Y = 82;
-const PISTA_ALTO = 64;
-const CARRIL_ALTO = PISTA_ALTO / 4;
+/*
+ * Las medidas se leen de medidas.ts, no se copian. Este archivo duplica a mano
+ * el dibujo de la escena para poder verla sin navegador, y si además duplicara
+ * los números, cambiar el formato del lienzo dejaría la maqueta mintiendo sin
+ * que nada fallara.
+ */
+import {
+  ALTO,
+  ANCHO,
+  CARRIL_ALTO,
+  CERROS_ALTO,
+  CERROS_Y,
+  CESPED_ALTO,
+  CESPED_Y,
+  MOTO_X,
+  PANEL_ALTO,
+  PANEL_Y,
+  PISTA_Y,
+  TRIBUNA_ALTO,
+  TRIBUNA_Y,
+} from './medidas';
 
 function maquetaPantalla(): Lienzo {
   const l = new Lienzo(ANCHO, ALTO, P.cieloAlto);
 
   // Cielo en bandas.
-  l.rect(P.cielo, 0, 50, ANCHO, 32);
+  l.rect(P.cielo, 0, TRIBUNA_Y - 2, ANCHO, PISTA_Y - TRIBUNA_Y + 2);
 
   // Nubes.
   for (const [x, y] of [
@@ -278,20 +294,20 @@ function maquetaPantalla(): Lienzo {
     l.sprite(S.NUBE, P, x, y);
   }
 
-  // Cerros y pinos, banda 18-46.
+  // Cerros y pinos.
   for (let x = -20; x < ANCHO + 40; x += 64) {
-    for (let i = 0; i < 28; i++) {
-      const mitad = Math.round((i / 28) * 32);
-      l.rect(P.verde, x + 32 - mitad, 18 + i, mitad * 2, 1);
+    for (let i = 0; i < CERROS_ALTO; i++) {
+      const mitad = Math.round((i / CERROS_ALTO) * 32);
+      l.rect(P.verde, x + 32 - mitad, CERROS_Y + i, mitad * 2, 1);
     }
   }
   for (const x of [30, 118, 200, 272]) {
     l.sprite(S.PINO, P, x, 26);
   }
 
-  // Tribuna, banda 46-74.
-  const T0 = 46;
-  l.rect(P.verdeOscuro, 0, T0, ANCHO, 28);
+  // Tribuna.
+  const T0 = TRIBUNA_Y;
+  l.rect(P.verdeOscuro, 0, T0, ANCHO, TRIBUNA_ALTO);
   l.rect(P.negro, 0, T0 + 6, ANCHO, 1);
 
   const coloresLuz = [P.rojo, P.verdeClaro, P.crema, P.azulClaro];
@@ -318,13 +334,13 @@ function maquetaPantalla(): Lienzo {
   l.rect(P.azul, xCartel + 2, T0 + 4, anchoCartel - 4, 13);
   l.texto(textoCartel, xCartel + 7, T0 + 7, P.blanco);
 
-  // Césped, banda 74-82.
-  l.rect(P.verde, 0, 74, ANCHO, 8);
+  // Césped.
+  l.rect(P.verde, 0, CESPED_Y, ANCHO, CESPED_ALTO);
   for (let x = 0; x < ANCHO; x += 16) {
     l.rect(P.verdeClaro, x + 3, 76, 2, 2);
     l.rect(P.verdeOscuro, x + 9, 78, 3, 2);
   }
-  l.rect(P.pistaBorde, 0, 80, ANCHO, 2);
+  l.rect(P.pistaBorde, 0, PISTA_Y - 2, ANCHO, 2);
 
   // Pista de asfalto. Mismo dibujo que crearPista() en texturas.ts.
   for (let carril = 0; carril < 4; carril++) {
@@ -354,23 +370,28 @@ function maquetaPantalla(): Lienzo {
   const centrado = (sprite: readonly string[], carril: number) =>
     apoyo(carril) - Math.floor(sprite.length / 2);
 
-  l.sprite(S.IMPULSOR, P, 140, centrado(S.IMPULSOR, 2));
-  l.sprite(S.CONO, P, 210, apoyo(1) - S.CONO.length);
-  l.sprite(S.ACEITE, P, 250, centrado(S.ACEITE, 3));
-  l.sprite(S.ITEM_LLAVE, P, 180, centrado(S.ITEM_LLAVE, 0));
+  l.sprite(S.IMPULSOR, P, 104, centrado(S.IMPULSOR, 2));
+  l.sprite(S.CONO, P, 140, apoyo(1) - S.CONO.length);
+  l.sprite(S.ACEITE, P, 150, centrado(S.ACEITE, 3));
+  l.sprite(S.ITEM_LLAVE, P, 160, centrado(S.ITEM_LLAVE, 0));
 
-  // Moto en el tercer carril.
-  l.sprite(S.MOTO, P, 63, apoyo(2) - S.MOTO.length);
+  // Moto en el tercer carril, donde la pone la escena.
+  l.sprite(S.MOTO, P, MOTO_X - Math.floor(S.MOTO[0].length / 2), apoyo(2) - S.MOTO.length);
 
-  // Panel inferior.
-  const panelY = PISTA_Y + PISTA_ALTO;
-  const panelAlto = ALTO - panelY;
+  // Panel inferior. Mismo reparto en tres columnas que crearPanel().
+  const panelY = PANEL_Y;
   const cx = Math.floor(ANCHO / 2);
+  const columna = Math.floor(ANCHO / 3);
+  const cajaAncho = columna - 8;
+  const izquierda = Math.floor((columna - cajaAncho) / 2);
+  const derecha = ANCHO - izquierda - cajaAncho;
+  const centroIzq = izquierda + Math.floor(cajaAncho / 2);
+  const centroDer = derecha + Math.floor(cajaAncho / 2);
 
-  l.rect(P.negro, 0, panelY, ANCHO, panelAlto);
-  l.texto('DIST', 30 - 11, panelY + 3, P.rojo);
-  l.texto('TEMP', cx - 11, panelY + 3, P.rojo);
-  l.texto('TIME', ANCHO - 30 - 11, panelY + 3, P.rojo);
+  l.rect(P.negro, 0, panelY, ANCHO, PANEL_ALTO);
+  l.texto('DIST', centroIzq - 11, panelY + 4, P.rojo);
+  l.texto('TEMP', cx - 11, panelY + 4, P.rojo);
+  l.texto('TIME', centroDer - 11, panelY + 4, P.rojo);
 
   const marco = (x: number, y: number, w: number, h: number) => {
     l.rect(P.azulClaro, x, y, w, 1);
@@ -379,21 +400,19 @@ function maquetaPantalla(): Lienzo {
     l.rect(P.azulClaro, x + w - 1, y, 1, h);
   };
 
-  marco(4, panelY + 12, 72, 15);
-  marco(ANCHO - 76, panelY + 12, 72, 15);
-  marco(cx - 34, panelY + 11, 68, 14);
-  l.rect(P.azulClaro, cx - 44, panelY + 16, 10, 2);
-  l.rect(P.azulClaro, cx + 34, panelY + 16, 10, 2);
-  l.rect(P.blanco, cx - 48, panelY + 14, 4, 5);
-  l.rect(P.blanco, cx + 44, panelY + 14, 4, 5);
-  l.rect(P.azulClaro, cx - 8, panelY + 25, 16, 3);
-  l.rect(P.azulClaro, cx - 12, panelY + 28, 24, 3);
+  marco(izquierda, panelY + 13, cajaAncho, 15);
+  marco(derecha, panelY + 13, cajaAncho, 15);
+  marco(cx - Math.floor(cajaAncho / 2), panelY + 13, cajaAncho, 14);
+  l.rect(P.azulClaro, cx - 7, panelY + 28, 14, 3);
+  l.rect(P.azulClaro, cx - 11, panelY + 31, 22, 3);
 
-  l.rect(P.tempFria, cx - 31, panelY + 14, 62, 8);
-  l.rect(P.tempCaliente, cx - 31, panelY + 14, 38, 8);
+  const anchoBarra = cajaAncho - 4;
+  const barraX = cx - Math.floor(anchoBarra / 2);
+  l.rect(P.tempFria, barraX, panelY + 16, anchoBarra, 8);
+  l.rect(P.tempCaliente, barraX, panelY + 16, Math.round(anchoBarra * 0.62), 8);
 
-  l.texto('1284M', 40 - 14, panelY + 16, P.blanco);
-  l.texto('0:47', ANCHO - 40 - 11, panelY + 16, P.blanco);
+  l.texto('1284M', centroIzq - 14, panelY + 17, P.blanco);
+  l.texto('0:47', centroDer - 11, panelY + 17, P.blanco);
 
   return l;
 }
@@ -417,7 +436,7 @@ function maquetaPodio(): Lienzo {
   l.sprite(S.ESTRELLA, P, ANCHO - margen + 36, 9);
 
   // Podio.
-  const base = 82;
+  const base = 106;
   const bloque = (x: number, alto: number) => {
     l.rect(P.azulProfundo, x, base - alto, 26, alto);
     l.rect(P.azulClaro, x, base - alto, 26, 3);
@@ -435,11 +454,11 @@ function maquetaPodio(): Lienzo {
 
   l.sprite(S.PILOTO_PODIO, P, cx - 7, base - 48);
 
-  // Panel con marco de cuadros.
-  const x = 26;
-  const y = 92;
+  // Panel con marco de cuadros. Mismas medidas que Podio.ts.
+  const x = 16;
+  const y = 116;
   const ancho = ANCHO - x * 2;
-  const alto = 62;
+  const alto = 56;
 
   for (let dy = 0; dy < alto; dy += 8) {
     for (let dx = 0; dx < ancho; dx += 8) {
@@ -457,7 +476,7 @@ function maquetaPodio(): Lienzo {
   l.texto(dist, cx - (dist.length * 6 - 1) / 2, y + 34, P.blanco);
 
   const gracias = t.podioGracias;
-  l.texto(gracias, cx - (gracias.length * 6 - 1) / 2, ALTO - 14, P.crema);
+  l.texto(gracias, cx - (gracias.length * 6 - 1) / 2, ALTO - 12, P.crema);
 
   return l;
 }

@@ -122,15 +122,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<ul class="ntvs-instrucciones">
 			<li>
 				<strong><?php esc_html_e( 'Acelerador', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Zona inferior derecha, o la tecla Z.', 'navidad-tvs' ); ?>
+				<?php esc_html_e( 'El botón grande de la derecha, o la tecla Z.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
 				<strong><?php esc_html_e( 'Turbo', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Zona superior derecha, o la tecla X. Vas más rápido, pero calienta el motor.', 'navidad-tvs' ); ?>
+				<?php esc_html_e( 'El botón rojo de arriba, o la tecla X. Vas más rápido, pero calienta el motor.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
 				<strong><?php esc_html_e( 'Cambiar de carril', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Zona izquierda, arriba o abajo. En el teclado, las flechas.', 'navidad-tvs' ); ?>
+				<?php esc_html_e( 'La cruceta de la izquierda. En el teclado, las flechas.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
 				<strong><?php esc_html_e( 'La pista acelera', 'navidad-tvs' ); ?></strong>
@@ -158,10 +158,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</li>
 		</ul>
 
-		<p class="ntvs-rotar" id="ntvs-rotar" hidden>
-			<?php esc_html_e( 'Gira tu dispositivo en horizontal para jugar.', 'navidad-tvs' ); ?>
-		</p>
-
 		<p class="ntvs-aviso ntvs-aviso--fuerte">
 			<?php esc_html_e( 'Al pulsar el botón empieza una cuenta regresiva y luego la carrera. Es tu único intento.', 'navidad-tvs' ); ?>
 		</p>
@@ -174,6 +170,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- Juego ------------------------------------------------------------ -->
 	<div class="ntvs-panel ntvs-panel--juego" id="ntvs-panel-juego" hidden>
 		<div id="ntvs-game-root" class="ntvs-game-root"></div>
+
+		<!--
+			Mando en pantalla. Va debajo del lienzo, como el control de una
+			consola: cruceta a la izquierda, acelerador y turbo a la derecha.
+
+			Antes los controles eran cuatro cuadrantes invisibles sobre el
+			propio juego y no había forma de adivinarlos. Con un solo intento
+			por persona, adivinar no es una opción.
+
+			Los botones son <button> de verdad, así que el teclado los alcanza
+			con Tab y el lector de pantalla los anuncia.
+		-->
+		<div class="ntvs-mando" id="ntvs-mando" hidden>
+			<div class="ntvs-mando__cruceta">
+				<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="arriba"
+					aria-label="<?php esc_attr_e( 'Subir de carril', 'navidad-tvs' ); ?>">
+					<span aria-hidden="true">&#9650;</span>
+				</button>
+				<button class="ntvs-btn ntvs-btn--dir" type="button" data-mando="abajo"
+					aria-label="<?php esc_attr_e( 'Bajar de carril', 'navidad-tvs' ); ?>">
+					<span aria-hidden="true">&#9660;</span>
+				</button>
+			</div>
+
+			<div class="ntvs-mando__acciones">
+				<button class="ntvs-btn ntvs-btn--turbo" type="button" data-mando="turbo"
+					aria-label="<?php esc_attr_e( 'Turbo', 'navidad-tvs' ); ?>">
+					<?php esc_html_e( 'TURBO', 'navidad-tvs' ); ?>
+				</button>
+				<button class="ntvs-btn ntvs-btn--acelera" type="button" data-mando="acelera"
+					aria-label="<?php esc_attr_e( 'Acelerar', 'navidad-tvs' ); ?>">
+					<?php esc_html_e( 'ACELERAR', 'navidad-tvs' ); ?>
+				</button>
+			</div>
+		</div>
 
 		<!-- Resultado. La distancia que vale es la que confirma el servidor. -->
 		<div class="ntvs-resultado" id="ntvs-resultado" hidden>

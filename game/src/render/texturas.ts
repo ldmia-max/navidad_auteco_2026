@@ -14,7 +14,18 @@ import Phaser from 'phaser';
 import { anchoTexto, pintarTexto } from './fuente';
 import { crearTextura, pintar, validar } from './pixeles';
 import * as S from './sprites';
-import { CARRILES_VISUALES, CARRIL_ALTO, PISTA_ALTO } from './medidas';
+import {
+  CARRILES_VISUALES,
+  CARRIL_ALTO,
+  CERROS_ALTO,
+  CERROS_Y,
+  CESPED_ALTO,
+  NUBES_ALTO,
+  PISTA_ALTO,
+  PISTA_Y,
+  TRIBUNA_ALTO,
+  TRIBUNA_Y,
+} from './medidas';
 import type { Paleta, Tema } from './tema';
 
 export const TEX = {
@@ -121,7 +132,7 @@ export function crearTexturas(escena: Phaser.Scene, tema: Tema): void {
 /** Degradado del cielo en bandas, como se hacía cuando no había degradados. */
 function crearCielo(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 82;
+  const alto = PISTA_Y;
 
   rect(g, p.cieloAlto, 0, 0, FRANJA, alto);
 
@@ -131,8 +142,10 @@ function crearCielo(escena: Phaser.Scene, p: Paleta): void {
    * devuelve un objeto {r,g,b,a} y no un color empaquetado, así que pedirle
    * .color daba undefined y la banda salía negra.
    */
-  rect(g, mezclar(p.cieloAlto, p.cielo, 0.5), 0, 26, FRANJA, alto - 26);
-  rect(g, p.cielo, 0, 50, FRANJA, alto - 50);
+  const corteMedio = CERROS_Y - 2;
+  const corteBajo = TRIBUNA_Y - 2;
+  rect(g, mezclar(p.cieloAlto, p.cielo, 0.5), 0, corteMedio, FRANJA, alto - corteMedio);
+  rect(g, p.cielo, 0, corteBajo, FRANJA, alto - corteBajo);
 
   g.generateTexture(TEX.cielo, FRANJA, alto);
   g.destroy();
@@ -141,7 +154,7 @@ function crearCielo(escena: Phaser.Scene, p: Paleta): void {
 /** Capa de nubes, la más lejana del parallax. */
 function crearNubes(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 18;
+  const alto = NUBES_ALTO;
 
   // Posiciones fijas: el parallax las mueve, no hace falta aleatoriedad.
   for (const [x, y] of [
@@ -161,7 +174,7 @@ function crearNubes(escena: Phaser.Scene, p: Paleta): void {
 /** Cerros y pinos nevados del fondo. */
 function crearCerros(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 28;
+  const alto = CERROS_ALTO;
 
   /*
    * Cerros en verdes claros. Los pinos van en verde oscuro, así que si los
@@ -196,7 +209,7 @@ function crearCerros(escena: Phaser.Scene, p: Paleta): void {
  */
 function crearTribuna(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 28;
+  const alto = TRIBUNA_ALTO;
 
   rect(g, p.verdeOscuro, 0, 0, FRANJA, alto);
 
@@ -284,7 +297,7 @@ function crearCartel(escena: Phaser.Scene, tema: Tema): void {
 /** Franja de césped entre la tribuna y la pista. */
 function crearCesped(escena: Phaser.Scene, p: Paleta): void {
   const g = graficos(escena);
-  const alto = 8;
+  const alto = CESPED_ALTO;
 
   rect(g, p.verde, 0, 0, FRANJA, alto);
 
@@ -360,27 +373,36 @@ export function crearPanel(
 
   const cx = Math.floor(ancho / 2);
 
+  /*
+   * Tres columnas de un tercio del panel. Con el lienzo de 320 cabían dos
+   * recuadros de 72 px y un medidor de 68 con sus topes laterales; en 200 esa
+   * misma distribución sumaba 212 y se pisaban unos a otros.
+   */
+  const columna = Math.floor(ancho / 3);
+  const cajaAncho = columna - 8;
+  const izquierda = Math.floor((columna - cajaAncho) / 2);
+  const derecha = ancho - izquierda - cajaAncho;
+
   // Rótulos.
   const rotuloDist = tema.textos.rotuloDistancia;
   const rotuloTemp = tema.textos.rotuloTemperatura;
   const rotuloTime = tema.textos.rotuloTiempo;
 
-  pintarTexto(g, rotuloDist, 30 - Math.floor(anchoTexto(rotuloDist) / 2), 3, p.rojo);
-  pintarTexto(g, rotuloTemp, cx - Math.floor(anchoTexto(rotuloTemp) / 2), 3, p.rojo);
-  pintarTexto(g, rotuloTime, ancho - 30 - Math.floor(anchoTexto(rotuloTime) / 2), 3, p.rojo);
+  const centroIzq = izquierda + Math.floor(cajaAncho / 2);
+  const centroDer = derecha + Math.floor(cajaAncho / 2);
+
+  pintarTexto(g, rotuloDist, centroIzq - Math.floor(anchoTexto(rotuloDist) / 2), 4, p.rojo);
+  pintarTexto(g, rotuloTemp, cx - Math.floor(anchoTexto(rotuloTemp) / 2), 4, p.rojo);
+  pintarTexto(g, rotuloTime, centroDer - Math.floor(anchoTexto(rotuloTime) / 2), 4, p.rojo);
 
   // Recuadros de dato.
-  marco(g, p.azulClaro, 4, 12, 72, 15);
-  marco(g, p.azulClaro, ancho - 76, 12, 72, 15);
+  marco(g, p.azulClaro, izquierda, 13, cajaAncho, 15);
+  marco(g, p.azulClaro, derecha, 13, cajaAncho, 15);
 
   // Medidor central con su soporte, como en la referencia.
-  marco(g, p.azulClaro, cx - 34, 11, 68, 14);
-  rect(g, p.azulClaro, cx - 44, 16, 10, 2);
-  rect(g, p.azulClaro, cx + 34, 16, 10, 2);
-  rect(g, p.blanco, cx - 48, 14, 4, 5);
-  rect(g, p.blanco, cx + 44, 14, 4, 5);
-  rect(g, p.azulClaro, cx - 8, 25, 16, 3);
-  rect(g, p.azulClaro, cx - 12, 28, 24, 3);
+  marco(g, p.azulClaro, cx - Math.floor(cajaAncho / 2), 13, cajaAncho, 14);
+  rect(g, p.azulClaro, cx - 7, 28, 14, 3);
+  rect(g, p.azulClaro, cx - 11, 31, 22, 3);
 
   g.generateTexture(TEX.panel, ancho, alto);
   g.destroy();

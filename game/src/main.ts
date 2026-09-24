@@ -47,13 +47,24 @@ const FACTOR_MAXIMO = 6;
  */
 function ajustarEscala(lienzo: HTMLCanvasElement, contenedor: HTMLElement): void {
   /*
+   * El mando vive debajo del lienzo y ocupa alto de verdad. Si no se descuenta,
+   * en un teléfono el juego se escala hasta llenar la pantalla y los botones
+   * quedan fuera de la vista, que es justo lo contrario de lo que se buscaba
+   * al sacarlos del lienzo.
+   *
+   * Se mide en vez de reservar un número fijo: los botones cambian de tamaño
+   * con el ancho de la pantalla.
+   */
+  const mando = document.getElementById('ntvs-mando');
+  const altoMando = mando && !mando.hidden ? mando.offsetHeight + 24 : 0;
+
+  /*
    * Margen pequeño a propósito. innerHeight ya descuenta la barra del
-   * navegador, así que restarle mucho más deja los teléfonos pequeños en ×1:
-   * un iPhone SE en horizontal (667×375) se quedaba en 320×180 por 5 píxeles
-   * de diferencia.
+   * navegador, así que restarle mucho más deja los teléfonos pequeños en ×1
+   * por unos pocos píxeles de diferencia.
    */
   const dispoAncho = Math.max(window.innerWidth - 8, ANCHO);
-  const dispoAlto = Math.max(window.innerHeight - 8, ALTO);
+  const dispoAlto = Math.max(window.innerHeight - 8 - altoMando, ALTO);
 
   const factor = Math.min(
     FACTOR_MAXIMO,

@@ -12,8 +12,9 @@ import { TextoPixel, anchoTexto, pintarTexto } from '../render/fuente';
 import type { Tema } from '../render/tema';
 import { TEX } from '../render/texturas';
 
-export const ANCHO = 320;
-export const ALTO = 180;
+import { ALTO, ANCHO } from '../render/medidas';
+
+export { ALTO, ANCHO };
 
 export interface DatosPodio {
   tema: Tema;
@@ -45,7 +46,7 @@ export class Podio extends Phaser.Scene {
     this.panelResultado();
 
     // El mensaje de agradecimiento cierra la pantalla.
-    const gracias = new TextoPixel(this, ANCHO / 2, ALTO - 14, p.crema, 'centro');
+    const gracias = new TextoPixel(this, ANCHO / 2, ALTO - 12, p.crema, 'centro');
     gracias.set(t.podioGracias);
 
     sonido.fanfarriaPodio();
@@ -76,7 +77,7 @@ export class Podio extends Phaser.Scene {
   private escenaPodio(): void {
     const p = this.tema.paleta;
     const cx = ANCHO / 2;
-    const base = 82;
+    const base = 106;
 
     // Escalones: el primero al centro y más alto.
     this.add.image(cx, base, TEX.podioBloque).setOrigin(0.5, 1).setScale(1, 1);
@@ -95,10 +96,10 @@ export class Podio extends Phaser.Scene {
   /** Panel con marco de cuadros: nombre y distancia. */
   private panelResultado(): void {
     const p = this.tema.paleta;
-    const x = 26;
-    const y = 92;
+    const x = 16;
+    const y = 116;
     const ancho = ANCHO - x * 2;
-    const alto = 62;
+    const alto = 56;
 
     // Marco de cuadros de meta alrededor del panel.
     this.add.tileSprite(x, y, ancho, 8, TEX.marcoCuadros).setOrigin(0, 0);

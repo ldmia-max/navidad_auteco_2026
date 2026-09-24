@@ -24,7 +24,6 @@
 	var panelAcceso        = document.getElementById( 'ntvs-panel-acceso' );
 	var panelInstrucciones = document.getElementById( 'ntvs-panel-instrucciones' );
 	var panelJuego         = document.getElementById( 'ntvs-panel-juego' );
-	var avisoRotar         = document.getElementById( 'ntvs-rotar' );
 
 	var textos = cfg.textos || {};
 	var sesion = null;
@@ -73,23 +72,86 @@
 	}
 
 	// -----------------------------------------------------------------
-	// Orientación del dispositivo
+	// Mando en pantalla
 	// -----------------------------------------------------------------
 
-	function revisarOrientacion() {
-		if ( ! avisoRotar ) {
+	/*
+	 * El juego lee estas cuatro banderas en cada tick. No las toca nadie más.
+	 *
+	 * Se crea aquí y no en el bundle porque este archivo carga antes: cuando el
+	 * juego arranca ya tiene dónde mirar.
+	 */
+	window.navidadTvsMando = { arriba: false, abajo: false, acelera: false, turbo: false };
+
+	function montarMando() {
+		var mando = document.getElementById( 'ntvs-mando' );
+		if ( ! mando ) {
 			return;
 		}
 
-		// Solo tiene sentido en pantallas de teléfono o tablet.
-		var esTactil = window.matchMedia( '(hover: none)' ).matches;
-		var vertical = window.innerHeight > window.innerWidth;
+		var botones = mando.querySelectorAll( '[data-mando]' );
 
-		avisoRotar.hidden = ! ( esTactil && vertical );
+		Array.prototype.forEach.call( botones, function ( boton ) {
+			var accion = boton.getAttribute( 'data-mando' );
+
+			var pulsar = function ( evento ) {
+				evento.preventDefault();
+				window.navidadTvsMando[ accion ] = true;
+				boton.classList.add( 'ntvs-btn--activo' );
+
+				/*
+				 * Capturar el puntero es lo que permite arrastrar el dedo fuera
+				 * del botón sin que se quede pulsado para siempre: el pointerup
+				 * llega igual a este elemento aunque el dedo ya no esté encima.
+				 */
+				if ( boton.setPointerCapture && evento.pointerId !== undefined ) {
+					try {
+						boton.setPointerCapture( evento.pointerId );
+					} catch ( e ) {
+						// Safari viejo. El soltar global de abajo lo cubre.
+					}
+				}
+			};
+
+			var soltar = function () {
+				window.navidadTvsMando[ accion ] = false;
+				boton.classList.remove( 'ntvs-btn--activo' );
+			};
+
+			boton.addEventListener( 'pointerdown', pulsar );
+			boton.addEventListener( 'pointerup', soltar );
+			boton.addEventListener( 'pointercancel', soltar );
+
+			// Que el botón no se quede "pegado" si el navegador se traga el
+			// pointerup: al perder el foco o al salir la pestaña, todo a cero.
+			boton.addEventListener( 'lostpointercapture', soltar );
+
+			// Sin esto, mantener pulsado abre el menú contextual en Android.
+			boton.addEventListener( 'contextmenu', function ( e ) {
+				e.preventDefault();
+			} );
+		} );
+
+		var soltarTodo = function () {
+			window.navidadTvsMando.arriba = false;
+			window.navidadTvsMando.abajo = false;
+			window.navidadTvsMando.acelera = false;
+			window.navidadTvsMando.turbo = false;
+
+			Array.prototype.forEach.call( botones, function ( b ) {
+				b.classList.remove( 'ntvs-btn--activo' );
+			} );
+		};
+
+		window.addEventListener( 'blur', soltarTodo );
+		document.addEventListener( 'visibilitychange', function () {
+			if ( document.hidden ) {
+				soltarTodo();
+			}
+		} );
 	}
 
-	window.addEventListener( 'resize', revisarOrientacion );
-	window.addEventListener( 'orientationchange', revisarOrientacion );
+	montarMando();
 
 	// -----------------------------------------------------------------
 	// Envío
@@ -228,8 +290,7 @@
 
 		panelAcceso.hidden = true;
 		panelInstrucciones.hidden = false;
-		revisarOrientacion();
-		panelInstrucciones.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+			panelInstrucciones.scrollIntoView( { block: 'start', behavior: 'smooth' } );
 
 		// El bundle se descarga mientras el participante lee las
 		// instrucciones. Son unos segundos que de otro modo se perderían
@@ -317,6 +378,13 @@
 				.then( function ( carrera ) {
 					panelInstrucciones.hidden = true;
 					panelJuego.hidden = false;
+
+					// El mando aparece con el juego: antes de eso no hay nada
+					// que controlar y solo sería ruido en la pantalla.
+					var mando = document.getElementById( 'ntvs-mando' );
+					if ( mando ) {
+						mando.hidden = false;
+					}
 
 					window.navidadTvsIniciarJuego( {
 						token: sesion.token,
@@ -479,5 +547,4 @@
 		}
 	}
 
-	revisarOrientacion();
 } )();

@@ -358,14 +358,111 @@
 	letter-spacing: 1px;
 }
 
-.ntvs-rotar {
-	margin: 16px 0 0;
-	padding: 12px;
-	font-size: 12px;
-	text-align: center;
-	color: var(--ntvs-azul-profundo);
-	background: var(--ntvs-crema);
-	border: 3px solid var(--ntvs-rojo);
+/* --- Mando en pantalla ---------------------------------------------------- */
+
+/*
+ * Va debajo del lienzo, como el control de una consola: cruceta a la izquierda
+ * y acciones a la derecha. Antes los controles eran cuatro cuadrantes
+ * invisibles sobre el propio juego, y el participante tenía que adivinarlos en
+ * su único intento.
+ *
+ * Los tamaños no bajan de 56 px. El mínimo cómodo para un dedo son 44, pero
+ * aquí se pulsa a ciegas y en movimiento, mirando la pista y no el botón.
+ */
+.ntvs-mando {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	width: 100%;
+	max-width: 520px;
+	margin: 14px auto 0;
+	padding: 0 4px;
+	/* Sin esto, arrastrar el dedo sobre un botón hace scroll de la página. */
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.ntvs-mando__cruceta {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ntvs-mando__acciones {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 10px;
+}
+
+.ntvs-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--ntvs-fuente);
+	font-weight: 700;
+	letter-spacing: 1px;
+	color: var(--ntvs-blanco);
+	border: 3px solid var(--ntvs-blanco);
+	border-radius: 0;
+	box-shadow: 4px 4px 0 var(--ntvs-azul-profundo);
+	cursor: pointer;
+	touch-action: none;
+	/* El resaltado azul de Android al tocar estropea el aspecto de consola. */
+	-webkit-tap-highlight-color: transparent;
+}
+
+.ntvs-btn--activo {
+	transform: translate(3px, 3px);
+	box-shadow: 1px 1px 0 var(--ntvs-azul-profundo);
+	filter: brightness(1.25);
+}
+
+.ntvs-btn--dir {
+	width: 76px;
+	height: 56px;
+	font-size: 20px;
+	background: var(--ntvs-azul);
+}
+
+.ntvs-btn--turbo {
+	width: 108px;
+	height: 56px;
+	font-size: 13px;
+	background: var(--ntvs-rojo);
+}
+
+.ntvs-btn--acelera {
+	width: 148px;
+	height: 66px;
+	font-size: 15px;
+	background: var(--ntvs-verde-oscuro);
+}
+
+@media (max-width: 400px) {
+	.ntvs-mando {
+		gap: 10px;
+	}
+
+	.ntvs-btn--dir {
+		width: 66px;
+	}
+
+	.ntvs-btn--turbo {
+		width: 92px;
+	}
+
+	.ntvs-btn--acelera {
+		width: 124px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ntvs-btn--activo {
+		transform: none;
+	}
 }
 
 /* --- Contenedor del juego ----------------------------------------------- */

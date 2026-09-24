@@ -130,7 +130,7 @@ idénticos y que la validación de E6 no rechace carreras legítimas.
 - Pantalla final: piloto en podio sobre panel con marco de cuadros, nombre y
   distancia debajo, mensaje de agradecimiento
   (`imagenes_apoyo/Ejemplo_final_carrera.png`).
-- Modal de instrucciones: controles, jugabilidad, aviso de girar el dispositivo
+- Modal de instrucciones: controles, jugabilidad
   y advertencia de conexión estable.
 - Audio chiptune **sintetizado con Web Audio**, sin archivos: cero bytes que
   descargar y sin el problema de que Safari no reproduzca `.ogg`.

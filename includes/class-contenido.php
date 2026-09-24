@@ -135,8 +135,8 @@ class NavidadTVS_Contenido {
 						'r' => __( 'No. El intento es único y no se repone por fallas de conexión, del dispositivo o del operador móvil. Por eso recomendamos jugar desde una conexión estable, preferiblemente WiFi, y no cerrar la página hasta que el sistema confirme que tu resultado quedó registrado.', 'navidad-tvs' ),
 					),
 					array(
-						'p' => __( '¿Puedo jugar en vertical?', 'navidad-tvs' ),
-						'r' => __( 'No. El juego requiere el dispositivo en posición horizontal. Si lo tienes vertical, la pantalla te pedirá girarlo.', 'navidad-tvs' ),
+						'p' => __( '¿Tengo que girar el celular?', 'navidad-tvs' ),
+						'r' => __( 'No. La pantalla del juego es cuadrada y los controles van debajo, así que se juega con el celular en la mano como siempre.', 'navidad-tvs' ),
 					),
 				),
 			),
@@ -146,7 +146,7 @@ class NavidadTVS_Contenido {
 				'preguntas' => array(
 					array(
 						'p' => __( '¿Cuáles son los controles?', 'navidad-tvs' ),
-						'r' => __( 'En celular y tablet: una zona a la derecha para acelerar y otra para el turbo, y una zona a la izquierda para cambiar de carril. En computador, la tecla Z acelera, la X es el turbo y las flechas cambian de carril. Antes de empezar verás una pantalla con las instrucciones.', 'navidad-tvs' ),
+						'r' => __( 'Debajo de la pantalla hay un mando: la cruceta a la izquierda cambia de carril y los dos botones de la derecha son el acelerador y el turbo. En computador, la tecla Z acelera, la X es el turbo y las flechas cambian de carril. Antes de empezar verás una pantalla con las instrucciones.', 'navidad-tvs' ),
 					),
 					array(
 						'p' => __( '¿Qué es la temperatura del motor?', 'navidad-tvs' ),

@@ -35,16 +35,43 @@ import {
   ALTO,
   ANCHO,
   CARRIL_ALTO,
+  CERROS_ALTO,
+  CERROS_Y,
+  CESPED_ALTO,
+  CESPED_Y,
   MOTO_X,
+  NUBES_ALTO,
+  NUBES_Y,
   PANEL_ALTO,
   PANEL_Y,
   PISTA_ALTO,
   PISTA_Y,
   PX_POR_METRO,
+  TRIBUNA_ALTO,
+  TRIBUNA_Y,
 } from '../render/medidas';
 import { TEX, crearPanel, crearTexturas } from '../render/texturas';
 
 export { ALTO, ANCHO };
+
+/**
+ * Estado del mando en pantalla.
+ *
+ * Lo crea y lo mantiene el JavaScript de la página (assets/js/acceso.js), que
+ * es quien dibuja los botones. El juego solo lee.
+ */
+export interface Mando {
+  arriba: boolean;
+  abajo: boolean;
+  acelera: boolean;
+  turbo: boolean;
+}
+
+declare global {
+  interface Window {
+    navidadTvsMando?: Mando;
+  }
+}
 
 /**
  * Línea sobre la que se apoya todo lo que está en un carril.
@@ -154,6 +181,7 @@ export class Carrera extends Phaser.Scene {
   private textoDist!: TextoPixel;
   private textoTiempo!: TextoPixel;
   private barraTemp!: Phaser.GameObjects.Rectangle;
+  private anchoBarraTemp = 0;
   private avisoMotor!: TextoPixel;
   private avisoFondo!: Phaser.GameObjects.Rectangle;
   private textoCuenta!: TextoPixel;
@@ -237,13 +265,13 @@ export class Carrera extends Phaser.Scene {
      * la tribuna empieza justo debajo. En la primera versión la tribuna
      * arrancaba dentro de los cerros y se comía los pinos enteros.
      */
-    this.nubes = this.add.tileSprite(0, 0, ANCHO, 18, TEX.nubes).setOrigin(0, 0);
-    this.cerros = this.add.tileSprite(0, 18, ANCHO, 28, TEX.cerros).setOrigin(0, 0);
-    this.tribuna = this.add.tileSprite(0, 46, ANCHO, 28, TEX.tribuna).setOrigin(0, 0);
+    this.nubes = this.add.tileSprite(0, NUBES_Y, ANCHO, NUBES_ALTO, TEX.nubes).setOrigin(0, 0);
+    this.cerros = this.add.tileSprite(0, CERROS_Y, ANCHO, CERROS_ALTO, TEX.cerros).setOrigin(0, 0);
+    this.tribuna = this.add.tileSprite(0, TRIBUNA_Y, ANCHO, TRIBUNA_ALTO, TEX.tribuna).setOrigin(0, 0);
 
-    this.cartel = this.add.image(ANCHO / 2, 48, TEX.cartel).setOrigin(0.5, 0);
+    this.cartel = this.add.image(ANCHO / 2, TRIBUNA_Y + 2, TEX.cartel).setOrigin(0.5, 0);
 
-    this.cesped = this.add.tileSprite(0, 74, ANCHO, 8, TEX.cesped).setOrigin(0, 0);
+    this.cesped = this.add.tileSprite(0, CESPED_Y, ANCHO, CESPED_ALTO, TEX.cesped).setOrigin(0, 0);
     this.suelo = this.add.tileSprite(0, PISTA_Y, ANCHO, PISTA_ALTO, TEX.pista).setOrigin(0, 0);
   }
 
@@ -269,12 +297,20 @@ export class Carrera extends Phaser.Scene {
     const p = this.tema.paleta;
     const cx = Math.floor(ANCHO / 2);
 
-    this.textoDist = new TextoPixel(this, 40, PANEL_Y + 16, p.blanco, 'centro');
-    this.textoTiempo = new TextoPixel(this, ANCHO - 40, PANEL_Y + 16, p.blanco, 'centro');
+    // Las mismas tres columnas que dibuja crearPanel().
+    const columna = Math.floor(ANCHO / 3);
+    const cajaAncho = columna - 8;
+    const izquierda = Math.floor((columna - cajaAncho) / 2);
+    const derecha = ANCHO - izquierda - cajaAncho;
+
+    this.textoDist = new TextoPixel(this, izquierda + Math.floor(cajaAncho / 2), PANEL_Y + 17, p.blanco, 'centro');
+    this.textoTiempo = new TextoPixel(this, derecha + Math.floor(cajaAncho / 2), PANEL_Y + 17, p.blanco, 'centro');
 
     // Barra de temperatura: verde de fondo, rojo que crece encima.
-    this.add.rectangle(cx - 31, PANEL_Y + 14, 62, 8, p.tempFria).setOrigin(0, 0);
-    this.barraTemp = this.add.rectangle(cx - 31, PANEL_Y + 14, 0, 8, p.tempCaliente).setOrigin(0, 0);
+    this.anchoBarraTemp = cajaAncho - 4;
+    const barraX = cx - Math.floor(this.anchoBarraTemp / 2);
+    this.add.rectangle(barraX, PANEL_Y + 16, this.anchoBarraTemp, 8, p.tempFria).setOrigin(0, 0);
+    this.barraTemp = this.add.rectangle(barraX, PANEL_Y + 16, 0, 8, p.tempCaliente).setOrigin(0, 0);
 
     /*
      * Aviso del motor: letras rojas sobre una caja negra.
@@ -391,7 +427,18 @@ export class Carrera extends Phaser.Scene {
     this.pintar();
   }
 
-  /** Lee el estado actual de teclado y pantalla táctil. */
+  /**
+   * Lee el estado actual del teclado y del mando en pantalla.
+   *
+   * El mando es HTML, no forma parte del lienzo: vive debajo del juego, en la
+   * página, y solo deja aquí cuatro banderas. Antes la pantalla se dividía en
+   * cuatro cuadrantes invisibles y había que adivinar dónde tocar; con un solo
+   * intento por persona, adivinar no es una opción.
+   *
+   * Y ya que hay botones de verdad, el lienzo dejó de escuchar toques: con el
+   * mando debajo, un dedo apoyado en la esquina de la pantalla habría metido
+   * turbo sin querer y recalentado el motor.
+   */
   private leerEntrada(): number {
     let entrada = 0;
 
@@ -402,30 +449,13 @@ export class Carrera extends Phaser.Scene {
       if (this.teclas.abajo.isDown) entrada |= BIT_ABAJO;
     }
 
-    /*
-     * Zonas táctiles, cuadrantes de media pantalla:
-     *
-     *   izquierda arriba  -> subir de carril / enderezar en el aire
-     *   izquierda abajo   -> bajar de carril / inclinar en el aire
-     *   derecha arriba    -> turbo
-     *   derecha abajo     -> acelerador
-     *
-     * Se recorren todos los punteros para que acelerar y moverse a la vez
-     * funcione con dos dedos.
-     */
-    for (const puntero of this.input.manager.pointers) {
-      if (!puntero.isDown) {
-        continue;
-      }
+    const mando = typeof window !== 'undefined' ? window.navidadTvsMando : undefined;
 
-      const x = puntero.worldX;
-      const y = puntero.worldY;
-
-      if (x < ANCHO / 2) {
-        entrada |= y < ALTO / 2 ? BIT_ARRIBA : BIT_ABAJO;
-      } else {
-        entrada |= y < ALTO / 2 ? BIT_TURBO : BIT_ACELERA;
-      }
+    if (mando) {
+      if (mando.acelera) entrada |= BIT_ACELERA;
+      if (mando.turbo) entrada |= BIT_TURBO;
+      if (mando.arriba) entrada |= BIT_ARRIBA;
+      if (mando.abajo) entrada |= BIT_ABAJO;
     }
 
     return entrada;
@@ -705,7 +735,7 @@ export class Carrera extends Phaser.Scene {
     const seg = segundosRestantes(e, TOTAL_TICKS);
     this.textoTiempo.set(`${div(seg, 60)}:${String(seg % 60).padStart(2, '0')}`);
 
-    this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * 62);
+    this.barraTemp.width = Math.round((e.temp / TEMP_MAX) * this.anchoBarraTemp);
 
     /*
      * Los dos avisos parpadean. El de motor parado, al doble de velocidad:
