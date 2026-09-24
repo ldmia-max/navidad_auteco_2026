@@ -378,6 +378,17 @@ function maquetaPantalla(): Lienzo {
   // Moto en el tercer carril, donde la pone la escena.
   l.sprite(S.MOTO, P, MOTO_X - Math.floor(S.MOTO[0].length / 2), apoyo(2) - S.MOTO.length);
 
+  /*
+   * Aviso del motor, con su caja negra. Se dibuja aquí para poder comprobar
+   * que queda centrado sin abrir el navegador: el fondo se dimensiona en
+   * tiempo de ejecución y ya se descolocó una vez.
+   */
+  const aviso = TEMA_POR_DEFECTO.textos.avisoSobrecalentado;
+  const anchoAviso = aviso.length * 6 - 1;
+  const cajaAviso = anchoAviso + 6;
+  l.rect(P.negro, Math.floor(ANCHO / 2 - cajaAviso / 2), PISTA_Y - 13, cajaAviso, 11);
+  l.texto(aviso, Math.floor(ANCHO / 2 - anchoAviso / 2), PISTA_Y - 11, P.rojo);
+
   // Panel inferior. Mismo reparto en tres columnas que crearPanel().
   const panelY = PANEL_Y;
   const cx = Math.floor(ANCHO / 2);

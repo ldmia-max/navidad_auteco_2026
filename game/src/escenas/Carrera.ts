@@ -112,6 +112,9 @@ const MAX_TICKS_POR_FRAME = 8;
 /** Cuánto dura en pantalla el "+50" de un bonus. */
 const TICKS_FLOTANTE = 45;
 
+/** Alto de la caja negra del aviso del motor: el texto y dos píxeles por lado. */
+const ALTO_AVISO = 11;
+
 /**
  * Cuánto dura el aviso de que la velocidad subió.
  *
@@ -316,7 +319,7 @@ export class Carrera extends Phaser.Scene {
      * Aviso del motor: letras rojas sobre una caja negra.
      * El rojo solo no se leería sobre el verde del césped ni sobre la pista.
      */
-    this.avisoFondo = this.add.rectangle(cx, PISTA_Y - 13, 10, 11, p.negro).setOrigin(0.5, 0);
+    this.avisoFondo = this.add.rectangle(cx, PISTA_Y - 13, 10, ALTO_AVISO, p.negro).setOrigin(0.5, 0);
     this.avisoFondo.setDepth(9);
     this.avisoFondo.setVisible(false);
 
@@ -758,8 +761,21 @@ export class Carrera extends Phaser.Scene {
     this.avisoMotor.setVisible(visible);
     this.avisoFondo.setVisible(visible);
 
-    if (visible) {
-      this.avisoFondo.width = this.avisoMotor.anchoActual + 6;
+    if (!visible) {
+      return;
+    }
+
+    /*
+     * setSize() y no .width. Asignar el ancho a pelo cambia el número pero no
+     * recalcula el origen, que se quedó con el que tenía la caja al crearse
+     * —10 px, o sea 5 de origen— así que la caja crecía entera hacia la
+     * derecha y el texto quedaba pegado a su borde izquierdo en vez de en el
+     * medio. setSize() actualiza la geometría y el origen a la vez.
+     */
+    const ancho = this.avisoMotor.anchoActual + 6;
+
+    if (this.avisoFondo.width !== ancho) {
+      this.avisoFondo.setSize(ancho, ALTO_AVISO);
     }
   }
 
