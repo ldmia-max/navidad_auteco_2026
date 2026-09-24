@@ -25,3 +25,29 @@ export const CARRIL_ALTO = PISTA_ALTO / CARRILES_VISUALES;
 /** Panel inferior. */
 export const PANEL_Y = PISTA_Y + PISTA_ALTO;
 export const PANEL_ALTO = ALTO - PANEL_Y;
+
+// ---------------------------------------------------------------------------
+// Cámara
+// ---------------------------------------------------------------------------
+
+/**
+ * Dónde va la moto en pantalla. Se queda quieta y el mundo se mueve.
+ *
+ * Está aquí y no en la escena porque de este número depende cuánta pista ve el
+ * jugador, y de eso depende a qué velocidad se puede jugar. El banco de
+ * pruebas lo necesita para medirlo.
+ */
+export const MOTO_X = 74;
+
+/** Píxeles por metro al dibujar la pista. */
+export const PX_POR_METRO = 8;
+
+/**
+ * Milímetros de pista visibles por delante de la moto.
+ *
+ * Es el presupuesto de reacción del jugador: todo lo que aparece, aparece a
+ * esta distancia. Subir la velocidad sin subir esto recorta el tiempo que hay
+ * para ver un cono y esquivarlo, así que cualquier cambio de velocidad se
+ * comprueba contra este número.
+ */
+export const VISTA_MM = ((ANCHO - MOTO_X) * 1000) / PX_POR_METRO;

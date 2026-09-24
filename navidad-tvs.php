@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.9.2
+ * Version:     1.10.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.9.2' );
+define( 'NAVIDAD_TVS_VERSION', '1.10.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );
@@ -45,8 +45,13 @@ define( 'NAVIDAD_TVS_TICKS_POR_SEGUNDO', 60 );
 define( 'NAVIDAD_TVS_DURACION_SEGUNDOS', 90 );
 define( 'NAVIDAD_TVS_TOTAL_TICKS', NAVIDAD_TVS_TICKS_POR_SEGUNDO * NAVIDAD_TVS_DURACION_SEGUNDOS );
 
-/** Tope de plausibilidad: por encima de esto se rechaza sin analizar. */
-define( 'NAVIDAD_TVS_DISTANCIA_MAXIMA_M', 3100 );
+/**
+ * Tope de plausibilidad: por encima de esto se rechaza sin analizar.
+ *
+ * Espejo de DISTANCIA_MAXIMA_M en game/src/sim/constantes.ts, donde está la
+ * explicación de cómo sale el número. Los dos tienen que cambiar juntos.
+ */
+define( 'NAVIDAD_TVS_DISTANCIA_MAXIMA_M', 4200 );
 
 require_once NAVIDAD_TVS_PATH . 'includes/class-settings.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-database.php';

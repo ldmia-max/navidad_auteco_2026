@@ -21,16 +21,30 @@ import {
 } from '../sim/constantes';
 import { BIT_ABAJO, BIT_ACELERA, BIT_ARRIBA, BIT_TURBO, codificar, registroVacio } from '../sim/entradas';
 import { generarPista, type Pista } from '../sim/pista';
-import { crearEstado, distanciaMetros, paso, segundosRestantes, type Estado } from '../sim/simulacion';
+import {
+  crearEstado,
+  distanciaMetros,
+  paso,
+  segundosRestantes,
+  subidaEscalon,
+  type Estado,
+} from '../sim/simulacion';
 import { TextoPixel } from '../render/fuente';
 import type { Tema } from '../render/tema';
-import { ALTO, ANCHO, CARRIL_ALTO, PANEL_ALTO, PANEL_Y, PISTA_ALTO, PISTA_Y } from '../render/medidas';
+import {
+  ALTO,
+  ANCHO,
+  CARRIL_ALTO,
+  MOTO_X,
+  PANEL_ALTO,
+  PANEL_Y,
+  PISTA_ALTO,
+  PISTA_Y,
+  PX_POR_METRO,
+} from '../render/medidas';
 import { TEX, crearPanel, crearTexturas } from '../render/texturas';
 
 export { ALTO, ANCHO };
-
-/** La moto se queda quieta en pantalla y el mundo se mueve. */
-const MOTO_X = 74;
 
 /**
  * Línea sobre la que se apoya todo lo que está en un carril.
@@ -46,9 +60,6 @@ const MOTO_X = 74;
 function apoyo(carril: number): number {
   return PISTA_Y + carril * CARRIL_ALTO + CARRIL_ALTO / 2;
 }
-
-/** Píxeles por metro al dibujar. */
-const PX_POR_METRO = 8;
 
 /**
  * Cuadros que tarda la moto en deslizarse de un carril al otro.
@@ -73,6 +84,15 @@ const MAX_TICKS_POR_FRAME = 8;
 
 /** Cuánto dura en pantalla el "+50" de un bonus. */
 const TICKS_FLOTANTE = 45;
+
+/**
+ * Cuánto dura el aviso de que la velocidad subió.
+ *
+ * Hace falta avisar. Cada 20 segundos el techo sube solo, y una moto que de
+ * pronto corre más sin que el jugador haya hecho nada se lee como un fallo si
+ * nadie le dice que es parte del juego.
+ */
+const TICKS_AVISO_VELOCIDAD = 96;
 
 /**
  * Cuánto se queda la pantalla congelada al acabarse el tiempo.
@@ -149,6 +169,8 @@ export class Carrera extends Phaser.Scene {
   // Para disparar sonidos cuando algo cambia entre un tick y el siguiente.
   private itemsPrevios = 0;
   private impulsoresPrevios = 0;
+  private subidaPrevia = 0;
+  private ticksAvisoVelocidad = 0;
   private caidasPrevias = 0;
   private sobrecalentamientosPrevios = 0;
 
@@ -184,6 +206,8 @@ export class Carrera extends Phaser.Scene {
 
     this.itemsPrevios = 0;
     this.impulsoresPrevios = 0;
+    this.subidaPrevia = 0;
+    this.ticksAvisoVelocidad = 0;
     this.caidasPrevias = 0;
     this.sobrecalentamientosPrevios = 0;
   }
@@ -417,6 +441,16 @@ export class Carrera extends Phaser.Scene {
       this.lanzarFlotante(this.tema.textos.bonus);
     }
 
+    // El techo de velocidad sube por escalones con el reloj.
+    const subida = subidaEscalon(e.tick);
+
+    if (subida !== this.subidaPrevia) {
+      this.subidaPrevia = subida;
+      this.ticksAvisoVelocidad = TICKS_AVISO_VELOCIDAD;
+      this.textoCuenta.set(this.tema.textos.avisoVelocidad);
+      sonido.subeVelocidad();
+    }
+
     // Cada impulsor pisado suma un metro y lo anuncia igual que el bonus.
     if (e.impulsores !== this.impulsoresPrevios) {
       sonido.impulsor();
@@ -465,6 +499,7 @@ export class Carrera extends Phaser.Scene {
     this.pintarMoto();
     this.pintarPista();
     this.pintarFlotantes();
+    this.pintarAvisoVelocidad();
     this.pintarPanel();
   }
 
@@ -649,6 +684,16 @@ export class Carrera extends Phaser.Scene {
         f.texto.setVisible(false);
       }
     }
+  }
+
+  /** El aviso de subida de velocidad, parpadeando y por un momento. */
+  private pintarAvisoVelocidad(): void {
+    if (this.ticksAvisoVelocidad <= 0) {
+      return;
+    }
+
+    this.ticksAvisoVelocidad--;
+    this.textoCuenta.setVisible(this.ticksAvisoVelocidad === 0 ? false : Math.floor(this.ticksAvisoVelocidad / 8) % 2 === 0);
   }
 
   private pintarPanel(): void {

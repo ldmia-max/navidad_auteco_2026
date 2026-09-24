@@ -51,15 +51,37 @@ const GAP_MAX = 26_000;
  * tumba es el cono, así que el límite de dificultad se pone sobre él y no
  * sobre la densidad general.
  *
- * Con 30 m de separación, aun yendo a tope de turbo (32 m/s) queda casi un
- * segundo entre un cono y el siguiente, y un cambio de carril cuesta ocho
- * ticks. Un cono que llegara antes no mediría habilidad, y con un solo intento
- * por persona eso no se puede permitir.
+ * Lo que se protege no son los metros sino los SEGUNDOS que el jugador tiene
+ * para ver un cono y cambiar de carril. Como el techo de velocidad sube cada
+ * 20 s (ver constantes.ts), la misma separación en metros vale cada vez menos
+ * tiempo, así que la separación crece con la pista: 30 m al arrancar y 42 m en
+ * la parte que alcanza una carrera buena, que a 41 m/s vuelven a ser los mismos
+ * segundos que había al principio a 32 m/s.
+ *
+ * Se escala por posición y no por tiempo porque la pista se genera antes de
+ * que nadie juegue. No es exacto —cada jugador llega a cada metro en un
+ * segundo distinto— pero se equivoca del lado seguro: quien va lento encuentra
+ * los conos más separados de lo que necesita.
  *
  * Cuando el dado pide un cono demasiado pronto, sale un impulsor en su lugar:
  * la pista sigue igual de poblada y el jugador sale ganando.
  */
-const SEPARACION_CONOS = 30_000;
+const SEPARACION_CONOS_MIN = 30_000;
+const SEPARACION_CONOS_MAX = 42_000;
+
+/**
+ * Hasta dónde llega una carrera buena. Ver docs/mecanica-y-balanceo.md.
+ *
+ * Es el tramo sobre el que se reparte el crecimiento de la separación. Más
+ * allá la pista sigue generándose, pero ya no la pisa nadie.
+ */
+const ALCANCE_CARRERA_MM = 2_400_000;
+
+/** Separación mínima entre conos en un punto de la pista. */
+function separacionConos(pos: number): number {
+  const avance = pos < ALCANCE_CARRERA_MM ? pos : ALCANCE_CARRERA_MM;
+  return SEPARACION_CONOS_MIN + div(avance * (SEPARACION_CONOS_MAX - SEPARACION_CONOS_MIN), ALCANCE_CARRERA_MM);
+}
 
 /** Separación entre llaves. Promedio ~200 m, como dice el balanceo. */
 const GAP_ITEM_MIN = 150_000;
@@ -78,7 +100,7 @@ export function generarPista(seed: number): Pista {
 
   // --- Obstáculos ---------------------------------------------------------
   let cursor = ARRANQUE_LIMPIO_MM;
-  let posUltimoCono = -SEPARACION_CONOS;
+  let posUltimoCono = -SEPARACION_CONOS_MAX;
 
   while (cursor < PISTA_MM) {
     cursor += prng.rango(GAP_MIN, GAP_MAX);
@@ -108,7 +130,7 @@ export function generarPista(seed: number): Pista {
     }
 
     // Conos demasiado seguidos: se convierten en impulsor.
-    if (tipo === TIPO_CONO && cursor - posUltimoCono < SEPARACION_CONOS) {
+    if (tipo === TIPO_CONO && cursor - posUltimoCono < separacionConos(cursor)) {
       tipo = TIPO_IMPULSOR;
     }
 

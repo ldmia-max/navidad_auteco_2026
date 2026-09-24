@@ -252,6 +252,13 @@ export class Sonido {
     this.nota(1046, 0.09, 'triangle', 0.2, 0.05);
   }
 
+  /** El techo de velocidad acaba de subir. Fanfarria corta y ascendente. */
+  subeVelocidad(): void {
+    this.nota(660, 0.09, 'square', 0.3);
+    this.nota(880, 0.09, 'square', 0.3, 0.09);
+    this.nota(1320, 0.18, 'square', 0.3, 0.18);
+  }
+
   caida(): void {
     this.ruido(0.35, 0.35, 900);
     this.barrido(400, 60, 0.4, 'sawtooth', 0.22);

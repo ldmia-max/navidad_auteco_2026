@@ -13,6 +13,7 @@
 import { readFileSync } from 'node:fs';
 
 import { anchoTexto, normalizar } from './fuente';
+import { DISTANCIA_MAXIMA_M } from '../sim/constantes';
 import { CARRIL_ALTO } from './medidas';
 import { LEYENDA, validar } from './pixeles';
 import * as S from './sprites';
@@ -124,8 +125,20 @@ comprobar(
   `"${avisoLargo}" mide ${anchoTexto(avisoLargo)} px`
 );
 
+// El aviso de subida de velocidad sale centrado sobre la pista.
+const avisoVel = TEMA_POR_DEFECTO.textos.avisoVelocidad;
+comprobar(
+  'el aviso de subida de velocidad cabe en pantalla',
+  anchoTexto(avisoVel) <= 320,
+  `"${avisoVel}" mide ${anchoTexto(avisoVel)} px`
+);
+
 // El dato más largo del panel: cinco cifras y la unidad.
-comprobar('la distancia máxima cabe en su recuadro', anchoTexto('3100M') <= 70, `${anchoTexto('3100M')} px`);
+comprobar(
+  'la distancia máxima cabe en su recuadro',
+  anchoTexto(`${DISTANCIA_MAXIMA_M}M`) <= 70,
+  `${anchoTexto(`${DISTANCIA_MAXIMA_M}M`)} px`
+);
 
 // El cartel de la tribuna no puede ser más ancho que la pantalla.
 const cartel = TEMA_POR_DEFECTO.textos.cartelTribuna;

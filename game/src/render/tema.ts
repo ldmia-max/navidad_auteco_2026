@@ -99,6 +99,8 @@ export interface Textos {
   bonus: string;
   /** Lo que sube flotando al pisar un impulsor. */
   bonusImpulsor: string;
+  /** Aviso de que el techo de velocidad acaba de subir. */
+  avisoVelocidad: string;
 }
 
 export interface Tema {
@@ -164,6 +166,7 @@ export const TEMA_POR_DEFECTO: Tema = {
     unidadMetros: 'M',
     bonus: '+50',
     bonusImpulsor: '+1',
+    avisoVelocidad: 'MAS RAPIDO',
   },
 };
 

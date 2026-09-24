@@ -133,6 +133,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php esc_html_e( 'Zona izquierda, arriba o abajo. En el teclado, las flechas.', 'navidad-tvs' ); ?>
 			</li>
 			<li>
+				<strong><?php esc_html_e( 'La pista acelera', 'navidad-tvs' ); ?></strong>
+				<?php esc_html_e( 'Cada 20 segundos la moto alcanza más velocidad y todo llega más rápido. Verás el aviso en pantalla.', 'navidad-tvs' ); ?>
+			</li>
+			<li>
 				<strong><?php esc_html_e( 'Temperatura', 'navidad-tvs' ); ?></strong>
 				<?php esc_html_e( 'El turbo la sube. Si llega al tope, el motor se sobrecalienta y la moto se detiene dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble de rápido.', 'navidad-tvs' ); ?>
 			</li>

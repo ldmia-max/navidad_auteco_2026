@@ -20,15 +20,18 @@ import {
   ACEL_TURBO,
   CARRILES,
   DECEL_SOBRECALENTADO,
+  ESCALONES_MAX,
   FRICCION,
   IMPULSOR_METROS,
   IMPULSOR_MMS,
   ITEM_METROS,
+  SUBIDA_POR_ESCALON,
   TEMP_MAX,
   TEMP_NORMAL,
   TEMP_SUELTO,
   TEMP_TURBO,
   TICKS_CAIDA,
+  TICKS_POR_ESCALON,
   TICKS_SOBRECALENTADO,
   TICKS_CAMBIO_CARRIL,
   TIPO_ACEITE,
@@ -97,6 +100,18 @@ export function distanciaMetros(estado: Estado): number {
   return div(estado.pos, 1000) + estado.items * ITEM_METROS + estado.impulsores * IMPULSOR_METROS;
 }
 
+/**
+ * Cuánto ha subido el techo de velocidad en este tick, en mm/s.
+ *
+ * Solo depende del tick, así que el servidor la reejecuta sin arrastrar nada:
+ * dos jugadores en el mismo segundo tienen exactamente el mismo techo, juegue
+ * como juegue cada uno.
+ */
+export function subidaEscalon(tick: number): number {
+  const paso = div(tick, TICKS_POR_ESCALON);
+  return (paso < ESCALONES_MAX ? paso : ESCALONES_MAX) * SUBIDA_POR_ESCALON;
+}
+
 /** Segundos que quedan de carrera, redondeados hacia arriba. */
 export function segundosRestantes(estado: Estado, totalTicks: number): number {
   const faltan = totalTicks - estado.tick;
@@ -144,15 +159,17 @@ export function paso(estado: Estado, entrada: number, pista: Pista): void {
   }
 
   // --- Motor ----------------------------------------------------------------
+  // El techo sube por escalones con el reloj; la aceleración no cambia.
+  const subida = subidaEscalon(estado.tick);
   let vmax: number;
   let acel: number;
 
   if (tiene(entrada, BIT_TURBO)) {
-    vmax = V_MAX_TURBO;
+    vmax = V_MAX_TURBO + subida;
     acel = ACEL_TURBO;
     estado.temp += TEMP_TURBO;
   } else if (tiene(entrada, BIT_ACELERA)) {
-    vmax = V_MAX_NORMAL;
+    vmax = V_MAX_NORMAL + subida;
     acel = ACEL_NORMAL;
     estado.temp += TEMP_NORMAL;
   } else {
@@ -211,7 +228,8 @@ function avanzar(estado: Estado, pista: Pista): void {
 
     if (obs.tipo === TIPO_IMPULSOR) {
       estado.impulsores++;
-      estado.vel = Math.min(V_MAX_TURBO, estado.vel + IMPULSOR_MMS);
+      // El tope del impulsor sube con el techo, como todo lo demás.
+      estado.vel = Math.min(V_MAX_TURBO + subidaEscalon(estado.tick), estado.vel + IMPULSOR_MMS);
     } else if (obs.tipo === TIPO_ACEITE) {
       estado.aceiteHasta = obs.pos + obs.largo;
     } else if (obs.tipo === TIPO_CONO) {

@@ -12,11 +12,24 @@
  * No depende de Phaser ni del navegador.
  */
 
-import { ARRANQUE_LIMPIO_MM, IMPULSOR_METROS, ITEM_METROS, TIPO_CONO, TOTAL_TICKS, TPS } from './constantes';
+import {
+  ARRANQUE_LIMPIO_MM,
+  DISTANCIA_MAXIMA_M,
+  ESCALONES_MAX,
+  IMPULSOR_METROS,
+  ITEM_METROS,
+  SUBIDA_POR_ESCALON,
+  TICKS_POR_ESCALON,
+  TIPO_CONO,
+  TOTAL_TICKS,
+  TPS,
+  V_MAX_TURBO,
+} from './constantes';
+import { VISTA_MM } from '../render/medidas';
 import { BIT_ACELERA, BIT_TURBO, codificar, decodificar, registroVacio } from './entradas';
 import { generarPista } from './pista';
 import { Prng } from './prng';
-import { crearEstado, distanciaMetros, paso, type Estado } from './simulacion';
+import { crearEstado, distanciaMetros, paso, subidaEscalon, type Estado } from './simulacion';
 
 let fallos = 0;
 
@@ -161,6 +174,93 @@ comprobar('el registro sobrevive ida y vuelta', JSON.stringify(Array.from(mezcla
 comprobar('el registro comprimido cabe de sobra', codificado.length < 1024, `${codificado.length} bytes en base64`);
 
 // ===========================================================================
+console.log('\n=== Escalada de velocidad ===');
+
+comprobar('el techo no sube antes del primer escalón', subidaEscalon(TICKS_POR_ESCALON - 1) === 0);
+comprobar('sube al cumplirse el escalón', subidaEscalon(TICKS_POR_ESCALON) === SUBIDA_POR_ESCALON);
+comprobar(
+  'deja de subir tras el último escalón',
+  subidaEscalon(TOTAL_TICKS - 1) === ESCALONES_MAX * SUBIDA_POR_ESCALON,
+  `${(V_MAX_TURBO + subidaEscalon(TOTAL_TICKS - 1)) / 1000} m/s de turbo al final`
+);
+
+for (let e = 0; e <= ESCALONES_MAX; e++) {
+  const t = e * TICKS_POR_ESCALON;
+  const turbo = V_MAX_TURBO + subidaEscalon(t);
+  console.log(
+    `     desde el segundo ${String(e * (TICKS_POR_ESCALON / TPS)).padStart(2)}: ` +
+      `turbo ${(turbo / 1000).toFixed(0)} m/s (${((turbo * 36) / 10000).toFixed(0)} km/h)`
+  );
+}
+
+/*
+ * Lo que de verdad limita la velocidad no es la física sino la cámara: el
+ * jugador ve VISTA_MM de pista por delante, y cuanto más rápido va, menos
+ * tiempo pasa entre que un cono aparece y le llega encima. Esto lo mide en una
+ * carrera de verdad, corriendo a tope de turbo todo el rato, que es el caso
+ * peor.
+ *
+ * No se calcula con fórmulas: se simula, se anota en qué tick aparece cada
+ * cono por el borde de la pantalla y en qué tick se pisa, y se toma el peor.
+ */
+function ventanaDeReaccion(seed: number, registro: Uint8Array): { ticks: number; metro: number } {
+  const pistaV = generarPista(seed);
+  const estadoV = crearEstado();
+
+  const conos = Array.from(
+    new Set(pistaV.obstaculos.filter((o) => o.tipo === TIPO_CONO).map((o) => o.pos))
+  ).sort((x, y) => x - y);
+
+  const aparece = new Map<number, number>();
+  let iVe = 0;
+  let iLlega = 0;
+  let peor = Number.POSITIVE_INFINITY;
+  let metro = 0;
+
+  for (let t = 1; t <= TOTAL_TICKS; t++) {
+    paso(estadoV, registro[t - 1], pistaV);
+
+    while (iVe < conos.length && conos[iVe] - VISTA_MM <= estadoV.pos) {
+      aparece.set(conos[iVe], t);
+      iVe++;
+    }
+
+    while (iLlega < conos.length && conos[iLlega] <= estadoV.pos) {
+      const ticks = t - (aparece.get(conos[iLlega]) ?? t);
+      if (ticks < peor) {
+        peor = ticks;
+        metro = Math.trunc(conos[iLlega] / 1000);
+      }
+      iLlega++;
+    }
+  }
+
+  return { ticks: peor, metro };
+}
+
+let peorVentana = { ticks: Number.POSITIVE_INFINITY, metro: 0, seed: 0 };
+
+for (const s of [101, 202, 303, 404, 505, 606, 707, 808]) {
+  const v = ventanaDeReaccion(s, registroDe(() => BIT_ACELERA | BIT_TURBO));
+  if (v.ticks < peorVentana.ticks) {
+    peorVentana = { ...v, seed: s };
+  }
+}
+
+const segVentana = peorVentana.ticks / TPS;
+console.log(
+  `     el cono peor colocado se ve ${segVentana.toFixed(2)} s antes de llegar ` +
+    `(pista ${peorVentana.seed}, metro ${peorVentana.metro})`
+);
+
+/*
+ * 0,70 s es el suelo. Reaccionar a algo que se ve cuesta del orden de 0,3 s y
+ * un cambio de carril son 8 ticks, 0,13 s. Por debajo de eso la caída deja de
+ * medir habilidad, y con un solo intento por persona eso no se puede permitir.
+ */
+comprobar('siempre da tiempo de ver un cono y esquivarlo', segVentana >= 0.7, `${segVentana.toFixed(2)} s`);
+
+// ===========================================================================
 console.log('\n=== Balanceo (docs/mecanica-y-balanceo.md) ===\n');
 
 const estrategias: Array<{ nombre: string; fn: (t: number) => number }> = [
@@ -239,7 +339,11 @@ comprobar(
 );
 
 const mejor = Math.max(...resumen.values());
-comprobar('nadie supera el tope de plausibilidad de 3100 m', mejor < 3100, `mejor estrategia: ${mejor} m`);
+comprobar(
+  `nadie se acerca al tope de plausibilidad de ${DISTANCIA_MAXIMA_M} m`,
+  mejor < DISTANCIA_MAXIMA_M,
+  `mejor estrategia: ${mejor} m`
+);
 
 const peorJugando = soloAcelerador;
 comprobar(

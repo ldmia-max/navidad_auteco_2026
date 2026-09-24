@@ -11,6 +11,8 @@ este documento se aplica en los dos lados y se corre la suite de paridad.
 
 - Carrera de **90 segundos exactos**.
 - Gana quien recorra **más metros**.
+- El techo de velocidad **sube cada 20 segundos**: la carrera empieza
+  manejable y termina exigiendo.
 - El contador avanza de 1 en 1 metro.
 - Las **llaves** suman **+50 m** directos al contador.
 - Cada **impulsor pisado suma +1 m**, con el mismo rótulo flotante que la
@@ -116,6 +118,50 @@ Al llegar a 10 000 el motor **se sobrecalienta** y la moto se detiene:
 - Durante la parada la temperatura baja a 0.
 - Al terminar, se recupera el control con velocidad 0.
 
+### Escalada de velocidad
+
+Cada 20 segundos sube el **techo** de velocidad, el del acelerador y el del
+turbo por igual, en 3 m/s. A los 60 s ya está arriba del todo.
+
+| Tramo | Acelerador | Turbo |
+|---|---|---|
+| 0–20 s | 22 m/s · 79 km/h | 32 m/s · 115 km/h |
+| 20–40 s | 25 m/s · 90 km/h | 35 m/s · 126 km/h |
+| 40–60 s | 28 m/s · 101 km/h | 38 m/s · 137 km/h |
+| 60–90 s | 31 m/s · 112 km/h | 41 m/s · 148 km/h |
+
+Al final de la carrera, ir con el acelerador pelado cuesta lo que al principio
+costaba ir con turbo. Solo depende del tick, así que dos participantes en el
+mismo segundo tienen exactamente el mismo techo y el servidor lo reejecuta sin
+arrastrar nada.
+
+**Sube el techo, no un piso de velocidad**, y la diferencia no es cosmética.
+Con un piso que empujara a la moto, soltar el acelerador dejaría de costar
+velocidad, enfriar el motor saldría gratis y abusar del turbo pasaría a ser la
+mejor jugada: se caería el equilibrio sobre el que está montado el concurso.
+Además regalaría los mismos metros a todo el mundo, incluido quien no toca
+nada, y con 150 participantes peleando por 4 puestos lo que hace falta es
+separación, no un suelo común.
+
+#### Lo que de verdad limita la velocidad es la cámara
+
+El jugador ve **30,75 m de pista por delante** (`VISTA_MM`, en medidas.ts). Ese
+es todo su presupuesto de reacción: cuanto más rápido va, menos tiempo pasa
+entre que un cono asoma por el borde y le llega encima.
+
+| | Antes | Con la escalada |
+|---|---|---|
+| Tiempo para ver un cono y esquivarlo, a tope de turbo | 0,96 s | **0,75 s** |
+
+Ese recorte *es* la dificultad que se buscaba, y 0,75 s sigue estando por
+encima de lo que cuesta reaccionar (unos 0,3 s) más un cambio de carril (8
+ticks, 0,13 s). El banco de pruebas lo mide simulando una carrera entera a tope
+de turbo y anotando el peor caso; si bajara de **0,70 s**, falla.
+
+Por eso la separación mínima entre conos crece con la pista, de 30 a 42 m: lo
+que se protege no son los metros sino los segundos, y 42 m a 41 m/s vuelven a
+ser el segundo largo que había al principio a 32 m/s.
+
 ### Verificación del balanceo
 
 Medido con `cd game && npm run sim`, promediando ocho pistas distintas. Las
@@ -125,21 +171,22 @@ logos y chocan con lo que les toca de frente: son el suelo, no el techo.
 | Estrategia | Distancia media | Impulsores | Caídas | Veces que se sobrecalienta |
 |---|---|---|---|---|
 | Sin tocar nada | 0 m | 0,0 | 0,0 | 0,0 |
-| Solo acelerador | **1867 m** | 16,5 | 3,5 | 0,0 |
-| Turbo continuo | **1535 m** | 14,0 | 2,4 | 12,9 |
-| Pulsos de 2 s turbo / 3 s normal | **2128 m** | 18,9 | 4,9 | 0,1 |
-| Pulsos de 2 s turbo / 2 s suelto | 2067 m | 18,1 | 4,3 | 0,1 |
-| Pulsos de 1 s turbo / 2 s normal | 2124 m | 18,8 | 5,0 | 0,0 |
+| Solo acelerador | **2133 m** | 19,4 | 4,6 | 0,0 |
+| Turbo continuo | **1696 m** | 15,3 | 2,8 | 12,9 |
+| Pulsos de 2 s turbo / 3 s normal | **2352 m** | 21,3 | 5,5 | 0,4 |
+| Pulsos de 2 s turbo / 2 s suelto | 2276 m | 20,5 | 5,0 | 0,0 |
+| Pulsos de 1 s turbo / 2 s normal | 2383 m | 21,1 | 5,6 | 0,0 |
 
-Abusar del turbo castiga de verdad: 1535 m frente a los 1867 m de no usarlo.
-Dosificarlo sube a 2128 m. Son 261 metros de diferencia entre jugar mal y jugar
+Abusar del turbo castiga de verdad: 1696 m frente a los 2133 m de no usarlo.
+Dosificarlo sube a 2383 m. Son 250 metros de diferencia entre jugar mal y jugar
 bien, sin contar las llaves ni los carriles, y con resolución de 1 metro:
 espacio de sobra para ordenar 150 participantes.
 
-Cambiar las rampas por impulsores movió las marcas menos de diez metros: los
-4 m/s del impulsor valen prácticamente lo mismo que valía el impulso de
-aterrizaje más los dos segundos de inmunidad por el aire. Era lo buscado, para
-no rehacer el balanceo entero por un cambio de estética.
+La escalada subió todas las marcas unos 250 m y las caídas de 4 a 5 por
+carrera, **sin tocar el orden entre estrategias**, que es lo único que el
+concurso necesita que se mantenga. Lo mismo había pasado al cambiar las rampas
+por impulsores: los 4 m/s del impulsor valen casi lo mismo que valía el impulso
+de aterrizaje más los dos segundos de inmunidad por el aire.
 
 Una carrera completa se simula en **0,14 ms**. Validar las 150 de una jornada
 cuesta centésimas de segundo, así que en E6 se puede reejecutar el 100 % de las
@@ -251,8 +298,12 @@ por segundo, no sesenta.
 
 Segunda malla, por si algo se escapa de la reejecución:
 
-- Distancia máxima teórica en 90 s: **3100 m**. Cualquier cosa por encima se
-  rechaza sin más análisis.
+- Distancia máxima teórica en 90 s: **4200 m**. Cualquier cosa por encima se
+  rechaza sin más análisis. Va deliberadamente alto: el filtro de verdad es
+  reejecutar la carrera, y esta primera malla solo tiene que atrapar lo absurdo
+  sin poder rechazar jamás algo que la física permita. Sale del techo físico
+  —unos 3300 m de recorrido yendo a tope de turbo los noventa segundos, que el
+  sobrecalentamiento hace imposible— más todas las llaves del camino.
 - Número de ítems recogidos no puede superar los presentes en la pista de ese
   seed.
 - La duración real de la sesión (entre la emisión del nonce y la llegada del
@@ -271,5 +322,6 @@ pruebas reales de juego, sobre todo:
   cliente.
 - Duración de la parada por sobrecalentamiento (2,5 s puede resultar muy duro en
   móvil).
-- Separación mínima entre conos (30 m): es el mando de dificultad real ahora
+- Cuánto sube el techo en cada escalón (3 m/s) y cada cuánto (20 s).
+- Separación mínima entre conos (30 a 42 m): es el mando de dificultad real ahora
   que la densidad general y el castigo van por separado.

@@ -25,6 +25,46 @@ export const ACEL_NORMAL = 12000;
 export const ACEL_TURBO = 18000;
 export const FRICCION = 8000;
 
+// ---------------------------------------------------------------------------
+// Escalada de velocidad
+// ---------------------------------------------------------------------------
+
+/*
+ * Cada 20 segundos sube el TECHO de velocidad, el del acelerador y el del
+ * turbo por igual. A los 60 s ya está arriba del todo y así se queda hasta el
+ * final.
+ *
+ *   tramo      acelerador        turbo
+ *   0–20 s     22 m/s  79 km/h   32 m/s  115 km/h
+ *   20–40 s    25 m/s  90 km/h   35 m/s  126 km/h
+ *   40–60 s    28 m/s 101 km/h   38 m/s  137 km/h
+ *   60–90 s    31 m/s 112 km/h   41 m/s  148 km/h
+ *
+ * Al final de la carrera ir con el acelerador pelado cuesta lo que al
+ * principio costaba ir con turbo. Esa es toda la escalada: la carrera empieza
+ * siendo manejable y termina exigiendo, en vez de quedarse plana desde el
+ * segundo 40, que era lo que la volvía aburrida.
+ *
+ * Sube el techo y no un piso de velocidad, y esa diferencia importa. Con un
+ * piso, soltar el acelerador dejaría de costar velocidad, enfriar el motor
+ * saldría gratis y abusar del turbo pasaría a ser la mejor jugada: se caería
+ * el equilibrio sobre el que está montado el concurso. Además regalaría los
+ * mismos metros a todo el mundo, incluso a quien no toca nada, y con 150
+ * participantes peleando por 4 puestos lo que hace falta es separación.
+ *
+ * Al subir la velocidad hay menos tiempo para reaccionar, así que la
+ * separación mínima entre conos crece con ella. Ver pista.ts.
+ */
+
+/** Cada cuántos ticks sube el techo. 20 s. */
+export const TICKS_POR_ESCALON = 20 * TPS;
+
+/** Cuántas veces sube como mucho. Tres subidas: a los 20, 40 y 60 s. */
+export const ESCALONES_MAX = 3;
+
+/** Cuánto sube el techo en cada escalón, en mm/s. 3 m/s ≈ 11 km/h. */
+export const SUBIDA_POR_ESCALON = 3000;
+
 /** Al calarse el motor la moto pierde potencia rápido. */
 export const DECEL_SOBRECALENTADO = 40000;
 
@@ -111,10 +151,31 @@ export const IMPULSOR_METROS = 1;
 export const ARRANQUE_LIMPIO_MM = 30_000;
 
 /**
- * Cuánta pista se genera. Por encima del tope de plausibilidad (3100 m) para
- * que nadie se quede sin pista aunque haga una carrera perfecta.
+ * Cuánta pista se genera.
+ *
+ * Por encima de lo que la física permite recorrer en 90 s, para que nadie se
+ * quede sin pista ni en una carrera perfecta. Con la escalada, quien fuera a
+ * tope de turbo los noventa segundos —imposible, porque el motor se
+ * sobrecalienta a los cuatro— recorrería unos 3300 m.
  */
-export const PISTA_MM = 3_600_000;
+export const PISTA_MM = 4_000_000;
+
+/**
+ * Tope de plausibilidad, en metros. Espejo de NAVIDAD_TVS_DISTANCIA_MAXIMA_M.
+ *
+ * Es la primera malla de E6: por encima de esto el resultado se rechaza sin
+ * analizar. Va deliberadamente alto, porque el filtro de verdad es reejecutar
+ * la carrera y esto solo tiene que atrapar lo absurdo sin poder rechazar jamás
+ * algo que la física permita.
+ *
+ * El techo físico son esos 3300 m de recorrido más las llaves que caben en el
+ * camino (unas 16 a 50 m cada una) y los impulsores: unos 4150 m. De ahí el
+ * valor. Las estrategias automáticas del banco llegan a 2400, y una persona
+ * que además cambie de carril, a unos 2900.
+ *
+ * Si cambia, hay que cambiarlo también en navidad-tvs.php.
+ */
+export const DISTANCIA_MAXIMA_M = 4200;
 
 // ---------------------------------------------------------------------------
 // Tipos de obstáculo
