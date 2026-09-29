@@ -15,7 +15,8 @@
     "gris": "#5A5A5A",
     "grisClaro": "#9A9A9A",
     "amarillo": "#F5C518",
-    "piel": "#E8B38A",
+    "piel": "#FFCC99",
+    "grisMedio": "#808080",
 
     "_comentarioMoto": "Colores del diseño de la moto deportiva que mandó el cliente. Cambiarlos aquí recolorea la moto sin tocar el dibujo.",
     "azulMoto": "#0070C0",

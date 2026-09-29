@@ -238,7 +238,7 @@ function crearTribuna(escena: Phaser.Scene, p: Paleta): void {
   rect(g, p.verdeOscuro, 0, 0, FRANJA, alto);
 
   // Guirnalda: el cable y las bombillas alternando color.
-  rect(g, p.negro, 0, 6, FRANJA, 1);
+  rect(g, p.negro, 0, 0, FRANJA, 1);
   const coloresLuz: Array<keyof Paleta> = ['rojo', 'verdeClaro', 'crema', 'azulClaro'];
 
   for (let i = 0, x = 4; x < FRANJA; x += 12, i++) {
@@ -246,27 +246,99 @@ function crearTribuna(escena: Phaser.Scene, p: Paleta): void {
     // La bombilla se pinta recoloreada: se reutiliza el sprite cambiando la
     // 'r' de la leyenda por el color que toca.
     const recoloreada = S.BOMBILLA.map((fila) => fila.replace(/r/g, '§'));
-    pintarConReemplazo(g, recoloreada, p, x, 6, '§', p[color]);
+    pintarConReemplazo(g, recoloreada, p, x, 0, '§', p[color]);
   }
 
-  // Dos filas de público, desfasadas. La de atrás asoma por encima.
-  const coloresRopa: Array<keyof Paleta> = ['rojo', 'azul', 'crema', 'verdeClaro', 'amarillo', 'blanco'];
+  /*
+   * Dos filas de público con los diseños del cliente.
+   *
+   * Atrás van bustos, que es lo que de verdad se ve de una segunda fila: la
+   * cabeza y los hombros asomando entre los de delante. Delante, cuerpos
+   * enteros, uno de cada tres con los brazos arriba.
+   *
+   * El verde con que vienen dibujados no llega a pantalla: se sustituye por
+   * un color distinto en cada persona, así que un solo dibujo puebla la grada
+   * entera.
+   */
+  const coloresRopa: Array<keyof Paleta> = [
+    'rojo',
+    'azul',
+    'crema',
+    'verdeClaro',
+    'amarillo',
+    'blanco',
+    'azulProfundo',
+    'rojoOscuro',
+    'grisClaro',
+  ];
 
-  for (let fila = 0; fila < 2; fila++) {
-    const y = 9 + fila * 7;
+  const recolorear = (sprite: readonly string[], x: number, y: number, color: keyof Paleta) => {
+    pintarConReemplazo(
+      g,
+      sprite.map((f) => f.replace(/r/g, '§')),
+      p,
+      x,
+      y,
+      '§',
+      p[color]
+    );
+  };
 
-    for (let i = 0, x = fila * 4; x < FRANJA; x += 9, i++) {
-      const color = coloresRopa[(i + fila * 3) % coloresRopa.length];
-      const anima = (i + fila) % 3 === 0;
-      const base = anima ? S.ESPECTADOR_ANIMANDO : S.ESPECTADOR;
-      const recoloreada = base.map((f) => f.replace(/r/g, '§'));
-      pintarConReemplazo(g, recoloreada, p, x, y, '§', p[color]);
-    }
+  /*
+   * LAS DOS FILAS NO SE PUEDEN SOLAPAR EN VERTICAL, y esto no es estético.
+   *
+   * Las filas de la cabeza son '.nkkkkn.': las esquinas van transparentes
+   * para que la cabeza no salga cuadrada. Si detrás de esas esquinas hay
+   * alguien, su ropa se ve por los huecos y aparece un cuadro de color
+   * flotando a la altura de los hombros, que es justo lo que parecía un
+   * píxel transparente.
+   *
+   * Por eso la fila de atrás se recorta a las siete primeras filas del busto
+   * y termina en el píxel 11, uno antes de donde empieza la de delante.
+   */
+  const FILA_ATRAS_Y = 5;
+  const FILA_ATRAS_FILAS = 7;
+  const FILA_DELANTE_Y = 13;
+
+  // Fila de atrás: cabeza y hombros, desplazados medio hueco para caer entre
+  // los de delante y no justo detrás.
+  for (let i = 0, x = -4; x < FRANJA; x += 9, i++) {
+    recolorear(
+      S.ESPECTADOR_BUSTO.slice(0, FILA_ATRAS_FILAS),
+      x,
+      FILA_ATRAS_Y,
+      coloresRopa[(i * 4) % coloresRopa.length]
+    );
   }
 
-  // Barandilla delante del público.
-  rect(g, p.blanco, 0, alto - 5, FRANJA, 2);
-  rect(g, p.verde, 0, alto - 3, FRANJA, 3);
+  /*
+   * Fila de delante: cuerpos enteros, alineados por los pies. El que anima
+   * mide un píxel más, así que empieza uno más arriba para que los zapatos
+   * de todos queden a la misma altura, justo encima de la barandilla.
+   */
+  for (let i = 0, x = 0; x < FRANJA; x += 9, i++) {
+    const anima = i % 3 === 0;
+    recolorear(
+      anima ? S.ESPECTADOR_ANIMANDO : S.ESPECTADOR,
+      x,
+      anima ? FILA_DELANTE_Y - 1 : FILA_DELANTE_Y,
+      coloresRopa[(i * 2 + 1) % coloresRopa.length]
+    );
+  }
+
+  /*
+   * Vallas delante del público, según el diseño del cliente.
+   *
+   * Se repiten cada 16 píxeles y no cada 15, que es lo que miden: 16 divide
+   * exacto los 320 de la franja, así que al repetirse la textura la costura
+   * cae justo en el hueco entre dos vallas y no parte ninguna por la mitad.
+   * El píxel que sobra es la separación entre una valla y la siguiente.
+   */
+  const yValla = alto - S.VALLA_TRIBUNA.length;
+
+  for (let x = 0; x < FRANJA; x += 16) {
+    pintar(g, S.VALLA_TRIBUNA, p, x, yValla);
+  }
 
   g.generateTexture(TEX.tribuna, FRANJA, alto);
   g.destroy();

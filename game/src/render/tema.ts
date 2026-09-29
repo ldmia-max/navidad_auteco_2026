@@ -27,7 +27,10 @@ export interface Paleta {
   gris: number;
   grisClaro: number;
   amarillo: number;
+  /** Piel del público y del piloto del podio. Del diseño del cliente. */
   piel: number;
+  /** Gris medio: el calzado del público. */
+  grisMedio: number;
   /** Azul del traje y el chasis de la moto deportiva. */
   azulMoto: number;
   /** Rojo del diseño de la moto. Más encendido que el rojo del manual TVS. */
@@ -122,7 +125,8 @@ export const TEMA_POR_DEFECTO: Tema = {
     gris: 0x5a5a5a,
     grisClaro: 0x9a9a9a,
     amarillo: 0xf5c518,
-    piel: 0xe8b38a,
+    piel: 0xffcc99,
+    grisMedio: 0x808080,
     azulMoto: 0x0070c0,
     rojoMoto: 0xff0000,
     plata: 0xa6a6a6,

@@ -212,35 +212,89 @@ export const ITEM_LLAVE: Sprite = [
 // Escenario
 // ---------------------------------------------------------------------------
 
-/**
- * Un espectador. 6×10. Se repiten con colores distintos para poblar la
- * tribuna.
+/*
+ * Público. Tres poses importadas de los diseños del cliente, todas dibujadas
+ * en la matriz de 24×24 del proyecto y recortadas al entrar:
+ *
+ *   npm run arte:importar -- ../imagenes_apoyo/espectador.png ESPECTADOR_BUSTO  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar  *     --mapa "ffffff=.,000000=n,3c7d22=r,ffcc99=k,808080=z"
+ *
+ *   ... espectador_2.png  -> ESPECTADOR
+ *   ... espectador_3.png  -> ESPECTADOR_ANIMANDO
+ *
+ * La ropa va como 'r' a propósito. crearTribuna() sustituye ese carácter por
+ * un color distinto en cada persona, así que con un solo dibujo se puebla la
+ * grada entera sin declarar una copia por color. El verde del diseño es solo
+ * el color de partida; en pantalla no aparece.
  */
-export const ESPECTADOR: Sprite = [
-  '..kk..',
-  '.kkkk.',
-  '..kk..',
-  '.rrrr.',
-  'rrrrrr',
-  'rrrrrr',
-  '.rrrr.',
-  '.r..r.',
-  '.n..n.',
-  '.n..n.',
+
+/** Busto. Va en la fila de atrás, donde solo se ven cabezas y hombros. */
+export const ESPECTADOR_BUSTO: Sprite = [
+  '..nnnn..',
+  '.nnkknn.',
+  '.nkkkkn.',
+  '.nnkknn.',
+  'nnrrrrnn',
+  'nrrrrrrn',
+  'nrrrrrrn',
+  'nnrrrrnn',
 ];
 
-/** Espectador con los brazos arriba, para variar la grada. */
+/** De pie, cuerpo entero. La fila de delante. */
+export const ESPECTADOR: Sprite = [
+  '..nnnn..',
+  '.nnkknn.',
+  '.nkkkkn.',
+  '.nnkknn.',
+  'nnrrrrnn',
+  'nrrrrrrn',
+  'nrrrrrrn',
+  'nnrrrrnn',
+  '.nrnnrn.',
+  '.nznnzn.',
+  '.nnnnnn.',
+];
+
+/** Con los brazos arriba, animando. */
 export const ESPECTADOR_ANIMANDO: Sprite = [
-  'r....r',
-  'r.kk.r',
-  'rkkkkr',
-  'rrkkrr',
-  '.rrrr.',
-  'rrrrrr',
-  '.rrrr.',
-  '.r..r.',
-  '.n..n.',
-  '.n..n.',
+  'nnn..nnn',
+  'nrnnnnrn',
+  'nrnkknrn',
+  'nrkkkkrn',
+  'nrrkkrrn',
+  'nnrrrrnn',
+  '.nrrrrn.',
+  '.nrrrrn.',
+  '.nrrrrn.',
+  '.nrnnrn.',
+  '.nznnzn.',
+  '.nnnnnn.',
+];
+
+/**
+ * Valla que separa al público de la pista. 15×8.
+ *
+ *   npm run arte:importar -- ../imagenes_apoyo/valla.png VALLA_TRIBUNA  *     --tamano 24x24 --fondo auto --offset -4,-4 --recortar --mapa "ffffff=.,808080=z"
+ *
+ * Es una valla portátil suelta, con sus patas, y se repite a lo largo de la
+ * grada dejando un píxel entre una y otra: son vallas independientes puestas
+ * en fila, no una barandilla continua. Por los huecos entre barrotes se ven
+ * las piernas del público, que es lo que la hace parecer una valla y no una
+ * franja gris.
+ *
+ * Va en plata clara y no en el gris del diseño: sobre el verde oscuro de la
+ * grada, el #808080 original quedaba casi negro. No comparte color con el
+ * calzado del público, que sí se queda en ese gris, porque lo que allí es
+ * una sombra de dos píxeles aquí es toda la valla.
+ */
+export const VALLA_TRIBUNA: Sprite = [
+  '..TTTTTTTTTTT..',
+  '.T.T.T.T.T.T.T.',
+  '.T.T.T.T.T.T.T.',
+  '.T.T.T.T.T.T.T.',
+  '.T.T.T.T.T.T.T.',
+  '.TTTTTTTTTTTTT.',
+  '.T...........T.',
+  'TTT.........TTT',
 ];
 
 /** Bombilla de las luces navideñas. 4×5. */

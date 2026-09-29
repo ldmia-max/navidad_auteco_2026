@@ -130,7 +130,7 @@
 
 .ntvs-panel {
 	border: var(--ntvs-borde) solid var(--ntvs-blanco);
-	background: var(--ntvs-azul-oscuro);
+	background: var(--ntvs-azul);
 	padding: 20px 16px;
 	margin-bottom: 16px;
 }
@@ -361,33 +361,69 @@
 /* --- Mando en pantalla ---------------------------------------------------- */
 
 /*
- * Sigue el diseño de imagenes_apoyo/control.png: carcasa clara con un panel
- * negro dentro, cruceta a la izquierda, rejilla al centro y las dos acciones a
- * la derecha.
+ * Tipografía de píxeles para las etiquetas del mando.
  *
- * Todo se mide en múltiplos de --m, un módulo que crece con el ancho de la
- * pantalla. Así el mando entero se escala con un solo número y conserva sus
- * proporciones desde un teléfono estrecho hasta un escritorio, sin una cascada
- * de media queries que ajusten pieza por pieza.
+ * Se sirve desde el propio plugin y no desde un CDN: en la ventana de 90
+ * minutos todo el tráfico del día llega junto, y una descarga que dependa de
+ * un tercero es una forma de que la jornada se caiga por algo que no
+ * controlamos. Es el subconjunto latino, 12 KB, nada al lado del megabyte y
+ * medio del juego.
  *
- * El mínimo de --m no es arbitrario: por debajo de 11 px los botones de
- * dirección bajarían de los 44 px de alto que necesita un dedo, y aquí se
- * pulsan a ciegas, mirando la pista y no el botón.
+ * Press Start 2P, de Cody Boisclair, bajo SIL Open Font License 1.1. La
+ * licencia va al lado del archivo, en assets/fonts/OFL.txt, porque la OFL
+ * obliga a distribuirla con la fuente.
+ *
+ * swap: si por lo que sea no llega, las etiquetas se ven con la monoespaciada
+ * del sistema en vez de quedarse invisibles. Un botón sin texto en el único
+ * intento de alguien no es aceptable.
+ */
+@font-face {
+	font-family: 'Press Start 2P';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('../fonts/press-start-2p-latin.woff2') format('woff2');
+}
+
+/*
+ * Sigue el prototipo de imagenes_apoyo/prototipo_control.png: carcasa gris
+ * azulada con marco oscuro, panel negro dentro, y botones con relieve.
+ *
+ * El relieve son box-shadow SIN desenfoque: un borde claro arriba a la
+ * izquierda y una sombra oscura abajo a la derecha. Con desenfoque quedaría
+ * un degradado suave y el aspecto dejaría de ser de 16 bits.
+ *
+ * Esquinas rectas a propósito. border-radius las suaviza con antialias, que
+ * es justo lo que rompe el pixel art; unas esquinas escalonadas de verdad
+ * pedirían clip-path y a tamaño de teléfono no se notarían.
+ *
+ * Todo se mide en múltiplos de --m, un módulo que crece con la pantalla, para
+ * que el mando entero escale con un solo número. El mínimo de 11 px no es
+ * estético: por debajo, los botones de dirección bajarían de los 44 px de
+ * alto que necesita un dedo, y aquí se pulsan a ciegas, mirando la pista.
  */
 .ntvs-mando {
 	--m: clamp(11px, 3.4vw, 16px);
-	--mando-carcasa: #e8edf0;
-	--mando-panel: #1c1c1c;
-	--mando-turbo: #1f73c4;
-	--mando-acelera: #2e9e4f;
+	--mando-carcasa: #b6b8c5;
+	--mando-carcasa-luz: #e2e4ee;
+	--mando-carcasa-sombra: #7b7d8a;
+	--mando-panel: #323136;
+	--mando-marco: #0f0f0f;
+	--mando-turbo: #3372c2;
+	--mando-acelera: #3d9a3f;
 
 	width: 100%;
 	max-width: calc(var(--m) * 32);
 	margin: calc(var(--m) * 1) auto 0;
-	padding: calc(var(--m) * 0.6);
+	padding: calc(var(--m) * 0.7);
 	background: var(--mando-carcasa);
-	border: 2px solid #2a2a2a;
-	border-radius: calc(var(--m) * 2.2);
+	border: calc(var(--m) * 0.25) solid var(--mando-marco);
+	border-radius: 0;
+
+	/* Relieve de la carcasa. */
+	box-shadow:
+		inset calc(var(--m) * 0.2) calc(var(--m) * 0.2) 0 var(--mando-carcasa-luz),
+		inset calc(var(--m) * -0.2) calc(var(--m) * -0.2) 0 var(--mando-carcasa-sombra);
 
 	/* Sin esto, arrastrar el dedo sobre un botón hace scroll de la página. */
 	touch-action: none;
@@ -400,9 +436,9 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: calc(var(--m) * 0.9);
-	padding: calc(var(--m) * 1.3);
+	padding: calc(var(--m) * 1);
 	background: var(--mando-panel);
-	border-radius: calc(var(--m) * 1.6);
+	border-radius: 0;
 }
 
 .ntvs-mando__cruceta,
@@ -415,10 +451,6 @@
 
 /* --- Placa del centro ----------------------------------------------------- */
 
-/*
- * El diseño traía cinco ranuras y el cliente pidió dejar solo la que lleva la
- * marca. Va centrada en lo que queda entre la cruceta y las acciones.
- */
 .ntvs-mando__rejilla {
 	display: flex;
 	flex: 1 1 auto;
@@ -427,24 +459,20 @@
 	min-width: calc(var(--m) * 4);
 }
 
-.ntvs-ranura {
-	display: block;
-	height: calc(var(--m) * 1.35);
-	background: var(--mando-carcasa);
-	border-radius: calc(var(--m) * 0.45);
-}
-
 .ntvs-ranura--marca {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	padding: 0 calc(var(--m) * 0.4);
-	font-family: var(--ntvs-fuente);
-	font-size: calc(var(--m) * 0.85);
-	font-weight: 700;
-	letter-spacing: 1px;
-	color: var(--ntvs-rojo);
+	padding: calc(var(--m) * 0.35) calc(var(--m) * 0.4);
+	background: var(--mando-carcasa);
+	box-shadow:
+		inset calc(var(--m) * 0.15) calc(var(--m) * 0.15) 0 var(--mando-carcasa-luz),
+		inset calc(var(--m) * -0.15) calc(var(--m) * -0.15) 0 var(--mando-carcasa-sombra);
+
+	font-family: 'Press Start 2P', var(--ntvs-fuente);
+	font-size: calc(var(--m) * 0.62);
+	color: #a4232d;
 	/* Que la palabra no se parta ni desborde en pantallas estrechas. */
 	overflow: hidden;
 	white-space: nowrap;
@@ -456,10 +484,11 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-family: var(--ntvs-fuente);
-	font-weight: 700;
-	letter-spacing: 1px;
+	font-family: 'Press Start 2P', var(--ntvs-fuente);
+	font-weight: 400;
+	letter-spacing: 0;
 	border: none;
+	border-radius: 0;
 	cursor: pointer;
 	touch-action: none;
 	/* El resaltado azul de Android al tocar estropea el aspecto del mando. */
@@ -467,15 +496,17 @@
 }
 
 .ntvs-btn:focus-visible {
-	outline: 3px solid var(--ntvs-blanco);
-	outline-offset: 2px;
+	outline: calc(var(--m) * 0.2) solid var(--ntvs-blanco);
+	outline-offset: calc(var(--m) * 0.15);
 }
 
 .ntvs-btn--dir {
 	width: calc(var(--m) * 5);
 	height: calc(var(--m) * 4);
 	background: var(--mando-carcasa);
-	border-radius: calc(var(--m) * 0.8);
+	box-shadow:
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 var(--mando-carcasa-luz),
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 var(--mando-carcasa-sombra);
 }
 
 /*
@@ -487,55 +518,57 @@
 	display: block;
 	width: 0;
 	height: 0;
-	border-left: calc(var(--m) * 1.15) solid transparent;
-	border-right: calc(var(--m) * 1.15) solid transparent;
+	border-left: calc(var(--m) * 1.1) solid transparent;
+	border-right: calc(var(--m) * 1.1) solid transparent;
 }
 
 .ntvs-flecha--arriba {
-	border-bottom: calc(var(--m) * 1.35) solid #111;
+	border-bottom: calc(var(--m) * 1.25) solid #2b2a2f;
 }
 
 .ntvs-flecha--abajo {
-	border-top: calc(var(--m) * 1.35) solid #111;
+	border-top: calc(var(--m) * 1.25) solid #2b2a2f;
 }
 
 .ntvs-btn--turbo,
 .ntvs-btn--acelera {
 	width: calc(var(--m) * 10.6);
 	color: var(--ntvs-blanco);
-	font-size: calc(var(--m) * 1);
-	border-radius: calc(var(--m) * 0.9);
-	/* El reborde claro del diseño, que separa el botón del panel negro. */
-	box-shadow: 0 0 0 calc(var(--m) * 0.22) var(--mando-carcasa);
+	/* La tipografía de píxeles rinde más grande que la del sistema. */
+	font-size: calc(var(--m) * 0.68);
 }
 
 .ntvs-btn--turbo {
 	height: calc(var(--m) * 3.4);
 	background: var(--mando-turbo);
+	box-shadow:
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 #6ba2df,
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 #1f4e8c;
 }
 
 .ntvs-btn--acelera {
 	height: calc(var(--m) * 3.9);
 	background: var(--mando-acelera);
+	box-shadow:
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 #74c476,
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 #256b27;
 }
 
 /*
  * El pulsado tiene que verse: se juega a ciegas y sin una señal no hay forma
- * de saber si el botón respondió o si el dedo resbaló.
+ * de saber si el botón respondió o si el dedo resbaló. Se invierte el relieve,
+ * que es como se hunde un botón de verdad.
  */
 .ntvs-btn--activo {
-	filter: brightness(1.3);
-	transform: translateY(calc(var(--m) * 0.12));
+	filter: brightness(1.15);
 }
 
-.ntvs-btn--dir.ntvs-btn--activo {
-	background: #b9c4cc;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.ntvs-btn--activo {
-		transform: none;
-	}
+.ntvs-btn--dir.ntvs-btn--activo,
+.ntvs-btn--turbo.ntvs-btn--activo,
+.ntvs-btn--acelera.ntvs-btn--activo {
+	box-shadow:
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 rgba(0, 0, 0, 0.45),
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 rgba(255, 255, 255, 0.35);
 }
 
 /* --- Contenedor del juego ----------------------------------------------- */
@@ -549,12 +582,32 @@
  */
 .ntvs-panel--juego {
 	padding: 8px 0;
-	border-left: 0;
-	border-right: 0;
+
+	/*
+	 * Sin marco por ningún lado. El panel genérico lleva un borde blanco de
+	 * 4 px y aquí, sobre negro, quedaban dos barras blancas arriba y abajo.
+	 */
+	border: 0;
+
+	/*
+	 * Se sale del contenedor por los cuatro lados.
+	 *
+	 * A los lados con el truco de 100vw. Arriba y abajo con margen negativo,
+	 * que se come los 16 px de relleno de .ntvs: sin eso asomaba el azul
+	 * profundo del contenedor por encima y por debajo del negro, y parecía
+	 * que había otra caja detrás.
+	 */
 	width: 100vw;
 	margin-left: calc(50% - 50vw);
 	margin-right: calc(50% - 50vw);
-	background: var(--ntvs-azul-profundo);
+	margin-top: -16px;
+	margin-bottom: -16px;
+	/*
+	 * Negro, no el azul profundo del resto. Es la zona donde está el juego, y
+	 * el negro la separa del resto de la página y hace de continuación del
+	 * lienzo, que también lo tiene detrás.
+	 */
+	background: #000;
 }
 
 .ntvs-game-root {
@@ -563,7 +616,12 @@
 	justify-content: center;
 	align-items: center;
 	background: #000;
-	border: 3px solid var(--ntvs-blanco);
+	/*
+	 * Sin marco. El lienzo llevaba un borde blanco de 3 px que, con el mando
+	 * justo debajo, dejaba una línea blanca entre la pantalla y el control.
+	 * El marco tenía sentido cuando el juego flotaba solo en la página; ahora
+	 * el mando ya hace de remate.
+	 */
 	width: fit-content;
 	margin: 0 auto;
 	max-width: 100%;

@@ -217,6 +217,8 @@ function hojaSprites(): Lienzo {
     ['ACEITE', S.ACEITE],
     ['LLAVE', S.ITEM_LLAVE],
     ['HUMO', S.HUMO],
+    ['VALLA', S.VALLA_TRIBUNA],
+    ['BUSTO', S.ESPECTADOR_BUSTO],
     ['PUBLICO', S.ESPECTADOR],
     ['ANIMANDO', S.ESPECTADOR_ANIMANDO],
     ['LUZ', S.BOMBILLA],
@@ -308,23 +310,46 @@ function maquetaPantalla(): Lienzo {
   // Tribuna.
   const T0 = TRIBUNA_Y;
   l.rect(P.verdeOscuro, 0, T0, ANCHO, TRIBUNA_ALTO);
-  l.rect(P.negro, 0, T0 + 6, ANCHO, 1);
+  l.rect(P.negro, 0, T0, ANCHO, 1);
 
   const coloresLuz = [P.rojo, P.verdeClaro, P.crema, P.azulClaro];
   for (let i = 0, x = 4; x < ANCHO; x += 12, i++) {
-    l.sprite(S.BOMBILLA, P, x, T0 + 6, ['r', coloresLuz[i % coloresLuz.length]]);
+    l.sprite(S.BOMBILLA, P, x, T0, ['r', coloresLuz[i % coloresLuz.length]]);
   }
 
-  const coloresRopa = [P.rojo, P.azul, P.crema, P.verdeClaro, P.amarillo, P.blanco];
-  for (let fila = 0; fila < 2; fila++) {
-    const y = T0 + 9 + fila * 7;
-    for (let i = 0, x = fila * 4; x < ANCHO; x += 9, i++) {
-      const base = (i + fila) % 3 === 0 ? S.ESPECTADOR_ANIMANDO : S.ESPECTADOR;
-      l.sprite(base, P, x, y, ['r', coloresRopa[(i + fila * 3) % coloresRopa.length]]);
-    }
+  // Mismas dos filas que crearTribuna() en texturas.ts.
+  const coloresRopa = [
+    P.rojo,
+    P.azul,
+    P.crema,
+    P.verdeClaro,
+    P.amarillo,
+    P.blanco,
+    P.azulProfundo,
+    P.rojoOscuro,
+    P.grisClaro,
+  ];
+
+  // La fila de atrás va recortada para no asomar por las esquinas
+  // transparentes de las cabezas de delante. Ver crearTribuna().
+  for (let i = 0, x = -4; x < ANCHO; x += 9, i++) {
+    l.sprite(S.ESPECTADOR_BUSTO.slice(0, 7), P, x, T0 + 5, ['r', coloresRopa[(i * 4) % coloresRopa.length]]);
   }
-  l.rect(P.blanco, 0, T0 + 23, ANCHO, 2);
-  l.rect(P.verde, 0, T0 + 25, ANCHO, 3);
+
+  for (let i = 0, x = 0; x < ANCHO; x += 9, i++) {
+    const anima = i % 3 === 0;
+    l.sprite(
+      anima ? S.ESPECTADOR_ANIMANDO : S.ESPECTADOR,
+      P,
+      x,
+      T0 + (anima ? 12 : 13),
+      ['r', coloresRopa[(i * 2 + 1) % coloresRopa.length]]
+    );
+  }
+  // Vallas cada 16 px, igual que crearTribuna().
+  for (let x = 0; x < ANCHO; x += 16) {
+    l.sprite(S.VALLA_TRIBUNA, P, x, T0 + TRIBUNA_ALTO - S.VALLA_TRIBUNA.length);
+  }
 
   // Cartel de la tribuna.
   const textoCartel = TEMA_POR_DEFECTO.textos.cartelTribuna;

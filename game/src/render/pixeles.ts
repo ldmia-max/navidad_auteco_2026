@@ -47,6 +47,7 @@ export const LEYENDA: Record<string, keyof Paleta | null> = {
   M: 'aceiteBrillo',
   y: 'amarillo',
   k: 'piel',
+  z: 'grisMedio',
   s: 'cielo',
   S: 'cieloAlto',
 
