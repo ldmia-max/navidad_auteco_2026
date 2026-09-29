@@ -517,17 +517,39 @@ export class Carrera extends Phaser.Scene {
     const e = this.estado;
     const scroll = div(e.pos * PX_POR_METRO, 1000);
 
-    // Parallax: cuanto más lejos, más despacio.
-    this.nubes.tilePositionX = scroll * 0.04;
-    this.cerros.tilePositionX = scroll * 0.14;
-    this.tribuna.tilePositionX = scroll * 0.36;
-    this.cesped.tilePositionX = scroll * 0.7;
+    /*
+     * Parallax: cuanto más lejos, más despacio.
+     *
+     * Los desplazamientos van REDONDEADOS A PÍXEL ENTERO, y no es un detalle.
+     * scroll es entero, pero al multiplicarlo por 0,36 el resultado no lo es,
+     * y un tileSprite colocado en una posición fraccionaria muestrea entre dos
+     * texels: el navegador interpola y la capa sale borrosa. Se veía justo
+     * así, con el público, los cerros y las nubes emborronados mientras el
+     * suelo, que usa scroll tal cual, salía nítido.
+     *
+     * El precio es que las capas lentas avanzan a saltos de un píxel en vez de
+     * fluido. Es exactamente como se hacía el parallax en las consolas que
+     * esto imita: no había medio píxel al que moverse.
+     */
+    const desplNubes = Math.floor(scroll * 0.04);
+    const desplCerros = Math.floor(scroll * 0.14);
+    const desplTribuna = Math.floor(scroll * 0.36);
+    const desplCesped = Math.floor(scroll * 0.7);
+
+    this.nubes.tilePositionX = desplNubes;
+    this.cerros.tilePositionX = desplCerros;
+    this.tribuna.tilePositionX = desplTribuna;
+    this.cesped.tilePositionX = desplCesped;
     this.suelo.tilePositionX = scroll;
 
-    // El cartel viaja con la tribuna y reaparece: si se quedara clavado en el
-    // centro, la tribuna se movería por debajo y parecería un error.
+    /*
+     * El cartel viaja con la tribuna y reaparece: si se quedara clavado en el
+     * centro, la tribuna se movería por debajo y parecería un error. Usa el
+     * mismo desplazamiento ya redondeado, o se separaría un píxel del público
+     * al que va pegado.
+     */
     const recorrido = ANCHO + this.cartel.width;
-    this.cartel.x = ANCHO - (((scroll * 0.36) % recorrido) | 0);
+    this.cartel.x = ANCHO - (desplTribuna % recorrido);
 
     this.pintarMoto();
     this.pintarPista();

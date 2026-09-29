@@ -127,6 +127,30 @@ export function crearTexturas(escena: Phaser.Scene, tema: Tema): void {
   // --- Podio ---------------------------------------------------------------
   crearPodioBloque(escena, p);
   crearMarcoCuadros(escena, p);
+
+  fijarFiltroNitido(escena);
+}
+
+/**
+ * Obliga a todas las texturas del juego a escalarse por vecino más cercano.
+ *
+ * pixelArt: true en la configuración de Phaser no basta: se aplica a las
+ * texturas que se CARGAN, y todas las nuestras se generan en tiempo de
+ * ejecución con generateTexture(), que no lo hereda. Quedaban en filtrado
+ * lineal, así que en cuanto algo se dibujaba en una posición o a una escala
+ * fraccionaria, el navegador interpolaba entre texels y el resultado salía
+ * borroso en vez de a bloques.
+ *
+ * Con las posiciones ya redondeadas casi nada lo pisaba, pero el humo sí, que
+ * se dibuja a escalas intermedias. Y sobre todo: esto evita que el problema
+ * vuelva la próxima vez que alguien mueva algo medio píxel.
+ */
+function fijarFiltroNitido(escena: Phaser.Scene): void {
+  for (const nombre of Object.values(TEX)) {
+    if (escena.textures.exists(nombre)) {
+      escena.textures.get(nombre).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }
+  }
 }
 
 /** Degradado del cielo en bandas, como se hacía cuando no había degradados. */
