@@ -44,6 +44,24 @@
 	box-sizing: inherit;
 }
 
+/*
+ * El atributo hidden tiene que ganar siempre.
+ *
+ * La regla [hidden]{display:none} la pone el navegador, y cualquier regla de
+ * autor le gana aunque empaten en especificidad. Como .ntvs-boton fija
+ * display:block, el botón de reintentar el envío se veía SIEMPRE, incluso al
+ * lado del aviso verde de "resultado registrado": el participante creía que
+ * algo había fallado y volvía a pulsar.
+ *
+ * Va como regla general y no como .ntvs-boton[hidden] porque el mismo choque
+ * aparece en cuanto alguien le ponga un display a otra clase que la escena
+ * oculte, y son casi todas: el mando, el panel del juego, el error, el
+ * resultado.
+ */
+.ntvs [hidden] {
+	display: none !important;
+}
+
 /* --- Portada ----------------------------------------------------------- */
 
 .ntvs-portada {
