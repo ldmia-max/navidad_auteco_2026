@@ -63,38 +63,45 @@ export const MOTO: Sprite = [
 /**
  * Piloto en el suelo y la moto tumbada. 24×24.
  *
- * DERIVADA, no viene de un diseño: es la única pose que no mandó el cliente.
- * Se recolorea cada vez que cambia el diseño de la moto, para que se lea como
- * el mismo piloto; ahora va con el casco y el carenado rojos y el traje blanco
- * y azul.
+ * Viene del diseño del cliente e importa a su TAMAÑO NATIVO, con un encaje
+ * del 100 %: cada píxel dibujado es un píxel del juego.
  *
- * Las ruedas van aplastadas, más anchas que altas. Con ruedas redondas la moto
- * seguía pareciendo de pie y el jugador no entendía por qué no avanzaba.
+ *   npm run arte:importar -- ../imagenes_apoyo/caida.png MOTO_CAIDA \
+ *     --tamano 24x24 --offset -4,-4 \
+ *     --mapa "ff9f00=.,000000=n,ffffff=w,f2f2f2=w,0070c0=B,ff0000=e,a6a6a6=t,808080=z"
+ *
+ * El --mapa es obligatorio aquí y no basta con --fondo auto: las ruedas y el
+ * cuadro encierran naranja del lienzo, y la inundación desde el borde no lo
+ * alcanza. Sin el mapa esos huecos entran como "naranjaLlave" y la moto sale
+ * con los bujes pintados.
+ *
+ * No se retoca a mano: si hay que cambiar algo, se cambia el PNG y se vuelve
+ * a importar.
  */
 export const MOTO_CAIDA: Sprite = [
   '........................',
   '........................',
+  '.....BBBB...............',
+  '......BBB...............',
+  '......BBB......eeee.....',
+  '......www.....eeeeee....',
+  '......www.....eeennn....',
+  '......wwwwwwwweeeennBBn.',
+  '.BBBwwwwwwwwwwneeeeeBBn.',
+  '.BBBwwwwwwwwwwBBBeee....',
+  '.BBBwwwwwwwwwwwBBBBBBBn.',
+  '.B.......wwwwwwBBBBBBBn.',
   '........................',
   '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '........................',
-  '..eeee..................',
-  '.eennee.................',
-  '.eennee....eeeeeeeeee...',
-  '..eeee....ettttttttte...',
-  '.wwwwww..BBeeeeeeeeeeBB.',
-  'wwwwwwww.eeeeeeeeeeeeee.',
-  '.wwwww..nnnnnn....nnnnnn',
-  '..BBB...nn..nn....nn..nn',
-  '..w.w...nnnnnn....nnnnnn',
+  '..........nnn.....nnn...',
+  '............nee..nn..n..',
+  '.......nn...ezzzzz..nn..',
+  '...eeeennneeee.nnzn.n...',
+  '..nnnnetttttne.n...nn...',
+  '.nn...tttnnnn.nn..nn....',
+  '.n.ttttntnnnn.nnnnn.....',
+  '.nnnnnnn.......nnn......',
+  '..nnnnn.................',
   '........................',
 ];
 
