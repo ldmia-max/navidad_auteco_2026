@@ -413,13 +413,17 @@
 	flex: 0 0 auto;
 }
 
-/* --- Rejilla del centro. Es adorno del diseño, no hace nada. -------------- */
+/* --- Placa del centro ----------------------------------------------------- */
 
+/*
+ * El diseño traía cinco ranuras y el cliente pidió dejar solo la que lleva la
+ * marca. Va centrada en lo que queda entre la cruceta y las acciones.
+ */
 .ntvs-mando__rejilla {
 	display: flex;
 	flex: 1 1 auto;
-	flex-direction: column;
-	gap: calc(var(--m) * 0.45);
+	align-items: center;
+	justify-content: center;
 	min-width: calc(var(--m) * 4);
 }
 
@@ -434,6 +438,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	width: 100%;
+	padding: 0 calc(var(--m) * 0.4);
 	font-family: var(--ntvs-fuente);
 	font-size: calc(var(--m) * 0.85);
 	font-weight: 700;

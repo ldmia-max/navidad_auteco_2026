@@ -180,10 +180,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</div>
 
 				<div class="ntvs-mando__rejilla" aria-hidden="true">
-					<span class="ntvs-ranura"></span>
-					<span class="ntvs-ranura"></span>
-					<span class="ntvs-ranura"></span>
-					<span class="ntvs-ranura"></span>
 					<span class="ntvs-ranura ntvs-ranura--marca"><?php esc_html_e( 'CONTROL', 'navidad-tvs' ); ?></span>
 				</div>
 
