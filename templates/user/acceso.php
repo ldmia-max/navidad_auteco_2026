@@ -8,7 +8,6 @@
  * @var string $url_tyc  Enlace a términos y condiciones.
  * @var string $url_faq  Enlace a preguntas frecuentes.
  * @var string $site_key Clave pública de Turnstile, o cadena vacía.
- * @var int    $duracion Duración de la carrera en segundos.
  *
  * @package NavidadTVS
  */
@@ -18,25 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="ntvs" id="ntvs-app">
-
-	<!-- Portada ------------------------------------------------------- -->
-	<div class="ntvs-portada">
-		<div class="ntvs-portada__tribuna" aria-hidden="true">
-			<div class="ntvs-luces"></div>
-			<div class="ntvs-cartel"><?php esc_html_e( 'NAVIDAD TVS', 'navidad-tvs' ); ?></div>
-		</div>
-		<div class="ntvs-portada__pista" aria-hidden="true"></div>
-		<h1 class="ntvs-titulo"><?php esc_html_e( 'Concurso Navideño', 'navidad-tvs' ); ?></h1>
-		<p class="ntvs-subtitulo">
-			<?php
-			printf(
-				/* translators: %d: duración de la carrera en segundos */
-				esc_html__( '%d segundos. La mayor distancia gana.', 'navidad-tvs' ),
-				(int) $duracion
-			);
-			?>
-		</p>
-	</div>
 
 	<!-- Formulario ----------------------------------------------------- -->
 	<div class="ntvs-panel" id="ntvs-panel-acceso">

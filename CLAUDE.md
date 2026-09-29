@@ -49,6 +49,16 @@ docker compose down -v    # borra volúmenes
 El repo se monta en vivo dentro del contenedor: editar un archivo PHP se
 refleja al recargar.
 
+**El montaje va en solo lectura (`:ro`)**, y no es opcional. El repo *es* la
+carpeta del plugin, así que pulsar "Eliminar" en Plugins borraba los archivos a
+través del montaje y se llevaba el repositorio entero, `.git` incluido. Pasó el
+29 de septiembre de 2026.
+
+Con `:ro` el borrado falla y no pasa nada. WordPress no necesita escribir
+dentro de la carpeta del plugin; lo único que se pierde es poder instalar el
+zip encima en el WordPress local, que no se hacía. Editar desde el host sigue
+funcionando igual, incluidos los scripts sueltos en `dev/`.
+
 ### Juego
 
 ```bash

@@ -204,7 +204,6 @@ class NavidadTVS_Shortcode {
 		$url_tyc   = $this->url_pagina( 'pagina_terminos' );
 		$url_faq   = $this->url_pagina( 'pagina_faq' );
 		$site_key  = $site_key;
-		$duracion  = NAVIDAD_TVS_DURACION_SEGUNDOS;
 
 		ob_start();
 
