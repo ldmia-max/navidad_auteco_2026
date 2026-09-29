@@ -660,15 +660,48 @@
 
 /* --- Resultado de la carrera -------------------------------------------- */
 
+/*
+ * El marco es la bandera de meta del podio, el mismo damero que dibuja
+ * Podio.ts: casilla blanca arriba a la izquierda y alternando desde ahí.
+ *
+ * Va como dos capas de fondo en vez de border-image. El borde transparente
+ * abre la banda, la capa del damero se recorta a border-box y la ocupa, y el
+ * azul se recorta a padding-box y se queda dentro. Con border-image el motor
+ * centra el tramo repetido y parte las casillas de los extremos por la mitad;
+ * así cada casilla sale entera y anclada a la esquina.
+ *
+ * El damero es un SVG y no un conic-gradient porque el gradiente difumina el
+ * punto central de cada baldosa y deja una cruz gris en arte de píxeles.
+ *
+ * La baldosa trae 2×2 casillas, de ahí el ×2 del background-size.
+ *
+ * El "round" del final es lo que cierra el marco. El cuadro es fluido, así
+ * que su ancho y su alto casi nunca son múltiplos de la baldosa, y con
+ * "repeat" las casillas de la derecha y de abajo salían partidas mientras
+ * las de arriba y la izquierda quedaban enteras. Con "round" el navegador
+ * estira o encoge la baldosa lo justo para que quepa un número entero en
+ * cada eje: las casillas dejan de ser cuadradas exactas por menos de un
+ * píxel, que no se ve, y a cambio los cuatro lados cierran con casilla
+ * completa.
+ *
+ * Al caber un número entero de baldosas de 2×2, las esquinas quedan blanca
+ * arriba-izquierda y abajo-derecha, negra en las otras dos, que es como
+ * alterna una bandera de meta de verdad.
+ */
 .ntvs-resultado {
+	--ntvs-meta: 14px;
+
 	max-width: 640px;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 16px;
 	padding: 16px 12px;
 	text-align: center;
-	border: 3px solid var(--ntvs-blanco);
-	background: var(--ntvs-azul);
+	border: var(--ntvs-meta) solid transparent;
+	background:
+		linear-gradient(var(--ntvs-azul), var(--ntvs-azul)) padding-box,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%23ffffff'/%3E%3Crect x='8' width='8' height='8' fill='%23000000'/%3E%3Crect y='8' width='8' height='8' fill='%23000000'/%3E%3C/svg%3E")
+			0 0 / calc(var(--ntvs-meta) * 2) calc(var(--ntvs-meta) * 2) round border-box;
 }
 
 .ntvs-resultado__titulo {
