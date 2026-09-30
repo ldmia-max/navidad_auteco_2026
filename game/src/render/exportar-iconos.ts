@@ -93,12 +93,23 @@ const destino = new URL('../../../assets/img/instrucciones/', import.meta.url).p
 );
 mkdirSync(destino, { recursive: true });
 
+/*
+ * El factor se elige para que el PNG salga ya del tamaño al que se va a ver,
+ * o muy cerca. La ficha da como mucho 96×64 px en escritorio y 76×52 en el
+ * teléfono; exportar más grande y dejar que el navegador reduzca estropea el
+ * dibujo, porque al encoger arte de píxeles se pierden filas enteras y las
+ * que quedan dejan de tener el mismo grosor.
+ *
+ * El medidor es el único que no cabe: es el más ancho y con factor 1 su
+ * rótulo mediría cinco píxeles de alto. Se queda en 2 y se conforma con
+ * reducirse un poco.
+ */
 const iconos: Array<[string, Lienzo, number]> = [
-  ['temp.png', medidorTemp(), 3],
-  ['llave.png', deSprite(S.ITEM_LLAVE), 5],
+  ['temp.png', medidorTemp(), 2],
+  ['llave.png', deSprite(S.ITEM_LLAVE), 4],
   ['impulsor.png', deSprite(S.IMPULSOR), 5],
-  ['cono.png', deSprite(S.CONO), 6],
-  ['aceite.png', deSprite(S.ACEITE), 5],
+  ['cono.png', deSprite(S.CONO), 4],
+  ['aceite.png', deSprite(S.ACEITE), 3],
 ];
 
 for (const [nombre, lienzo, factor] of iconos) {

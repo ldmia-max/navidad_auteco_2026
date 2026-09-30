@@ -33,15 +33,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 $ntvs_fichas = array(
 	array(
 		'archivo' => 'temp.png',
-		'ancho'   => 174,
-		'alto'    => 102,
+		'ancho'   => 116,
+		'alto'    => 68,
 		'titulo'  => __( 'Temperatura', 'navidad-tvs' ),
 		'texto'   => __( 'El turbo la sube. Si llega al tope, el motor se sobrecalienta y la moto se detiene dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble.', 'navidad-tvs' ),
 	),
 	array(
 		'archivo' => 'llave.png',
-		'ancho'   => 90,
-		'alto'    => 50,
+		'ancho'   => 72,
+		'alto'    => 40,
 		'titulo'  => __( 'Llaves', 'navidad-tvs' ),
 		'texto'   => __( 'Cada una que recojas suma 50 metros.', 'navidad-tvs' ),
 	),
@@ -54,15 +54,15 @@ $ntvs_fichas = array(
 	),
 	array(
 		'archivo' => 'cono.png',
-		'ancho'   => 60,
-		'alto'    => 84,
+		'ancho'   => 40,
+		'alto'    => 56,
 		'titulo'  => __( 'Conos', 'navidad-tvs' ),
 		'texto'   => __( 'Esquívalos cambiando de carril. Si le pegas a uno te caes y pierdes dos segundos.', 'navidad-tvs' ),
 	),
 	array(
 		'archivo' => 'aceite.png',
-		'ancho'   => 130,
-		'alto'    => 45,
+		'ancho'   => 78,
+		'alto'    => 27,
 		'titulo'  => __( 'Charcos de aceite', 'navidad-tvs' ),
 		'texto'   => __( 'No tumban, pero te frenan mientras los pisas.', 'navidad-tvs' ),
 	),
@@ -78,37 +78,52 @@ $ntvs_fichas = array(
 	<h2 class="ntvs-ayuda__titulo"><?php esc_html_e( '¿Cómo se juega?', 'navidad-tvs' ); ?></h2>
 
 	<!-- Controles ---------------------------------------------------- -->
+	<?php
+	/*
+	 * La columna del celular y la del computador van las dos en el HTML y el
+	 * CSS enseña una sola, la que corresponde al aparato.
+	 *
+	 * Se hace con CSS y no en PHP porque en el servidor no se sabe qué hay al
+	 * otro lado: user agent sniffing se equivoca, y una tableta o un portátil
+	 * táctil no caen en ninguna de las dos casillas. El CSS pregunta lo único
+	 * que importa —si hay ratón y pantalla ancha— y acierta siempre.
+	 *
+	 * Las dos van en el marcado también para que quien llegue con un lector de
+	 * pantalla o con el CSS caído las tenga ambas: la ayuda completa es mejor
+	 * que media ayuda.
+	 */
+	?>
 	<div class="ntvs-ayuda__bloque">
 		<table class="ntvs-controles">
 			<thead>
 				<tr>
 					<th scope="col"><?php esc_html_e( 'Mecánica', 'navidad-tvs' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Celular', 'navidad-tvs' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Computador', 'navidad-tvs' ); ?></th>
+					<th scope="col" class="ntvs-col--tactil"><?php esc_html_e( 'Celular', 'navidad-tvs' ); ?></th>
+					<th scope="col" class="ntvs-col--teclado"><?php esc_html_e( 'Computador', 'navidad-tvs' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Acelerador', 'navidad-tvs' ); ?></th>
-					<td>
+					<td class="ntvs-col--tactil">
 						<span class="ntvs-mando-mini">
 							<span class="ntvs-btn ntvs-btn--acelera"><?php esc_html_e( 'ACELERAR', 'navidad-tvs' ); ?></span>
 						</span>
 					</td>
-					<td><kbd class="ntvs-tecla">Z</kbd></td>
+					<td class="ntvs-col--teclado"><kbd class="ntvs-tecla">Z</kbd></td>
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Turbo', 'navidad-tvs' ); ?></th>
-					<td>
+					<td class="ntvs-col--tactil">
 						<span class="ntvs-mando-mini">
 							<span class="ntvs-btn ntvs-btn--turbo"><?php esc_html_e( 'TURBO', 'navidad-tvs' ); ?></span>
 						</span>
 					</td>
-					<td><kbd class="ntvs-tecla">X</kbd></td>
+					<td class="ntvs-col--teclado"><kbd class="ntvs-tecla">X</kbd></td>
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Cambio de carril', 'navidad-tvs' ); ?></th>
-					<td>
+					<td class="ntvs-col--tactil">
 						<span class="ntvs-mando-mini ntvs-mando-mini--par">
 							<span class="ntvs-btn ntvs-btn--dir">
 								<span class="ntvs-flecha ntvs-flecha--arriba" aria-hidden="true"></span>
@@ -118,7 +133,7 @@ $ntvs_fichas = array(
 							</span>
 						</span>
 					</td>
-					<td>
+					<td class="ntvs-col--teclado">
 						<span class="ntvs-teclas-par">
 							<kbd class="ntvs-tecla">&uarr;</kbd>
 							<kbd class="ntvs-tecla">&darr;</kbd>
