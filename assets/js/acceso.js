@@ -282,6 +282,92 @@
 	var juegoListo = false;
 	var juegoFallo = false;
 
+	/**
+	 * Espera obligatoria antes de poder arrancar.
+	 *
+	 * El intento es único y dura noventa segundos. Sin esta pausa, quien llega
+	 * con prisa pulsa el botón nada más aparecer la pantalla y descubre los
+	 * controles con el reloj ya corriendo. Diez segundos no alcanzan para
+	 * leerlo todo, pero sí para que la vista se pose en la tabla.
+	 */
+	var ESPERA_MS = 10000;
+	var finEspera = 0;
+	var relojEspera = null;
+
+	/**
+	 * Segundos que faltan, calculados contra el reloj y no descontando de uno
+	 * en uno.
+	 *
+	 * En el celular la pantalla se apaga o el participante se va a otra app, y
+	 * ahí el navegador frena los temporizadores. Contando ticks, al volver
+	 * faltarían ocho segundos que ya pasaron; contra el reloj, la cuenta dice
+	 * la verdad.
+	 */
+	function segundosQueFaltan() {
+		if ( ! finEspera ) {
+			return 0;
+		}
+
+		return Math.max( 0, Math.ceil( ( finEspera - Date.now() ) / 1000 ) );
+	}
+
+	/**
+	 * Deja el botón como toque según el estado.
+	 *
+	 * Son dos condiciones independientes y las dos tienen que cumplirse: que
+	 * el bundle haya terminado de bajar y que la espera haya pasado. Tenerlas
+	 * en un solo sitio evita el enredo de que una las deshaga por su cuenta.
+	 */
+	function refrescarBotonIniciar() {
+		if ( ! botonIniciar || juegoFallo ) {
+			return;
+		}
+
+		if ( ! juegoListo ) {
+			botonIniciar.disabled = true;
+			botonIniciar.textContent = textos.cargando || 'Cargando el juego…';
+			return;
+		}
+
+		var faltan = segundosQueFaltan();
+
+		if ( faltan > 0 ) {
+			var plantilla = 1 === faltan
+				? ( textos.esperaUno || 'Iniciar carrera en %d segundo' )
+				: ( textos.espera || 'Iniciar carrera en %d segundos' );
+
+			botonIniciar.disabled = true;
+			botonIniciar.textContent = plantilla.replace( '%d', faltan );
+			return;
+		}
+
+		botonIniciar.disabled = false;
+		botonIniciar.textContent = textos.listo || 'Iniciar carrera';
+	}
+
+	function arrancarEspera() {
+		finEspera = Date.now() + ESPERA_MS;
+		refrescarBotonIniciar();
+
+		if ( relojEspera ) {
+			window.clearInterval( relojEspera );
+		}
+
+		/*
+		 * Cada cuarto de segundo y no cada segundo: con un intervalo de 1000 ms
+		 * el número tarda hasta un segundo entero en cambiar después de que
+		 * toque, y la cuenta se ve trabada.
+		 */
+		relojEspera = window.setInterval( function () {
+			refrescarBotonIniciar();
+
+			if ( 0 === segundosQueFaltan() ) {
+				window.clearInterval( relojEspera );
+				relojEspera = null;
+			}
+		}, 250 );
+	}
+
 	function mostrarInstrucciones() {
 		var etiquetaNombre = document.getElementById( 'ntvs-nombre-jugador' );
 		if ( etiquetaNombre ) {
@@ -291,6 +377,10 @@
 		panelAcceso.hidden = true;
 		panelInstrucciones.hidden = false;
 			panelInstrucciones.scrollIntoView( { block: 'start', behavior: 'smooth' } );
+
+		// La cuenta arranca aquí y no al cargar la página: lo que se quiere
+		// es que pasen diez segundos DELANTE de las instrucciones.
+		arrancarEspera();
 
 		// El bundle se descarga mientras el participante lee las
 		// instrucciones. Son unos segundos que de otro modo se perderían
@@ -305,11 +395,11 @@
 
 		if ( typeof window.navidadTvsIniciarJuego === 'function' ) {
 			juegoListo = true;
+			refrescarBotonIniciar();
 			return;
 		}
 
-		botonIniciar.disabled = true;
-		botonIniciar.textContent = textos.cargando || 'Cargando el juego…';
+		refrescarBotonIniciar();
 
 		var etiqueta = document.createElement( 'script' );
 		etiqueta.src = cfg.urlJuego;
@@ -317,8 +407,7 @@
 
 		etiqueta.onload = function () {
 			juegoListo = true;
-			botonIniciar.disabled = false;
-			botonIniciar.textContent = textos.listo || 'Iniciar carrera';
+			refrescarBotonIniciar();
 		};
 
 		etiqueta.onerror = function () {
@@ -395,8 +484,7 @@
 					} );
 				} )
 				.catch( function ( error ) {
-					botonIniciar.disabled = false;
-					botonIniciar.textContent = textos.listo || 'Iniciar carrera';
+					refrescarBotonIniciar();
 					mostrarErrorEn( panelInstrucciones, error.message || textos.errorGeneral );
 				} );
 		} );

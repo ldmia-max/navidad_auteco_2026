@@ -132,10 +132,13 @@ class NavidadTVS_Shortcode {
 	 * producción: cualquier despliegue la cambia. La versión se conserva
 	 * delante para que la URL siga diciendo de qué release viene.
 	 *
+	 * Publica porque las plantillas la usan para las imagenes que sirve el
+	 * plugin; el mismo cache buster por fecha de archivo vale ahi.
+	 *
 	 * @param string $relativa Ruta dentro del plugin.
 	 * @return string
 	 */
-	private static function url_asset( $relativa ) {
+	public static function url_asset( $relativa ) {
 		return NAVIDAD_TVS_URL . $relativa . '?ver=' . rawurlencode( self::version_asset( $relativa ) );
 	}
 
@@ -185,6 +188,13 @@ class NavidadTVS_Shortcode {
 					'jugar'         => __( 'Entrar al juego', 'navidad-tvs' ),
 					'cargando'      => __( 'Cargando el juego…', 'navidad-tvs' ),
 					'listo'         => __( 'Iniciar carrera', 'navidad-tvs' ),
+					/*
+					 * El %d son los segundos que faltan. Dos cadenas y no una
+					 * con "segundo(s)": en la pantalla de un participante eso
+					 * se lee como un descuido.
+					 */
+					'espera'        => __( 'Iniciar carrera en %d segundos', 'navidad-tvs' ),
+					'esperaUno'     => __( 'Iniciar carrera en %d segundo', 'navidad-tvs' ),
 					'errorJuego'    => __( 'No se pudo cargar el juego. Revisa tu conexión y recarga la página.', 'navidad-tvs' ),
 					'preparando'    => __( 'Preparando la pista…', 'navidad-tvs' ),
 					'errorRed'      => __( 'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.', 'navidad-tvs' ),

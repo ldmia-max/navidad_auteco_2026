@@ -90,62 +90,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</p>
 	</div>
 
-	<!-- Instrucciones (tras validar el acceso) -------------------------- -->
-	<div class="ntvs-panel" id="ntvs-panel-instrucciones" hidden>
-		<p class="ntvs-bienvenida">
-			<?php esc_html_e( '¡Listo', 'navidad-tvs' ); ?>
-			<span id="ntvs-nombre-jugador"></span>!
-		</p>
-
-		<h2 class="ntvs-h2"><?php esc_html_e( 'Cómo se juega', 'navidad-tvs' ); ?></h2>
-
-		<ul class="ntvs-instrucciones">
-			<li>
-				<strong><?php esc_html_e( 'Acelerador', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'El botón grande de la derecha, o la tecla Z.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Turbo', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'El botón rojo de arriba, o la tecla X. Vas más rápido, pero calienta el motor.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Cambiar de carril', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'La cruceta de la izquierda. En el teclado, las flechas.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'La pista acelera', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Cada 20 segundos la moto alcanza más velocidad y todo llega más rápido. Verás el aviso en pantalla.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Temperatura', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'El turbo la sube. Si llega al tope, el motor se sobrecalienta y la moto se detiene dos segundos y medio. Suelta el turbo para enfriarlo; soltar el acelerador enfría el doble de rápido.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Llaves', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Cada una que recojas suma 50 metros.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Impulsores', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Las flechas verdes del pavimento te dan un empujón y suman 1 metro.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Conos', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'Esquívalos cambiando de carril. Si le pegas a uno te caes y pierdes dos segundos.', 'navidad-tvs' ); ?>
-			</li>
-			<li>
-				<strong><?php esc_html_e( 'Charcos de aceite', 'navidad-tvs' ); ?></strong>
-				<?php esc_html_e( 'No tumban, pero te frenan mientras los pisas.', 'navidad-tvs' ); ?>
-			</li>
-		</ul>
-
-		<p class="ntvs-aviso ntvs-aviso--fuerte">
-			<?php esc_html_e( 'Al pulsar el botón empieza una cuenta regresiva y luego la carrera. Es tu único intento.', 'navidad-tvs' ); ?>
-		</p>
-
-		<button class="ntvs-boton" type="button" id="ntvs-iniciar">
-			<?php esc_html_e( 'Iniciar carrera', 'navidad-tvs' ); ?>
-		</button>
-	</div>
+	<?php include NAVIDAD_TVS_PATH . 'templates/user/parcial-instrucciones.php'; ?>
 
 	<!-- Juego ------------------------------------------------------------ -->
 	<div class="ntvs-panel ntvs-panel--juego" id="ntvs-panel-juego" hidden>

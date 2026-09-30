@@ -25,6 +25,25 @@
 	--ntvs-cielo: #4a90d9;
 	--ntvs-borde: 4px;
 
+	/*
+	 * Colores del mando. Viven aqui y no en .ntvs-mando porque los comparten
+	 * tres sitios: el mando de verdad, las miniaturas de la tabla de controles
+	 * y el boton de iniciar la carrera, que lleva el mismo verde del
+	 * acelerador. Solo --m se queda en cada uno, que es lo que cambia de
+	 * tamano entre el mando y su miniatura.
+	 */
+	--mando-carcasa: #b6b8c5;
+	--mando-carcasa-luz: #e2e4ee;
+	--mando-carcasa-sombra: #7b7d8a;
+	--mando-panel: #323136;
+	--mando-marco: #0f0f0f;
+	--mando-turbo: #3372c2;
+	--mando-turbo-luz: #6ba2df;
+	--mando-turbo-sombra: #1f4e8c;
+	--mando-acelera: #3d9a3f;
+	--mando-acelera-luz: #74c476;
+	--mando-acelera-sombra: #256b27;
+
 	--ntvs-fuente: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono", Menlo, Consolas, monospace;
 
 	box-sizing: border-box;
@@ -353,27 +372,231 @@
 	color: var(--ntvs-blanco);
 }
 
-.ntvs-instrucciones {
+/*
+ * Pantalla de ayuda, según imagenes_apoyo/Ayudas.png.
+ *
+ * Dos bloques enmarcados en rojo —los controles y los elementos de la pista—
+ * con fichas blancas dentro. El blanco es deliberado: el resto de la página
+ * es azul oscuro y este es el único sitio donde hay que leer un párrafo
+ * seguido, así que se invierte el contraste.
+ */
+
+.ntvs-ayuda__titulo {
+	margin: 0 0 16px;
+	font-size: 15px;
+	font-weight: 700;
+	text-align: center;
+	color: var(--ntvs-blanco);
+}
+
+.ntvs-ayuda__bloque {
+	margin-bottom: 18px;
+	padding: 10px;
+	border: 3px solid var(--ntvs-rojo);
+}
+
+.ntvs-ayuda__bloque:last-of-type {
+	margin-bottom: 20px;
+}
+
+/* --- Tabla de controles --------------------------------------------------- */
+
+/*
+ * border-spacing y no border-collapse: el diseño separa las filas con aire,
+ * y con las celdas pegadas no hay forma de dejar ese hueco.
+ */
+.ntvs-controles {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0 6px;
+	font-size: 12px;
+}
+
+.ntvs-controles thead th {
+	padding: 4px 8px 8px;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--ntvs-blanco);
+	text-align: center;
+}
+
+.ntvs-controles thead th:first-child {
+	text-align: left;
+}
+
+.ntvs-controles tbody th,
+.ntvs-controles tbody td {
+	padding: 8px;
+	background: var(--ntvs-blanco);
+	vertical-align: middle;
+}
+
+.ntvs-controles tbody th {
+	font-weight: 400;
+	text-align: left;
+	color: var(--ntvs-azul-profundo);
+	line-height: 1.5;
+}
+
+.ntvs-controles tbody td {
+	text-align: center;
+	/* Que la columna de la mecánica se lleve el espacio sobrante. */
+	width: 1%;
+	white-space: nowrap;
+}
+
+/* --- Miniaturas de los botones del mando ---------------------------------- */
+
+/*
+ * Reutilizan .ntvs-btn--acelera, --turbo y --dir tal cual. Todas sus medidas
+ * cuelgan de --m, así que basta con darles un módulo más pequeño aquí para
+ * tener el mismo botón a escala de miniatura.
+ *
+ * Es la razón de que la ayuda no pueda desactualizarse: si el mando cambia de
+ * color o de forma, esto cambia con él.
+ */
+.ntvs-mando-mini {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+
+	--m: 9px;
+}
+
+.ntvs-mando-mini .ntvs-btn {
+	/* Son adorno, no botones: no reciben foco ni puntero de mano. */
+	cursor: default;
+}
+
+/* --- Teclas del computador ------------------------------------------------ */
+
+.ntvs-teclas-par {
+	display: inline-flex;
+	gap: 6px;
+}
+
+/*
+ * La tecla es un cuadrado oscuro con relieve, como la del diseño. El relieve
+ * va sin desenfoque por lo mismo que en el mando: un degradado suave rompería
+ * el aspecto de 16 bits.
+ */
+.ntvs-tecla {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	font-family: 'Press Start 2P', var(--ntvs-fuente);
+	font-size: 13px;
+	line-height: 1;
+	color: var(--ntvs-blanco);
+	background: #2b2a2f;
+	border: 2px solid #0f0f0f;
+	border-radius: 0;
+	box-shadow:
+		inset 2px 2px 0 #5a5960,
+		inset -2px -2px 0 #131216;
+}
+
+/* --- Fichas de los elementos de la pista ---------------------------------- */
+
+.ntvs-fichas {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
-.ntvs-instrucciones li {
-	padding: 10px 0;
+.ntvs-ficha {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px;
+	background: var(--ntvs-blanco);
+}
+
+.ntvs-ficha__texto {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.ntvs-ficha__texto h3 {
+	margin: 0 0 6px;
 	font-size: 12px;
-	line-height: 1.7;
-	border-bottom: 2px solid #23407a;
+	font-weight: 700;
+	color: var(--ntvs-azul-profundo);
 }
 
-.ntvs-instrucciones li:last-child {
-	border-bottom: 0;
+.ntvs-ficha__texto p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--ntvs-azul);
 }
 
-.ntvs-instrucciones strong {
-	display: block;
-	color: var(--ntvs-blanco);
-	letter-spacing: 1px;
+/*
+ * Los PNG vienen de los sprites del juego, así que se amplían con el vecino
+ * más cercano; si el navegador los suavizara, el arte de píxeles se
+ * emborronaría justo en la pantalla que lo está explicando.
+ *
+ * flex-shrink deja que se encojan en pantallas estrechas antes que empujar el
+ * texto fuera de la ficha.
+ */
+.ntvs-ficha__icono {
+	flex: 0 1 auto;
+	max-width: 38%;
+	height: auto;
+	image-rendering: pixelated;
+}
+
+/* --- Botón de iniciar la carrera ------------------------------------------ */
+
+/*
+ * Lleva el verde del acelerador porque es el mismo gesto: es el botón que
+ * pone la moto en marcha, y conviene que el participante lo reconozca antes
+ * de tenerlo debajo del juego.
+ *
+ * Mientras corre la cuenta atrás va en rojo y deshabilitado, y al llegar a
+ * cero pasa a verde. Es el semáforo de salida de una carrera, que se entiende
+ * sin leer nada, y además el color cambia a la vez que el botón se abre: si
+ * solo cambiara el texto, en un teléfono habría que estar leyéndolo.
+ */
+.ntvs-boton--arranque {
+	font-family: 'Press Start 2P', var(--ntvs-fuente);
+	font-size: 12px;
+	line-height: 1.6;
+	border: 0;
+	background: var(--mando-acelera);
+	box-shadow:
+		inset 4px 4px 0 var(--mando-acelera-luz),
+		inset -4px -4px 0 var(--mando-acelera-sombra);
+}
+
+.ntvs-boton--arranque:hover:not(:disabled),
+.ntvs-boton--arranque:focus-visible:not(:disabled) {
+	background: #47ae49;
+}
+
+.ntvs-boton--arranque:active:not(:disabled) {
+	transform: none;
+	box-shadow:
+		inset 4px 4px 0 rgba(0, 0, 0, 0.45),
+		inset -4px -4px 0 rgba(255, 255, 255, 0.35);
+}
+
+/*
+ * Va después de .ntvs-boton:disabled para ganarle: esa regla pinta el botón
+ * de gris, que aquí sería perder la señal de "todavía no".
+ */
+.ntvs-boton--arranque:disabled {
+	cursor: default;
+	background: var(--ntvs-rojo);
+	box-shadow:
+		inset 4px 4px 0 #f2606c,
+		inset -4px -4px 0 #8d1220;
 }
 
 /* --- Mando en pantalla ---------------------------------------------------- */
@@ -422,13 +645,6 @@
  */
 .ntvs-mando {
 	--m: clamp(11px, 3.4vw, 16px);
-	--mando-carcasa: #b6b8c5;
-	--mando-carcasa-luz: #e2e4ee;
-	--mando-carcasa-sombra: #7b7d8a;
-	--mando-panel: #323136;
-	--mando-marco: #0f0f0f;
-	--mando-turbo: #3372c2;
-	--mando-acelera: #3d9a3f;
 
 	width: 100%;
 	max-width: calc(var(--m) * 32);
@@ -560,16 +776,16 @@
 	height: calc(var(--m) * 3.4);
 	background: var(--mando-turbo);
 	box-shadow:
-		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 #6ba2df,
-		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 #1f4e8c;
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 var(--mando-turbo-luz),
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 var(--mando-turbo-sombra);
 }
 
 .ntvs-btn--acelera {
 	height: calc(var(--m) * 3.9);
 	background: var(--mando-acelera);
 	box-shadow:
-		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 #74c476,
-		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 #256b27;
+		inset calc(var(--m) * 0.22) calc(var(--m) * 0.22) 0 var(--mando-acelera-luz),
+		inset calc(var(--m) * -0.22) calc(var(--m) * -0.22) 0 var(--mando-acelera-sombra);
 }
 
 /*
@@ -816,6 +1032,49 @@
 	.ntvs-cartel {
 		font-size: 12px;
 		letter-spacing: 2px;
+	}
+
+	/*
+	 * La tabla de controles no cabe a lo ancho en un telefono.
+	 *
+	 * Sus tres columnas tienen un ancho minimo que no se puede negociar: el
+	 * boton ACELERAR y el par de teclas miden lo que miden. Medido a 360 px,
+	 * se pasaba 26 px del marco. Se recorta el relleno de las celdas y se baja
+	 * el modulo del mando y el tamano de las teclas, que es de donde sale el
+	 * espacio sin tocar el diseno.
+	 */
+	.ntvs-controles thead th,
+	.ntvs-controles tbody th,
+	.ntvs-controles tbody td {
+		padding: 6px 4px;
+	}
+
+	.ntvs-controles {
+		font-size: 11px;
+	}
+
+	.ntvs-mando-mini {
+		--m: 7px;
+		gap: 4px;
+	}
+
+	.ntvs-tecla {
+		width: 30px;
+		height: 30px;
+		font-size: 11px;
+	}
+
+	.ntvs-teclas-par {
+		gap: 4px;
+	}
+
+	.ntvs-ayuda__bloque {
+		padding: 8px;
+	}
+
+	.ntvs-ficha {
+		gap: 8px;
+		padding: 8px;
 	}
 }
 
