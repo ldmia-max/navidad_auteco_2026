@@ -184,6 +184,8 @@ docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verif
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-participantes.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e8.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/prueba-carga.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/ciclo-completo.php
 cd game && npm run sim && npm run arte
 ```
 
@@ -204,3 +206,7 @@ viejos**, que es la forma exacta en que esto se rompe sin que nadie se entere.
 ```bash
 docker exec navidad_tvs_wp tail -f /var/www/html/wp-content/debug.log
 ```
+
+Lo que hay que dejar configurado en el servidor y la lista de pruebas en
+dispositivos reales están en
+[docs/operacion-y-qa.md](docs/operacion-y-qa.md).

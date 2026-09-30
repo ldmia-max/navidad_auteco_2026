@@ -21,7 +21,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | E6 | Validación server-side y score | ✅ Completada | 2026-09-24 |
 | E7 | Sitio público | ✅ Completada | 2026-09-24 |
 | E8 | Backoffice y ranking | ✅ Hecho | 30-09-2026 |
-| E9 | Endurecimiento y QA | ⬜ Pendiente | — |
+| E9 | Endurecimiento y QA | 🟡 Parcial | falta QA en dispositivos |
 | E10 | Despliegue y operación | ⬜ Pendiente | — |
 
 Ruta crítica: E0 → E1 → E2 → E3 → E4 → E6 → E8 → E9 → E10.
@@ -266,6 +266,23 @@ Que aguante el día de apertura.
 - Ciclo completo con padrón real anonimizado.
 
 **Revisión:** reporte de QA por dispositivo.
+
+**30-09-2026: hecho todo menos las pruebas en dispositivos reales.**
+
+Hecho: cabeceras de seguridad acotadas a las páginas del concurso, prueba de
+carga con 50 accesos simultáneos, barra de progreso de la descarga del juego y
+ciclo completo con el padrón real anonimizado.
+
+La prueba de carga destapó lo que más se va a notar el primer día, y no era el
+plugin: la primera ráfaga sobre un servidor dormido tarda 6 s, y la misma
+ráfaga en caliente 0,12 s. Es Apache arrancando procesos. Mitigación en
+[operacion-y-qa.md](operacion-y-qa.md).
+
+**Falta, y no se puede hacer desde el código:** probar en Android de gama baja,
+iOS Safari, tableta y escritorio. La lista por dispositivo está en
+[operacion-y-qa.md](operacion-y-qa.md), sección 3. También queda pendiente de
+aplicar en el servidor la compresión del JavaScript, HSTS y la CSP, que son
+configuración y no plugin.
 
 ## E10 — Despliegue y operación
 

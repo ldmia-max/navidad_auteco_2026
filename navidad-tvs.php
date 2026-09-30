@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.18.0
+ * Version:     1.19.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.18.0' );
+define( 'NAVIDAD_TVS_VERSION', '1.19.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );
@@ -59,6 +59,7 @@ require_once NAVIDAD_TVS_PATH . 'includes/class-acceso.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-validador.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-rest.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-shortcode.php';
+require_once NAVIDAD_TVS_PATH . 'includes/class-seguridad.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-paginas.php';
 require_once NAVIDAD_TVS_PATH . 'includes/class-admin.php';
 
@@ -94,6 +95,9 @@ final class NavidadTVS_Plugin {
 	/** @var NavidadTVS_Shortcode */
 	public $shortcode;
 
+	/** @var NavidadTVS_Seguridad */
+	public $seguridad;
+
 	/** @var NavidadTVS_Paginas */
 	public $paginas;
 
@@ -121,6 +125,9 @@ final class NavidadTVS_Plugin {
 
 		$this->shortcode = new NavidadTVS_Shortcode( $this->acceso, $this->settings );
 		$this->shortcode->registrar_hooks();
+
+		$this->seguridad = new NavidadTVS_Seguridad( $this->settings );
+		$this->seguridad->registrar_hooks();
 
 		$this->paginas = new NavidadTVS_Paginas( $this->settings );
 		$this->paginas->registrar_hooks();

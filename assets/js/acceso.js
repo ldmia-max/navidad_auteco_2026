@@ -325,7 +325,18 @@
 
 		if ( ! juegoListo ) {
 			botonIniciar.disabled = true;
-			botonIniciar.textContent = textos.cargando || 'Cargando el juego…';
+
+			/*
+			 * El porcentaje va también en el rótulo, no solo en la barra. La
+			 * barra se ve de reojo; la cifra es la que convence de que la
+			 * pantalla no se quedó pegada.
+			 */
+			var base = textos.cargando || 'Cargando el juego…';
+
+			botonIniciar.textContent = ( 'number' === typeof pctDescarga )
+				? base + ' ' + pctDescarga + '%'
+				: base;
+
 			return;
 		}
 
@@ -388,6 +399,22 @@
 		precargarJuego();
 	}
 
+	/**
+	 * Descarga el bundle del juego enseñando cuánto lleva.
+	 *
+	 * El bundle pesa alrededor de metro y medio de megabyte. En una conexión
+	 * móvil mala eso son varios segundos con el botón bloqueado y sin señal de
+	 * vida, y un participante que ve una pantalla quieta cree que se rompió y
+	 * recarga; recargar en mitad de la descarga la empieza de cero.
+	 *
+	 * Por eso no basta con <script src>: esa etiqueta no informa del avance.
+	 * Se baja con XHR, que sí lo hace, y el código se inyecta después.
+	 *
+	 * La etiqueta suelta se conserva como plan B. Si el XHR falla —sin
+	 * XMLHttpRequest, una CSP que prohíba el script en línea, un proxy que
+	 * corte— se vuelve al camino de siempre, que funciona aunque no muestre
+	 * progreso. Antes perder el progreso que perder el juego.
+	 */
 	function precargarJuego() {
 		if ( ! botonIniciar ) {
 			return;
@@ -400,6 +427,77 @@
 		}
 
 		refrescarBotonIniciar();
+
+		if ( typeof window.XMLHttpRequest === 'undefined' ) {
+			precargarConEtiqueta();
+			return;
+		}
+
+		var xhr = new XMLHttpRequest();
+
+		xhr.open( 'GET', cfg.urlJuego, true );
+
+		/*
+		 * lengthComputable es false cuando el servidor no manda Content-Length,
+		 * que pasa con algunas configuraciones de compresión al vuelo. En ese
+		 * caso se enseña la barra en movimiento pero sin cifra, que es honesto:
+		 * está bajando y no se sabe cuánto falta.
+		 */
+		xhr.onprogress = function ( evento ) {
+			if ( evento.lengthComputable && evento.total > 0 ) {
+				// Se topa en 99: el 100 se pone cuando el juego ya respondió.
+				ponerProgreso( Math.min( 99, Math.round( ( evento.loaded * 100 ) / evento.total ) ) );
+			} else {
+				ponerProgreso( null );
+			}
+		};
+
+		xhr.onload = function () {
+			if ( xhr.status < 200 || xhr.status >= 300 ) {
+				precargarConEtiqueta();
+				return;
+			}
+
+			try {
+				var etiqueta = document.createElement( 'script' );
+				etiqueta.text = xhr.responseText;
+				document.head.appendChild( etiqueta );
+			} catch ( e ) {
+				precargarConEtiqueta();
+				return;
+			}
+
+			/*
+			 * Que el script se haya inyectado no garantiza que se haya
+			 * ejecutado: una CSP estricta lo bloquea en silencio. Se comprueba
+			 * que la función existe antes de dar el juego por cargado.
+			 */
+			if ( typeof window.navidadTvsIniciarJuego !== 'function' ) {
+				precargarConEtiqueta();
+				return;
+			}
+
+			ponerProgreso( 100 );
+			ocultarProgreso();
+			juegoListo = true;
+			refrescarBotonIniciar();
+		};
+
+		xhr.onerror = function () {
+			precargarConEtiqueta();
+		};
+
+		mostrarProgreso();
+		xhr.send();
+	}
+
+	/** Descarga el bundle con una etiqueta script, sin progreso. */
+	function precargarConEtiqueta() {
+		if ( juegoListo || juegoFallo ) {
+			return;
+		}
+
+		ocultarProgreso();
 
 		var etiqueta = document.createElement( 'script' );
 		etiqueta.src = cfg.urlJuego;
@@ -417,6 +515,52 @@
 		};
 
 		document.head.appendChild( etiqueta );
+	}
+
+	// -----------------------------------------------------------------
+	// Barra de progreso de la descarga
+	// -----------------------------------------------------------------
+
+	var cajaProgreso = document.getElementById( 'ntvs-progreso' );
+	var barraProgreso = document.getElementById( 'ntvs-progreso-barra' );
+	var pctDescarga = null;
+
+	function mostrarProgreso() {
+		if ( cajaProgreso ) {
+			cajaProgreso.hidden = false;
+		}
+	}
+
+	function ocultarProgreso() {
+		if ( cajaProgreso ) {
+			cajaProgreso.hidden = true;
+		}
+	}
+
+	/**
+	 * Fija el avance.
+	 *
+	 * @param {number|null} pct Porcentaje, o null si no se puede saber.
+	 */
+	function ponerProgreso( pct ) {
+		pctDescarga = pct;
+
+		if ( barraProgreso ) {
+			if ( null === pct ) {
+				// Sin cifra: la barra se llena a medias y se deja animada por CSS.
+				barraProgreso.style.width = '100%';
+				barraProgreso.parentNode.classList.add( 'ntvs-progreso--indeterminado' );
+			} else {
+				barraProgreso.parentNode.classList.remove( 'ntvs-progreso--indeterminado' );
+				barraProgreso.style.width = pct + '%';
+			}
+		}
+
+		if ( cajaProgreso ) {
+			cajaProgreso.setAttribute( 'aria-valuenow', null === pct ? '0' : String( pct ) );
+		}
+
+		refrescarBotonIniciar();
 	}
 
 	/** Muestra un error dentro de un panel que no tiene su propia caja. */

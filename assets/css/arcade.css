@@ -636,6 +636,57 @@
 	image-rendering: pixelated;
 }
 
+/* --- Barra de descarga ---------------------------------------------------- */
+
+/*
+ * Se ve mientras baja el bundle del juego, que pesa metro y medio de megabyte.
+ *
+ * Esquinas rectas y sin transicion en el ancho: la barra tiene que ir a
+ * saltos, como la del arte del juego, y una animacion suave haria que el
+ * avance pareciera ir por detras de lo que va.
+ */
+.ntvs-progreso {
+	width: 100%;
+	height: 14px;
+	margin-bottom: 10px;
+	background: var(--ntvs-azul-profundo);
+	border: 2px solid var(--ntvs-blanco);
+	overflow: hidden;
+}
+
+.ntvs-progreso__barra {
+	display: block;
+	width: 0;
+	height: 100%;
+	background: var(--mando-acelera);
+}
+
+/*
+ * Cuando el servidor no manda Content-Length no se puede saber el porcentaje.
+ * En vez de mentir con una cifra inventada, la barra se llena y se mueve: dice
+ * "esto sigue vivo" sin prometer cuanto falta.
+ */
+.ntvs-progreso--indeterminado .ntvs-progreso__barra {
+	background: repeating-linear-gradient(
+		90deg,
+		var(--mando-acelera) 0 12px,
+		var(--mando-acelera-sombra) 12px 24px
+	);
+	animation: ntvs-progreso-desliza 1s linear infinite;
+}
+
+@keyframes ntvs-progreso-desliza {
+	from { background-position: 0 0; }
+	to   { background-position: 24px 0; }
+}
+
+/* Quien pidio menos movimiento no tiene por que ver la barra correr. */
+@media (prefers-reduced-motion: reduce) {
+	.ntvs-progreso--indeterminado .ntvs-progreso__barra {
+		animation: none;
+	}
+}
+
 /* --- Botón con relieve --------------------------------------------------- */
 
 /*

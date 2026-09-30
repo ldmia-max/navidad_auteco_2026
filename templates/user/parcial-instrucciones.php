@@ -177,6 +177,21 @@ $ntvs_fichas = array(
 
 	<?php
 	/*
+	 * Barra de descarga del bundle.
+	 *
+	 * Nace oculta y solo aparece mientras baja el juego. El role progressbar
+	 * con sus valores es lo que hace que un lector de pantalla cante el avance;
+	 * sin eso, para quien no ve la barra la espera es una pantalla muda.
+	 */
+	?>
+	<div class="ntvs-progreso" id="ntvs-progreso" hidden
+		role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+		aria-label="<?php esc_attr_e( 'Descarga del juego', 'navidad-tvs' ); ?>">
+		<span class="ntvs-progreso__barra" id="ntvs-progreso-barra"></span>
+	</div>
+
+	<?php
+	/*
 	 * El botón nace deshabilitado y en rojo. La cuenta de diez segundos la
 	 * lleva acceso.js, que es quien sabe además si el bundle del juego ya
 	 * terminó de bajar; el botón solo se abre cuando se cumplen las dos cosas.
