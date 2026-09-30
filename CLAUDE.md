@@ -182,6 +182,7 @@ No hay suite de PHPUnit. La verificación es manual sobre Docker:
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e1.php
 # ... e2, e3, e4, e6
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-participantes.php
 cd game && npm run sim && npm run arte
 ```
 

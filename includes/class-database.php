@@ -460,6 +460,136 @@ class NavidadTVS_Database {
 	}
 
 	/**
+	 * Busca participantes por teléfono, cédula o placa.
+	 *
+	 * Para la pantalla de edición del panel. No busca por nombre porque el
+	 * padrón no trae nombre: el participante lo digita al entrar y no se
+	 * guarda en esta tabla.
+	 *
+	 * El teléfono se prueba en sus dos formas. El operador puede tener a mano
+	 * el número de doce dígitos del archivo o el de diez que digita la
+	 * persona, y buscar el que no es devolvía "no encontrado" sobre alguien
+	 * que sí estaba.
+	 *
+	 * @param string $texto  Lo que escribió el operador.
+	 * @param int    $limite Máximo de filas.
+	 * @return array Filas del padrón.
+	 */
+	public function buscar_participantes( $texto, $limite = 50 ) {
+		global $wpdb;
+
+		$texto = trim( (string) $texto );
+
+		if ( '' === $texto ) {
+			return array();
+		}
+
+		$limite   = max( 1, min( 200, (int) $limite ) );
+		$telefono = NavidadTVS_Plugin::normalizar_telefono( $texto );
+		$suelto   = strtoupper( preg_replace( '/[^A-Za-z0-9]/', '', $texto ) );
+
+		if ( '' === $suelto ) {
+			return array();
+		}
+
+		$filas = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_participantes}
+				  WHERE telefono = %s
+				     OR telefono_csv = %s
+				     OR cedula = %s
+				     OR placa = %s
+				  ORDER BY fecha_concurso DESC, id DESC
+				  LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$telefono,
+				$suelto,
+				$suelto,
+				$suelto,
+				$limite
+			),
+			ARRAY_A
+		);
+
+		return $filas ? $filas : array();
+	}
+
+	/**
+	 * Actualiza los datos de un participante.
+	 *
+	 * Solo toca las columnas que se le pasan. Devuelve un WP_Error cuando el
+	 * cambio chocaría con otra fila: teléfono, cédula y placa son claves
+	 * únicas, y sin esta comprobación el UPDATE fallaría con un error de MySQL
+	 * que el operador no puede interpretar.
+	 *
+	 * @param int   $id     Id del participante.
+	 * @param array $datos  Columnas a cambiar.
+	 * @return true|WP_Error
+	 */
+	public function actualizar_participante( $id, array $datos ) {
+		global $wpdb;
+
+		$id = (int) $id;
+
+		if ( $id <= 0 || empty( $datos ) ) {
+			return new WP_Error( 'sin_cambios', __( 'No hay nada que guardar.', 'navidad-tvs' ) );
+		}
+
+		$actual = $this->buscar_participante( $id );
+
+		if ( ! $actual ) {
+			return new WP_Error( 'no_existe', __( 'Ese participante ya no está en el padrón.', 'navidad-tvs' ) );
+		}
+
+		/*
+		 * Choques con las claves únicas, comprobados antes de escribir. Se
+		 * mira fila por fila para poder decir CUÁL de los tres campos choca y
+		 * con qué jornada, que es lo que el operador necesita saber para
+		 * decidir.
+		 */
+		foreach ( array( 'telefono', 'cedula', 'placa' ) as $campo ) {
+			if ( ! isset( $datos[ $campo ] ) || $datos[ $campo ] === $actual[ $campo ] ) {
+				continue;
+			}
+
+			$choque = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT id, fecha_concurso FROM {$this->tabla_participantes}
+					  WHERE {$campo} = %s AND id <> %d LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+					$datos[ $campo ],
+					$id
+				),
+				ARRAY_A
+			);
+
+			if ( $choque ) {
+				return new WP_Error(
+					'duplicado',
+					sprintf(
+						/* translators: 1: campo, 2: valor, 3: fecha de la otra jornada */
+						__( 'Ya hay otro participante con ese %1$s (%2$s), en la jornada del %3$s.', 'navidad-tvs' ),
+						$campo,
+						$datos[ $campo ],
+						$choque['fecha_concurso']
+					)
+				);
+			}
+		}
+
+		$formatos = array_fill( 0, count( $datos ), '%s' );
+
+		$resultado = $wpdb->update( $this->tabla_participantes, $datos, array( 'id' => $id ), $formatos, array( '%d' ) );
+
+		if ( false === $resultado ) {
+			return new WP_Error(
+				'fallo_bd',
+				__( 'La base de datos rechazó el cambio. Revisa el registro de errores.', 'navidad-tvs' )
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Indica si un participante ya tiene un resultado registrado.
 	 *
 	 * Incluye los descalificados a propósito: haber sido descalificado no

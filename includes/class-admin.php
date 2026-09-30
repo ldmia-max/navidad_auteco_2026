@@ -32,6 +32,9 @@ class NavidadTVS_Admin {
 	/** @var NavidadTVS_Admin_Settings */
 	private $config;
 
+	/** @var NavidadTVS_Participantes */
+	private $participantes;
+
 	/**
 	 * @param NavidadTVS_Database $database Acceso a datos.
 	 * @param NavidadTVS_Settings $settings Configuración.
@@ -45,6 +48,9 @@ class NavidadTVS_Admin {
 
 		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-admin-settings.php';
 		$this->config = new NavidadTVS_Admin_Settings( $settings );
+
+		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-participantes.php';
+		$this->participantes = new NavidadTVS_Participantes( $database );
 	}
 
 	/**
@@ -59,6 +65,7 @@ class NavidadTVS_Admin {
 		add_action( 'admin_menu', array( $this, 'registrar_menu' ) );
 		$this->importador->registrar_hooks();
 		$this->config->registrar_hooks();
+		$this->participantes->registrar_hooks();
 	}
 
 	/**
@@ -102,6 +109,15 @@ class NavidadTVS_Admin {
 			self::CAPACIDAD,
 			self::SLUG . '-importar',
 			array( $this, 'render_importar' )
+		);
+
+		add_submenu_page(
+			self::SLUG,
+			__( 'Participantes', 'navidad-tvs' ),
+			__( 'Participantes', 'navidad-tvs' ),
+			self::CAPACIDAD,
+			self::SLUG . '-participantes',
+			array( $this, 'render_participantes' )
 		);
 
 		add_submenu_page(
@@ -159,6 +175,15 @@ class NavidadTVS_Admin {
 		$database  = $this->database;
 
 		include NAVIDAD_TVS_PATH . 'includes/admin/templates/importar.php';
+	}
+
+	/**
+	 * Búsqueda y edición del padrón.
+	 *
+	 * @return void
+	 */
+	public function render_participantes() {
+		$this->participantes->render();
 	}
 
 	/**

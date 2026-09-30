@@ -70,42 +70,22 @@ $jornadas_padron = $database->resumen_por_jornada( 30 );
 			<?php endif; ?>
 		</div>
 
-		<?php if ( ! empty( $resultado['rechazos'] ) ) : ?>
-			<h2><?php esc_html_e( 'Filas rechazadas', 'navidad-tvs' ); ?></h2>
-			<?php
-			$muestra = array_slice( $resultado['rechazos'], 0, 100 );
-			$resto   = count( $resultado['rechazos'] ) - count( $muestra );
-			?>
-			<table class="widefat striped">
-				<thead>
-					<tr>
-						<th style="width:80px"><?php esc_html_e( 'Fila', 'navidad-tvs' ); ?></th>
-						<th style="width:180px"><?php esc_html_e( 'Referencia', 'navidad-tvs' ); ?></th>
-						<th><?php esc_html_e( 'Motivo', 'navidad-tvs' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php foreach ( $muestra as $r ) : ?>
-					<tr>
-						<td><?php echo esc_html( $r['fila'] ); ?></td>
-						<td><code><?php echo esc_html( $r['referencia'] ); ?></code></td>
-						<td><?php echo esc_html( $r['motivo'] ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
-			<?php if ( $resto > 0 ) : ?>
-				<p class="description">
-					<?php
-					printf(
-						/* translators: %s: cantidad de filas restantes */
-						esc_html__( 'Se muestran las primeras 100. Hay %s más en el CSV de rechazos.', 'navidad-tvs' ),
-						esc_html( number_format_i18n( $resto ) )
-					);
-					?>
-				</p>
-			<?php endif; ?>
-		<?php endif; ?>
+		<?php
+		/*
+		 * Aqui iba la tabla con las filas rechazadas una por una.
+		 *
+		 * Se quito a peticion del cliente: con un padron de varios cientos de
+		 * filas, una lista de rechazos llena la pantalla y no se puede hacer nada
+		 * con ella, porque para corregir hay que volver al CSV de origen. El
+		 * numero de rechazadas sigue arriba, en el aviso, y el reporte completo
+		 * se descarga con el boton: eso si sirve, porque se abre al lado del
+		 * archivo original.
+		 *
+		 * OJO: el array $resultado['rechazos'] NO se toco. Lo necesita
+		 * descargar_rechazos() para armar el CSV; lo que desaparece es la vista,
+		 * no el dato.
+		 */
+		?>
 	<?php endif; ?>
 
 	<h2><?php esc_html_e( 'Cargar archivo', 'navidad-tvs' ); ?></h2>
