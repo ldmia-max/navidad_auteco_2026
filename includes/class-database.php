@@ -29,12 +29,16 @@ class NavidadTVS_Database {
 	/** @var string Resultados validados. */
 	public $tabla_scores;
 
+	/** @var string Jornadas de revancha, generales o de una sola persona. */
+	public $tabla_revanchas;
+
 	public function __construct() {
 		global $wpdb;
 
 		$this->tabla_participantes = $wpdb->prefix . 'navidad_tvs_participantes';
 		$this->tabla_sesiones      = $wpdb->prefix . 'navidad_tvs_sesiones';
 		$this->tabla_scores        = $wpdb->prefix . 'navidad_tvs_scores';
+		$this->tabla_revanchas     = $wpdb->prefix . 'navidad_tvs_revanchas';
 	}
 
 	/**
@@ -58,7 +62,26 @@ class NavidadTVS_Database {
 
 		dbDelta( $this->sql_participantes( $collate ) );
 		dbDelta( $this->sql_sesiones( $collate ) );
+
+		/*
+		 * El cambio de clave única va ANTES de dbDelta y no con el resto de
+		 * migraciones.
+		 *
+		 * En una instalación que viene de antes, scores todavía tiene
+		 * UNIQUE(participante_id). dbDelta ve que el esquema nuevo pide un
+		 * KEY normal con ese mismo nombre, intenta crearlo y choca con el que
+		 * ya está: "Duplicate key name". El resultado final acababa siendo
+		 * correcto porque la migración lo arreglaba después, pero dejaba un
+		 * error de base de datos en el log de cada actualización, y un error
+		 * que se puede evitar no debe estar ahí: el día que aparezca uno de
+		 * verdad, nadie lo va a distinguir del ruido.
+		 */
+		if ( $this->tiene_tabla( $this->tabla_scores ) ) {
+			$this->migrar_intento_por_jornada();
+		}
+
 		dbDelta( $this->sql_scores( $collate ) );
+		dbDelta( $this->sql_revanchas( $collate ) );
 
 		$this->migrar();
 	}
@@ -115,6 +138,7 @@ class NavidadTVS_Database {
 		return "CREATE TABLE {$this->tabla_sesiones} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			participante_id bigint(20) unsigned NOT NULL,
+			fecha_concurso date NOT NULL,
 			nombre_digitado varchar(120) NOT NULL DEFAULT '',
 			seed bigint(20) unsigned NOT NULL,
 			nonce char(64) NOT NULL,
@@ -128,6 +152,7 @@ class NavidadTVS_Database {
 			PRIMARY KEY  (id),
 			UNIQUE KEY nonce (nonce),
 			KEY participante_id (participante_id),
+			KEY participante_jornada (participante_id,fecha_concurso,estado),
 			KEY estado (estado),
 			KEY creada_en (creada_en)
 		) {$collate};";
@@ -136,8 +161,19 @@ class NavidadTVS_Database {
 	/**
 	 * Resultados validados por el servidor.
 	 *
-	 * participante_id es UNIQUE: un solo intento por persona, garantizado por
-	 * la base de datos y no solo por la lógica de la aplicación.
+	 * La clave única es (participante_id, fecha_concurso): un solo intento por
+	 * persona Y POR JORNADA, garantizado por la base y no solo por la lógica.
+	 *
+	 * Era UNIQUE(participante_id) a secas, un intento en toda la campaña. Lo
+	 * cambiaron las revanchas: quien no jugó o no ganó puede volver en otra
+	 * fecha. Lo que no cambia es que en una misma jornada nadie juega dos
+	 * veces, y eso lo sigue sosteniendo la base de datos.
+	 *
+	 * ganador se marca a mano desde el panel. No se deduce de la distancia
+	 * porque el reglamento premia a los cuatro primeros Y a todos los
+	 * empatados con el cuarto, y porque el organizador puede tener motivos
+	 * para dejar a alguien fuera; que quede escrito quién ganó, y no
+	 * calculado al vuelo, es lo que permite defender el acta después.
 	 *
 	 * Los datos del participante (cédula, teléfono, ciudad, departamento) se
 	 * copian aquí al registrar el score. Así el ranking y el acta de ganadores
@@ -178,14 +214,58 @@ class NavidadTVS_Database {
 			inputs longtext NOT NULL,
 			valido tinyint(1) NOT NULL DEFAULT 1,
 			motivo_descalificacion varchar(255) NOT NULL DEFAULT '',
+			ganador tinyint(1) NOT NULL DEFAULT 0,
+			ganador_en datetime DEFAULT NULL,
+			ganador_nota varchar(255) NOT NULL DEFAULT '',
 			ip varchar(45) NOT NULL DEFAULT '',
 			user_agent varchar(255) NOT NULL DEFAULT '',
 			creado_en datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
-			UNIQUE KEY participante_id (participante_id),
+			UNIQUE KEY participante_jornada (participante_id,fecha_concurso),
+			KEY participante_id (participante_id),
 			KEY sesion_id (sesion_id),
 			KEY ranking (fecha_concurso,valido,distancia_m),
+			KEY ganadores (fecha_concurso,ganador),
 			KEY creado_en (creado_en)
+		) {$collate};";
+	}
+
+	/**
+	 * Jornadas de revancha.
+	 *
+	 * Una revancha es una fecha extra en la que alguien puede volver a jugar.
+	 * Hay dos clases y se distinguen por participante_id:
+	 *
+	 * - GENERAL (participante_id NULL): ese día vuelve a jugar todo el que no
+	 *   haya ganado todavía. Es la segunda oportunidad de campaña.
+	 * - INDIVIDUAL (participante_id con valor): ese día vuelve a jugar una
+	 *   sola persona. Existe porque en una campaña anterior hubo un derecho de
+	 *   petición, y hace falta poder atender un reclamo concreto sin abrirle
+	 *   la puerta a todo el mundo.
+	 *
+	 * El motivo es obligatorio en las individuales y por eso hay una columna:
+	 * devolver un intento a una persona concreta es una decisión que alguien
+	 * va a tener que explicar, y sin el motivo escrito no se puede.
+	 *
+	 * La clave única deja una sola revancha por fecha y persona. Para las
+	 * generales el participante va a 0 y no a NULL, porque en MySQL dos NULL
+	 * no chocan entre sí y se podrían crear cien revanchas generales del mismo
+	 * día sin que la base dijera nada.
+	 *
+	 * @param string $collate Charset y collation de WordPress.
+	 * @return string
+	 */
+	private function sql_revanchas( $collate ) {
+		return "CREATE TABLE {$this->tabla_revanchas} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			participante_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			fecha date NOT NULL,
+			motivo varchar(255) NOT NULL DEFAULT '',
+			creada_por bigint(20) unsigned NOT NULL DEFAULT 0,
+			creada_en datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			UNIQUE KEY persona_fecha (participante_id,fecha),
+			KEY fecha (fecha)
 		) {$collate};";
 	}
 
@@ -222,6 +302,137 @@ class NavidadTVS_Database {
 		foreach ( $nuevas as $columna => $clausula ) {
 			if ( ! $this->tiene_columna( $this->tabla_scores, $columna ) ) {
 				$wpdb->query( "ALTER TABLE {$this->tabla_scores} {$clausula}" ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+			}
+		}
+
+		$this->migrar_columnas_ganador();
+		$this->migrar_jornada_en_sesiones();
+	}
+
+	/**
+	 * La sesión pasa a saber a qué jornada pertenece.
+	 *
+	 * Antes no hacía falta: cada persona tenía un solo intento en toda la
+	 * campaña, así que bastaba con preguntar si existía una sesión consumida.
+	 * Con revanchas la pregunta es otra —¿consumió una HOY?— y sin esta
+	 * columna habría que deducir la jornada convirtiendo consumida_en de UTC a
+	 * hora de Colombia en cada consulta. La jornada es un dato del concurso,
+	 * no una conversión de reloj, y se guarda como tal.
+	 *
+	 * A las filas que ya existen se les pone la jornada del participante, que
+	 * es la que tenían por definición: antes de las revanchas no había otra.
+	 *
+	 * @return void
+	 */
+	private function migrar_jornada_en_sesiones() {
+		global $wpdb;
+
+		/*
+		 * El relleno va SIEMPRE, no solo cuando falta la columna.
+		 *
+		 * Esto costó un rato de depuración. dbDelta crea la columna él solo,
+		 * porque está en el esquema de sql_sesiones(), y la rellena con
+		 * '0000-00-00'. Cuando esta migración comprobaba "¿existe la columna?"
+		 * para decidir si hacer algo, se la encontraba ya creada y se iba sin
+		 * copiar las fechas. Resultado: la columna estaba, vacía, y ningún
+		 * participante podía entrar porque su sesión no pertenecía a ninguna
+		 * jornada.
+		 *
+		 * El UPDATE es idempotente: solo toca las filas sin fecha, así que
+		 * correrlo en cada actualización no cuesta nada y no puede pisar una
+		 * jornada buena.
+		 */
+		if ( ! $this->tiene_columna( $this->tabla_sesiones, 'fecha_concurso' ) ) {
+			$wpdb->query( // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				"ALTER TABLE {$this->tabla_sesiones}
+				   ADD COLUMN fecha_concurso date NOT NULL AFTER participante_id"
+			);
+		}
+
+		// A las filas de antes se les pone la jornada del participante, que es
+		// la que tenían por definición: antes de las revanchas no había otra.
+		$wpdb->query( // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+			"UPDATE {$this->tabla_sesiones} s
+			   JOIN {$this->tabla_participantes} p ON p.id = s.participante_id
+			    SET s.fecha_concurso = p.fecha_concurso
+			  WHERE s.fecha_concurso = '0000-00-00' OR s.fecha_concurso IS NULL"
+		);
+	}
+
+	/**
+	 * Columnas de la marca de ganador.
+	 *
+	 * @return void
+	 */
+	private function migrar_columnas_ganador() {
+		global $wpdb;
+
+		$nuevas = array(
+			'ganador'      => "ADD COLUMN ganador tinyint(1) NOT NULL DEFAULT 0 AFTER motivo_descalificacion",
+			'ganador_en'   => "ADD COLUMN ganador_en datetime DEFAULT NULL AFTER ganador",
+			'ganador_nota' => "ADD COLUMN ganador_nota varchar(255) NOT NULL DEFAULT '' AFTER ganador_en",
+		);
+
+		foreach ( $nuevas as $columna => $clausula ) {
+			if ( ! $this->tiene_columna( $this->tabla_scores, $columna ) ) {
+				$wpdb->query( "ALTER TABLE {$this->tabla_scores} {$clausula}" ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+			}
+		}
+	}
+
+	/**
+	 * El intento único pasa de ser por campaña a ser por jornada.
+	 *
+	 * Hasta las revanchas, scores tenía UNIQUE(participante_id): una persona,
+	 * un intento y se acabó. Con revanchas la misma persona puede jugar otro
+	 * día, así que la clave pasa a (participante_id, fecha_concurso).
+	 *
+	 * dbDelta NO hace esto solo. Sabe agregar índices, pero no quitar el viejo,
+	 * y dejar los dos convertiría cada revancha en un error de clave duplicada
+	 * justo cuando el participante pulsa "iniciar carrera". Por eso se hace a
+	 * mano y comprobando antes, que es la regla de la casa para los cambios de
+	 * esquema.
+	 *
+	 * @return void
+	 */
+	private function migrar_intento_por_jornada() {
+		global $wpdb;
+
+		$indices = $wpdb->get_results( "SHOW INDEX FROM {$this->tabla_scores}", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+
+		$columnas_por_indice = array();
+
+		foreach ( (array) $indices as $fila ) {
+			$columnas_por_indice[ $fila['Key_name'] ][] = $fila['Column_name'];
+		}
+
+		// El de jornada primero: si algo fallara, mejor quedarse con los dos
+		// que sin ninguno, porque sin clave única se puede colar un intento
+		// doble en la misma jornada.
+		if ( ! isset( $columnas_por_indice['participante_jornada'] ) ) {
+			$wpdb->query( // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				"ALTER TABLE {$this->tabla_scores}
+				   ADD UNIQUE KEY participante_jornada (participante_id, fecha_concurso)"
+			);
+		}
+
+		$viejo = $columnas_por_indice['participante_id'] ?? array();
+
+		// Solo se quita si es el índice ÚNICO de una sola columna. El índice
+		// normal del mismo nombre que declara el esquema nuevo tiene que
+		// quedarse.
+		if ( array( 'participante_id' ) === $viejo ) {
+			$unico = false;
+
+			foreach ( (array) $indices as $fila ) {
+				if ( 'participante_id' === $fila['Key_name'] && '0' === (string) $fila['Non_unique'] ) {
+					$unico = true;
+				}
+			}
+
+			if ( $unico ) {
+				$wpdb->query( "ALTER TABLE {$this->tabla_scores} DROP INDEX participante_id" ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+				$wpdb->query( "ALTER TABLE {$this->tabla_scores} ADD KEY participante_id (participante_id)" ); // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
 			}
 		}
 	}
@@ -639,22 +850,30 @@ class NavidadTVS_Database {
 	 * Permite que quien recargue la página antes de arrancar la carrera
 	 * retome su sesión en vez de generar una nueva cada vez.
 	 *
-	 * @param int $participante_id Id del participante.
-	 * @param int $minutos         Vigencia en minutos.
+	 * Se acota a la jornada además de a los minutos. El plazo de vigencia ya
+	 * impediría reutilizar la de otro día, pero dejarlo implícito es pedir que
+	 * alguien suba ese plazo un día y reviva sin querer la sesión de una
+	 * jornada anterior.
+	 *
+	 * @param int    $participante_id Id del participante.
+	 * @param int    $minutos         Vigencia en minutos.
+	 * @param string $jornada         Jornada Y-m-d.
 	 * @return array|null
 	 */
-	public function sesion_vigente_de( $participante_id, $minutos ) {
+	public function sesion_vigente_de( $participante_id, $minutos, $jornada ) {
 		global $wpdb;
 
 		$fila = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$this->tabla_sesiones}
 				  WHERE participante_id = %d
+				    AND fecha_concurso = %s
 				    AND estado = 'emitida'
 				    AND creada_en > ( UTC_TIMESTAMP() - INTERVAL %d MINUTE )
 				  ORDER BY id DESC
 				  LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
 				$participante_id,
+				$jornada,
 				$minutos
 			),
 			ARRAY_A
@@ -672,10 +891,26 @@ class NavidadTVS_Database {
 	public function crear_sesion( array $datos ) {
 		global $wpdb;
 
+		/*
+		 * Sin jornada, la sesión nace rota.
+		 *
+		 * Una sesión con fecha '0000-00-00' no la encuentra ninguna de las
+		 * comprobaciones por jornada, y el resultado se guardaría con esa
+		 * fecha imposible: fuera de todo ranking y contando como un intento
+		 * que nadie puede ver. Antes de que exista esa fila es mejor asumir
+		 * que la jornada es hoy, que es lo único que puede ser.
+		 */
+		$jornada = isset( $datos['fecha_concurso'] ) ? (string) $datos['fecha_concurso'] : '';
+
+		if ( '' === $jornada || '0000-00-00' === $jornada ) {
+			$jornada = NavidadTVS_Plugin::hoy();
+		}
+
 		$ok = $wpdb->insert(
 			$this->tabla_sesiones,
 			array(
 				'participante_id'  => (int) $datos['participante_id'],
+				'fecha_concurso'   => $jornada,
 				'nombre_digitado'  => (string) $datos['nombre_digitado'],
 				'seed'             => (int) $datos['seed'],
 				'nonce'            => (string) $datos['nonce'],
@@ -686,7 +921,7 @@ class NavidadTVS_Database {
 				'user_agent'       => (string) $datos['user_agent'],
 				'creada_en'        => gmdate( 'Y-m-d H:i:s' ),
 			),
-			array( '%d', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
 		);
 
 		return $ok ? (int) $wpdb->insert_id : false;
@@ -933,7 +1168,8 @@ class NavidadTVS_Database {
 				        ciudad_propietario, departamento_propietario,
 				        fecha_concurso, distancia_m, distancia_base_m,
 				        items_recogidos, impulsores, caidas, sobrecalentamientos,
-				        valido, motivo_descalificacion, creado_en
+				        valido, motivo_descalificacion,
+				        ganador, ganador_en, ganador_nota, creado_en
 				   FROM {$this->tabla_scores}
 				  {$where}
 				  ORDER BY distancia_m DESC, creado_en ASC
@@ -1072,6 +1308,296 @@ class NavidadTVS_Database {
 		return true;
 	}
 
+	// ---------------------------------------------------------------------
+	// Revanchas y ganadores
+	// ---------------------------------------------------------------------
+
+	/**
+	 * Indica si un participante ya tiene resultado en una jornada concreta.
+	 *
+	 * Sustituye a tiene_score() a secas, que preguntaba por toda la campaña.
+	 * Con revanchas la pregunta correcta es por jornada: haber jugado el lunes
+	 * no impide jugar el sábado de revancha.
+	 *
+	 * @param int    $participante_id Id del participante.
+	 * @param string $fecha           Jornada Y-m-d.
+	 * @return bool
+	 */
+	public function tiene_score_en( $participante_id, $fecha ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_scores}
+				  WHERE participante_id = %d AND fecha_concurso = %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				(int) $participante_id,
+				$fecha
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Indica si ya arrancó una carrera en esa jornada.
+	 *
+	 * Una sesión consumida significa que la carrera empezó. Da igual si llegó
+	 * a enviarse un resultado: el intento de ese día está gastado.
+	 *
+	 * @param int    $participante_id Id del participante.
+	 * @param string $fecha           Jornada Y-m-d.
+	 * @return bool
+	 */
+	public function tiene_sesion_consumida_en( $participante_id, $fecha ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_sesiones}
+				  WHERE participante_id = %d AND fecha_concurso = %s AND estado = 'consumida'
+				  LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				(int) $participante_id,
+				$fecha
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Indica si el participante ya ganó algún premio en la campaña.
+	 *
+	 * Gobierna las revanchas generales: la segunda oportunidad es para quien
+	 * no jugó o no ganó, no para quien ya se llevó una moto.
+	 *
+	 * @param int $participante_id Id del participante.
+	 * @return bool
+	 */
+	public function es_ganador( $participante_id ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_scores}
+				  WHERE participante_id = %d AND ganador = 1 LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				(int) $participante_id
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Indica si una fecha es jornada de revancha general.
+	 *
+	 * @param string $fecha Jornada Y-m-d.
+	 * @return bool
+	 */
+	public function hay_revancha_general( $fecha ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_revanchas}
+				  WHERE participante_id = 0 AND fecha = %s LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				$fecha
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Indica si una persona concreta tiene revancha para esa fecha.
+	 *
+	 * @param int    $participante_id Id del participante.
+	 * @param string $fecha           Jornada Y-m-d.
+	 * @return bool
+	 */
+	public function hay_revancha_individual( $participante_id, $fecha ) {
+		global $wpdb;
+
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$this->tabla_revanchas}
+				  WHERE participante_id = %d AND fecha = %s LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				(int) $participante_id,
+				$fecha
+			)
+		);
+
+		return $id > 0;
+	}
+
+	/**
+	 * Crea una revancha.
+	 *
+	 * @param int    $participante_id 0 para una revancha general.
+	 * @param string $fecha           Jornada Y-m-d.
+	 * @param string $motivo          Por qué se concede.
+	 * @param int    $usuario         Quién la concede.
+	 * @return int|WP_Error Id de la revancha.
+	 */
+	public function crear_revancha( $participante_id, $fecha, $motivo, $usuario = 0 ) {
+		global $wpdb;
+
+		$participante_id = max( 0, (int) $participante_id );
+
+		if ( $participante_id > 0 && ! $this->buscar_participante( $participante_id ) ) {
+			return new WP_Error( 'no_existe', __( 'Ese participante no está en el padrón.', 'navidad-tvs' ) );
+		}
+
+		if ( $participante_id > 0 && '' === trim( (string) $motivo ) ) {
+			return new WP_Error(
+				'sin_motivo',
+				__( 'Hay que escribir por qué se le devuelve el intento a esta persona.', 'navidad-tvs' )
+			);
+		}
+
+		$ok = $wpdb->insert(
+			$this->tabla_revanchas,
+			array(
+				'participante_id' => $participante_id,
+				'fecha'           => $fecha,
+				'motivo'          => substr( trim( (string) $motivo ), 0, 255 ),
+				'creada_por'      => (int) $usuario,
+				'creada_en'       => gmdate( 'Y-m-d H:i:s' ),
+			),
+			array( '%d', '%s', '%s', '%d', '%s' )
+		);
+
+		if ( false === $ok ) {
+			/*
+			 * El choque contra la clave única no es un error que haya que
+			 * enseñar como tal: significa que esa revancha ya existía, y el
+			 * resultado es el que el operador quería.
+			 */
+			if ( $this->hay_revancha_individual( $participante_id, $fecha ) ) {
+				return new WP_Error( 'ya_existe', __( 'Esa revancha ya estaba concedida.', 'navidad-tvs' ) );
+			}
+
+			return new WP_Error( 'fallo_bd', __( 'La base de datos rechazó la revancha.', 'navidad-tvs' ) );
+		}
+
+		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Borra una revancha.
+	 *
+	 * @param int $id Id de la revancha.
+	 * @return bool
+	 */
+	public function borrar_revancha( $id ) {
+		global $wpdb;
+
+		return (bool) $wpdb->delete( $this->tabla_revanchas, array( 'id' => (int) $id ), array( '%d' ) );
+	}
+
+	/**
+	 * Lista las revanchas, con los datos de la persona cuando es individual.
+	 *
+	 * @param int $limite Máximo de filas.
+	 * @return array
+	 */
+	public function listar_revanchas( $limite = 200 ) {
+		global $wpdb;
+
+		return (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT r.*, p.telefono, p.cedula, p.placa
+				   FROM {$this->tabla_revanchas} r
+				   LEFT JOIN {$this->tabla_participantes} p ON p.id = r.participante_id
+				  ORDER BY r.fecha DESC, r.id DESC
+				  LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				max( 1, min( 500, (int) $limite ) )
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Marca o desmarca un resultado como ganador.
+	 *
+	 * @param int    $id     Id del score.
+	 * @param bool   $gana   true marca, false desmarca.
+	 * @param string $nota   Anotación opcional (premio, puesto…).
+	 * @return true|WP_Error
+	 */
+	public function marcar_ganador( $id, $gana, $nota = '' ) {
+		global $wpdb;
+
+		$score = $this->buscar_score( (int) $id );
+
+		if ( ! $score ) {
+			return new WP_Error( 'no_existe', __( 'Ese resultado ya no existe.', 'navidad-tvs' ) );
+		}
+
+		/*
+		 * Un resultado descalificado no puede ganar. Es la comprobación que
+		 * evita el error más caro posible en esta pantalla: marcar como
+		 * ganador a alguien cuya carrera ya se había anulado.
+		 */
+		if ( $gana && ! $score['valido'] ) {
+			return new WP_Error(
+				'descalificado',
+				__( 'Ese resultado está descalificado y no puede ganar. Rehabilítalo primero si fue un error.', 'navidad-tvs' )
+			);
+		}
+
+		$ok = $wpdb->update(
+			$this->tabla_scores,
+			array(
+				'ganador'      => $gana ? 1 : 0,
+				'ganador_en'   => $gana ? gmdate( 'Y-m-d H:i:s' ) : null,
+				'ganador_nota' => $gana ? substr( trim( (string) $nota ), 0, 255 ) : '',
+			),
+			array( 'id' => (int) $id ),
+			array( '%d', '%s', '%s' ),
+			array( '%d' )
+		);
+
+		if ( false === $ok ) {
+			return new WP_Error( 'fallo_bd', __( 'La base de datos rechazó el cambio.', 'navidad-tvs' ) );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Devuelve los ganadores, opcionalmente de un rango de fechas.
+	 *
+	 * @param string $desde Fecha Y-m-d, o vacío.
+	 * @param string $hasta Fecha Y-m-d, o vacío.
+	 * @return array
+	 */
+	public function ganadores( $desde = '', $hasta = '' ) {
+		global $wpdb;
+
+		$condiciones = array( 'ganador = 1' );
+		$valores     = array();
+
+		if ( '' !== $desde ) {
+			$condiciones[] = 'fecha_concurso >= %s';
+			$valores[]     = $desde;
+		}
+
+		if ( '' !== $hasta ) {
+			$condiciones[] = 'fecha_concurso <= %s';
+			$valores[]     = $hasta;
+		}
+
+		$where = 'WHERE ' . implode( ' AND ', $condiciones );
+		$sql   = "SELECT * FROM {$this->tabla_scores} {$where}
+		           ORDER BY fecha_concurso DESC, distancia_m DESC";
+
+		if ( empty( $valores ) ) {
+			return (array) $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+		}
+
+		return (array) $wpdb->get_results( $wpdb->prepare( $sql, $valores ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
 	/**
 	 * Padrón completo con la participación de cada uno, para exportar.
 	 *
@@ -1117,6 +1643,136 @@ class NavidadTVS_Database {
 		}
 
 		return (array) $wpdb->get_results( $wpdb->prepare( $sql, $valores ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
+	 * Una fila por persona del padrón, con el resumen de su campaña.
+	 *
+	 * Distinto de padron_con_participacion(), que devuelve una fila por
+	 * carrera. Aquí la unidad es la PERSONA: cuántas veces jugó, su mejor
+	 * marca y si ganó. Con revanchas, alguien puede tener varias carreras y
+	 * juntarlas a mano en Excel es justo lo que este informe evita.
+	 *
+	 * El LEFT JOIN es lo que mantiene a los que nunca jugaron, que suelen ser
+	 * la mayoría y son el dato interesante de la campaña.
+	 *
+	 * @return array
+	 */
+	public function informe_por_participante() {
+		global $wpdb;
+
+		/*
+		 * La subconsulta de la mejor carrera va aparte porque MySQL no
+		 * garantiza qué fila acompaña a un MAX() en un GROUP BY: pedir
+		 * MAX(distancia) y fecha en la misma agregación puede devolver la
+		 * distancia de una carrera y la fecha de otra. Se busca primero el id
+		 * de la mejor y luego se traen SUS datos.
+		 */
+		$sql = "SELECT p.id, p.telefono, p.cedula, p.placa, p.fecha_concurso,
+		               p.ciudad_propietario, p.departamento_propietario,
+		               p.razon_social_establecimiento, p.estado,
+		               COUNT(s.id) AS intentos,
+		               SUM(CASE WHEN s.valido = 1 THEN 1 ELSE 0 END) AS intentos_validos,
+		               MAX(CASE WHEN s.valido = 1 THEN s.distancia_m END) AS distancia_maxima,
+		               MIN(s.fecha_concurso) AS primera,
+		               MAX(s.fecha_concurso) AS ultima,
+		               MAX(CASE WHEN s.ganador = 1 THEN 1 ELSE 0 END) AS gano,
+		               GROUP_CONCAT(DISTINCT s.fecha_concurso ORDER BY s.fecha_concurso SEPARATOR ' ') AS jornadas,
+		               GROUP_CONCAT(DISTINCT NULLIF(s.ganador_nota,'') SEPARATOR ' / ') AS premio,
+		               mejor.nombre AS nombre,
+		               mejor.fecha_concurso AS fecha_mejor,
+		               mejor.items_recogidos AS llaves_mejor,
+		               mejor.caidas AS caidas_mejor
+		          FROM {$this->tabla_participantes} p
+		          LEFT JOIN {$this->tabla_scores} s ON s.participante_id = p.id
+		          LEFT JOIN {$this->tabla_scores} mejor
+		                 ON mejor.id = (
+		                      SELECT s2.id FROM {$this->tabla_scores} s2
+		                       WHERE s2.participante_id = p.id
+		                       ORDER BY s2.valido DESC, s2.distancia_m DESC, s2.creado_en ASC
+		                       LIMIT 1
+		                    )
+		         GROUP BY p.id
+		         ORDER BY gano DESC, distancia_maxima DESC, p.id ASC";
+
+		return (array) $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
+	 * Totales de la campaña y su desglose por día.
+	 *
+	 * @return array
+	 */
+	public function resumen_ejecutivo() {
+		global $wpdb;
+
+		$resumen = array(
+			'inscritos'              => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_participantes}" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'jornadas_padron'        => (int) $wpdb->get_var( "SELECT COUNT(DISTINCT fecha_concurso) FROM {$this->tabla_participantes}" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'participaciones'        => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_scores}" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'participaciones_validas' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_scores} WHERE valido = 1" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'personas_que_jugaron'   => (int) $wpdb->get_var( "SELECT COUNT(DISTINCT participante_id) FROM {$this->tabla_scores}" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'ganadores'              => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_scores} WHERE ganador = 1" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'distancia_maxima'       => (int) $wpdb->get_var( "SELECT COALESCE(MAX(distancia_m),0) FROM {$this->tabla_scores} WHERE valido = 1" ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'distancia_promedio'     => (int) round( (float) $wpdb->get_var( "SELECT COALESCE(AVG(distancia_m),0) FROM {$this->tabla_scores} WHERE valido = 1" ) ), // phpcs:ignore WordPress.DB.PreparedSQL
+			'revanchas_generales'    => 0,
+			'revanchas_individuales' => 0,
+			'inscritos_por_dia'      => array(),
+			'por_dia'                => array(),
+			'por_departamento'       => array(),
+		);
+
+		if ( $this->tiene_tabla( $this->tabla_revanchas ) ) {
+			$resumen['revanchas_generales']    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_revanchas} WHERE participante_id = 0" ); // phpcs:ignore WordPress.DB.PreparedSQL
+			$resumen['revanchas_individuales'] = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_revanchas} WHERE participante_id > 0" ); // phpcs:ignore WordPress.DB.PreparedSQL
+		}
+
+		$filas = $wpdb->get_results( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT fecha_concurso, COUNT(*) AS total
+			   FROM {$this->tabla_participantes}
+			  GROUP BY fecha_concurso ORDER BY fecha_concurso ASC",
+			ARRAY_A
+		);
+
+		foreach ( (array) $filas as $f ) {
+			$resumen['inscritos_por_dia'][ $f['fecha_concurso'] ] = (int) $f['total'];
+		}
+
+		$filas = $wpdb->get_results( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT fecha_concurso,
+			        COUNT(*) AS participaciones,
+			        SUM(CASE WHEN valido = 1 THEN 1 ELSE 0 END) AS validas,
+			        SUM(CASE WHEN ganador = 1 THEN 1 ELSE 0 END) AS ganadores,
+			        COALESCE(MAX(CASE WHEN valido = 1 THEN distancia_m END),0) AS maxima,
+			        COALESCE(ROUND(AVG(CASE WHEN valido = 1 THEN distancia_m END)),0) AS promedio
+			   FROM {$this->tabla_scores}
+			  GROUP BY fecha_concurso ORDER BY fecha_concurso ASC",
+			ARRAY_A
+		);
+
+		foreach ( (array) $filas as $f ) {
+			$resumen['por_dia'][ $f['fecha_concurso'] ] = array(
+				'participaciones' => (int) $f['participaciones'],
+				'validas'         => (int) $f['validas'],
+				'ganadores'       => (int) $f['ganadores'],
+				'maxima'          => (int) $f['maxima'],
+				'promedio'        => (int) $f['promedio'],
+			);
+		}
+
+		$filas = $wpdb->get_results( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT departamento_propietario AS depto, COUNT(*) AS total
+			   FROM {$this->tabla_scores}
+			  WHERE departamento_propietario <> ''
+			  GROUP BY departamento_propietario ORDER BY total DESC",
+			ARRAY_A
+		);
+
+		foreach ( (array) $filas as $f ) {
+			$resumen['por_departamento'][ $f['depto'] ] = (int) $f['total'];
+		}
+
+		return $resumen;
 	}
 
 	/**

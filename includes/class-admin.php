@@ -38,6 +38,9 @@ class NavidadTVS_Admin {
 	/** @var NavidadTVS_Ranking */
 	private $ranking;
 
+	/** @var NavidadTVS_Revanchas */
+	private $revanchas;
+
 	/**
 	 * @param NavidadTVS_Database $database Acceso a datos.
 	 * @param NavidadTVS_Settings $settings Configuración.
@@ -57,6 +60,9 @@ class NavidadTVS_Admin {
 
 		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-ranking.php';
 		$this->ranking = new NavidadTVS_Ranking( $database, $settings );
+
+		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-revanchas.php';
+		$this->revanchas = new NavidadTVS_Revanchas( $database );
 	}
 
 	/**
@@ -73,6 +79,7 @@ class NavidadTVS_Admin {
 		$this->config->registrar_hooks();
 		$this->participantes->registrar_hooks();
 		$this->ranking->registrar_hooks();
+		$this->revanchas->registrar_hooks();
 	}
 
 	/**
@@ -116,6 +123,15 @@ class NavidadTVS_Admin {
 			self::CAPACIDAD,
 			self::SLUG . '-importar',
 			array( $this, 'render_importar' )
+		);
+
+		add_submenu_page(
+			self::SLUG,
+			__( 'Revanchas', 'navidad-tvs' ),
+			__( 'Revanchas', 'navidad-tvs' ),
+			self::CAPACIDAD,
+			self::SLUG . '-revanchas',
+			array( $this, 'render_revanchas' )
 		);
 
 		add_submenu_page(
@@ -179,6 +195,15 @@ class NavidadTVS_Admin {
 		$database  = $this->database;
 
 		include NAVIDAD_TVS_PATH . 'includes/admin/templates/importar.php';
+	}
+
+	/**
+	 * Revanchas: segundas oportunidades.
+	 *
+	 * @return void
+	 */
+	public function render_revanchas() {
+		$this->revanchas->render();
 	}
 
 	/**

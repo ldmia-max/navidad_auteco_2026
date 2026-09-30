@@ -36,6 +36,10 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 		<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Resultado descalificado.', 'navidad-tvs' ); ?></p></div>
 	<?php elseif ( 'rehabilitado' === $aviso ) : ?>
 		<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Resultado rehabilitado.', 'navidad-tvs' ); ?></p></div>
+	<?php elseif ( 'ganadores' === $aviso ) : ?>
+		<div class="notice notice-success is-dismissible">
+			<p><?php esc_html_e( 'Ganadores guardados.', 'navidad-tvs' ); ?> <?php echo esc_html( $detalle ); ?></p>
+		</div>
 	<?php elseif ( 'error' === $aviso ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( '' !== $detalle ? $detalle : __( 'No se pudo aplicar el cambio.', 'navidad-tvs' ) ); ?></p></div>
 	<?php endif; ?>
@@ -113,6 +117,38 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 			)
 		);
 		?>"><?php esc_html_e( 'Exportar padrón con participación (CSV)', 'navidad-tvs' ); ?></a>
+
+		<a class="button" href="<?php
+		echo esc_url(
+			wp_nonce_url(
+				add_query_arg(
+					array_merge( $ntvs_base, array( 'action' => 'navidad_tvs_exportar_ganadores', 'page' => null, 'incluir_invalidos' => null ) ),
+					admin_url( 'admin-post.php' )
+				),
+				'navidad_tvs_exportar_ganadores'
+			)
+		);
+		?>"><?php esc_html_e( 'Exportar ganadores (CSV)', 'navidad-tvs' ); ?></a>
+	</p>
+
+	<?php
+	/*
+	 * Los dos informes de campaña van sin filtro de fechas a propósito: son
+	 * el cierre, y un cierre parcial no cierra nada.
+	 */
+	?>
+	<p>
+		<a class="button" href="<?php
+		echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'navidad_tvs_informe_general' ), admin_url( 'admin-post.php' ) ), 'navidad_tvs_informe_general' ) );
+		?>"><?php esc_html_e( 'Informe general de la campaña (CSV)', 'navidad-tvs' ); ?></a>
+
+		<a class="button" href="<?php
+		echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'navidad_tvs_informe_ejecutivo' ), admin_url( 'admin-post.php' ) ), 'navidad_tvs_informe_ejecutivo' ) );
+		?>"><?php esc_html_e( 'Informe ejecutivo (CSV)', 'navidad-tvs' ); ?></a>
+
+		<span class="description">
+			<?php esc_html_e( 'Estos dos cubren toda la campaña, sin filtro. El general lleva una fila por persona; el ejecutivo, los totales y el desglose por día listos para graficar.', 'navidad-tvs' ); ?>
+		</span>
 	</p>
 
 	<?php if ( $una_jornada && null !== $corte ) : ?>
@@ -133,6 +169,30 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 			<p><?php esc_html_e( 'Todavía no hay resultados con esos filtros.', 'navidad-tvs' ); ?></p>
 		</div>
 	<?php else : ?>
+		<?php
+		/*
+		 * La tabla es un formulario porque marcar ganadores se hace aquí.
+		 *
+		 * Es el único sitio donde tiene sentido: el reglamento premia a los
+		 * cuatro primeros y a los empatados con el cuarto, así que la decisión
+		 * se toma mirando la lista ordenada, no fila por fila.
+		 *
+		 * El campo oculto "mostrados" lleva los identificadores que hay en
+		 * pantalla. Sin él, guardar en la página 2 borraría los ganadores de
+		 * la 1, porque una casilla sin marcar no viaja en el POST y no habría
+		 * forma de distinguir "la desmarcó" de "no estaba en pantalla".
+		 */
+		?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<?php wp_nonce_field( 'navidad_tvs_ganadores' ); ?>
+			<input type="hidden" name="action" value="navidad_tvs_ganadores">
+			<input type="hidden" name="desde" value="<?php echo esc_attr( $desde ); ?>">
+			<input type="hidden" name="hasta" value="<?php echo esc_attr( $hasta ); ?>">
+			<input type="hidden" name="paged" value="<?php echo (int) $pagina; ?>">
+			<?php if ( $todos ) : ?>
+				<input type="hidden" name="incluir_invalidos" value="1">
+			<?php endif; ?>
+
 		<table class="widefat striped">
 			<thead>
 				<tr>
@@ -145,6 +205,7 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 					<th><?php esc_html_e( 'Departamento', 'navidad-tvs' ); ?></th>
 					<th style="text-align:right"><?php esc_html_e( 'Distancia', 'navidad-tvs' ); ?></th>
 					<th><?php esc_html_e( 'Jornada', 'navidad-tvs' ); ?></th>
+					<th style="width:210px"><?php esc_html_e( 'Ganador', 'navidad-tvs' ); ?></th>
 					<th></th>
 				</tr>
 			</thead>
@@ -153,8 +214,9 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 					<?php
 					$ntvs_posicion++;
 					$ntvs_premiado = null !== $corte && (int) $ntvs_f['distancia_m'] >= $corte && $ntvs_f['valido'];
+					$ntvs_gana     = ! empty( $ntvs_f['ganador'] );
 					?>
-					<tr<?php echo $ntvs_f['valido'] ? '' : ' style="opacity:.55"'; ?>>
+					<tr<?php echo $ntvs_gana ? ' style="background:#e7f6e7"' : ( $ntvs_f['valido'] ? '' : ' style="opacity:.55"' ); ?>>
 						<td>
 							<?php echo esc_html( $ntvs_posicion ); ?>
 							<?php if ( $ntvs_premiado ) : ?>
@@ -177,6 +239,21 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 							<?php endif; ?>
 						</td>
 						<td>
+							<input type="hidden" name="mostrados[]" value="<?php echo (int) $ntvs_f['id']; ?>">
+							<?php if ( $ntvs_f['valido'] ) : ?>
+								<label>
+									<input type="checkbox" name="ganador[]" value="<?php echo (int) $ntvs_f['id']; ?>"
+										<?php checked( ! empty( $ntvs_f['ganador'] ) ); ?>>
+									<?php esc_html_e( 'Gana', 'navidad-tvs' ); ?>
+								</label>
+								<input type="text" name="nota[<?php echo (int) $ntvs_f['id']; ?>]" class="small-text"
+									value="<?php echo esc_attr( $ntvs_f['ganador_nota'] ); ?>"
+									placeholder="<?php esc_attr_e( 'premio', 'navidad-tvs' ); ?>" maxlength="255">
+							<?php else : ?>
+								<span class="description"><?php esc_html_e( 'descalificado', 'navidad-tvs' ); ?></span>
+							<?php endif; ?>
+						</td>
+						<td>
 							<a class="button button-small" href="<?php
 							echo esc_url( add_query_arg( array_merge( $ntvs_base, array( 'ver' => (int) $ntvs_f['id'] ) ), admin_url( 'admin.php' ) ) );
 							?>"><?php esc_html_e( 'Auditar', 'navidad-tvs' ); ?></a>
@@ -185,6 +262,9 @@ $ntvs_posicion = ( $pagina - 1 ) * $por_pagina;
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+
+			<?php submit_button( __( 'Guardar ganadores de esta página', 'navidad-tvs' ) ); ?>
+		</form>
 
 		<?php if ( $paginas > 1 ) : ?>
 			<div class="tablenav"><div class="tablenav-pages">

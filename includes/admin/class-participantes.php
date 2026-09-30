@@ -136,12 +136,22 @@ class NavidadTVS_Participantes {
 			);
 		}
 
-		if ( $participante['fecha_concurso'] !== NavidadTVS_Plugin::hoy() ) {
+		$hoy_jornada = NavidadTVS_Plugin::hoy();
+
+		$habilitado_hoy = $participante['fecha_concurso'] === $hoy_jornada
+			|| $this->database->hay_revancha_individual( $id, $hoy_jornada )
+			|| (
+				$this->database->hay_revancha_general( $hoy_jornada )
+				&& $participante['fecha_concurso'] <= $hoy_jornada
+				&& ! $this->database->es_ganador( $id )
+			);
+
+		if ( ! $habilitado_hoy ) {
 			$motivos[] = sprintf(
 				/* translators: 1: fecha de la jornada, 2: fecha de hoy */
-				__( 'Su jornada es el %1$s y hoy es %2$s. Solo puede jugar el día que le toca.', 'navidad-tvs' ),
+				__( 'Su jornada es el %1$s y hoy es %2$s, y no tiene revancha para hoy.', 'navidad-tvs' ),
 				$participante['fecha_concurso'],
-				NavidadTVS_Plugin::hoy()
+				$hoy_jornada
 			);
 		}
 
@@ -149,10 +159,13 @@ class NavidadTVS_Participantes {
 			$motivos[] = __( 'Está descalificado.', 'navidad-tvs' );
 		}
 
-		$ya_jugo = $this->database->tiene_score( $id ) || $this->database->tiene_sesion_consumida( $id );
+		$hoy = NavidadTVS_Plugin::hoy();
+
+		$ya_jugo = $this->database->tiene_score_en( $id, $hoy )
+			|| $this->database->tiene_sesion_consumida_en( $id, $hoy );
 
 		if ( $ya_jugo ) {
-			$motivos[] = __( 'Ya gastó su intento. Esto NO se arregla desde aquí: cambiar la fecha no le devuelve el turno.', 'navidad-tvs' );
+			$motivos[] = __( 'Ya gastó su intento de hoy. Cambiar la fecha no se lo devuelve: para eso está la revancha.', 'navidad-tvs' );
 		}
 
 		return array(

@@ -298,8 +298,15 @@ configuración y no plugin.
 - **Mecánica:** 90 segundos fijos, gana quien recorra más metros. Ítems TVS
   suman +50 m. Contador de 1 en 1.
 - **Temperatura del motor** es mecánica real, no decorativa.
-- **Un solo intento** por participante, sin reintentos por ningún motivo. Se
-  advierte al usuario que use conexión estable.
+- **Un intento por participante y por JORNADA.** Hasta septiembre de 2026 era
+  uno en toda la campaña; lo cambiaron las revanchas, que abren fechas extra
+  para quien no jugó o no ganó. Dentro de una misma jornada sigue habiendo un
+  solo intento, garantizado por clave única en la base. Se advierte al usuario
+  que use conexión estable.
+- **Ganadores marcados a mano** desde el panel, no deducidos de la distancia:
+  el reglamento premia a los cuatro primeros y a todos los empatados con el
+  cuarto, y el organizador puede tener motivos para dejar a alguien fuera.
+  Quien ya ganó no entra en las revanchas generales.
 - **Acceso** con celular y nombre. Sin llave alfanumérica y sin OTP.
 - **Elegibilidad:** marca TVS únicamente, y solo el día indicado en
   `fecha_concurso`.

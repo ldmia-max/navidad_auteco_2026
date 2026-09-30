@@ -234,6 +234,7 @@ try {
 		$db->tabla_sesiones,
 		array(
 			'participante_id' => $ids[1],
+			'fecha_concurso'  => $hoy,
 			'nonce'           => 'prueba-' . wp_generate_password( 12, false ),
 			'seed'            => 123,
 			'estado'          => 'consumida',

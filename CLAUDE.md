@@ -183,6 +183,7 @@ docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verif
 # ... e2, e3, e4, e6
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-participantes.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-revanchas.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e8.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/prueba-carga.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/ciclo-completo.php

@@ -57,6 +57,10 @@ class NavidadTVS_Ranking {
 		add_action( 'admin_post_navidad_tvs_exportar_ranking', array( $this, 'exportar_ranking' ) );
 		add_action( 'admin_post_navidad_tvs_exportar_padron', array( $this, 'exportar_padron' ) );
 		add_action( 'admin_post_navidad_tvs_descalificar', array( $this, 'descalificar' ) );
+		add_action( 'admin_post_navidad_tvs_ganadores', array( $this, 'guardar_ganadores' ) );
+		add_action( 'admin_post_navidad_tvs_exportar_ganadores', array( $this, 'exportar_ganadores' ) );
+		add_action( 'admin_post_navidad_tvs_informe_general', array( $this, 'exportar_informe_general' ) );
+		add_action( 'admin_post_navidad_tvs_informe_ejecutivo', array( $this, 'exportar_informe_ejecutivo' ) );
 	}
 
 	/**
@@ -247,6 +251,151 @@ class NavidadTVS_Ranking {
 	}
 
 	/**
+	 * Guarda de una vez los ganadores marcados en la tabla.
+	 *
+	 * Trabaja solo sobre las filas que estaban EN PANTALLA, que llegan en un
+	 * campo oculto. Es la diferencia entre "los que marqué" y "todos los del
+	 * concurso": sin esa lista, desmarcar una casilla en la página 2 borraría
+	 * los ganadores de la página 1, porque no venían en el POST.
+	 *
+	 * @return void
+	 */
+	public function guardar_ganadores() {
+		if ( ! current_user_can( NavidadTVS_Admin::CAPACIDAD ) ) {
+			wp_die( esc_html__( 'No tienes permisos para marcar ganadores.', 'navidad-tvs' ) );
+		}
+
+		check_admin_referer( 'navidad_tvs_ganadores' );
+
+		$mostrados = isset( $_POST['mostrados'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['mostrados'] ) ) : array();
+		$marcados  = isset( $_POST['ganador'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['ganador'] ) ) : array();
+		$notas     = isset( $_POST['nota'] ) ? (array) wp_unslash( $_POST['nota'] ) : array();
+
+		$puestos  = 0;
+		$quitados = 0;
+		$errores  = array();
+
+		foreach ( $mostrados as $id ) {
+			$gana = in_array( $id, $marcados, true );
+			$nota = isset( $notas[ $id ] ) ? sanitize_text_field( $notas[ $id ] ) : '';
+
+			$score = $this->database->buscar_score( $id );
+
+			if ( ! $score ) {
+				continue;
+			}
+
+			$era = ! empty( $score['ganador'] );
+
+			// Solo se escribe lo que cambia. Así ganador_en sigue diciendo
+			// cuándo se decidió de verdad y no la última vez que alguien
+			// pulsó guardar.
+			if ( $era === $gana && ( ! $gana || $nota === $score['ganador_nota'] ) ) {
+				continue;
+			}
+
+			$resultado = $this->database->marcar_ganador( $id, $gana, $nota );
+
+			if ( is_wp_error( $resultado ) ) {
+				$errores[] = $resultado->get_error_message();
+				continue;
+			}
+
+			if ( $gana && ! $era ) {
+				$puestos++;
+			} elseif ( ! $gana && $era ) {
+				$quitados++;
+			}
+		}
+
+		$args = array(
+			'page'  => NavidadTVS_Admin::SLUG . '-ranking',
+			'aviso' => empty( $errores ) ? 'ganadores' : 'error',
+		);
+
+		if ( ! empty( $errores ) ) {
+			$args['detalle'] = implode( ' ', array_unique( $errores ) );
+		} else {
+			$args['detalle'] = sprintf(
+				/* translators: 1: ganadores marcados, 2: ganadores quitados */
+				__( '%1$d marcados, %2$d quitados.', 'navidad-tvs' ),
+				$puestos,
+				$quitados
+			);
+		}
+
+		foreach ( array( 'desde', 'hasta', 'paged' ) as $clave ) {
+			if ( ! empty( $_POST[ $clave ] ) ) {
+				$args[ $clave ] = sanitize_text_field( wp_unslash( $_POST[ $clave ] ) );
+			}
+		}
+
+		if ( ! empty( $_POST['incluir_invalidos'] ) ) {
+			$args['incluir_invalidos'] = '1';
+		}
+
+		wp_safe_redirect( add_query_arg( array_map( 'rawurlencode', $args ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/**
+	 * Descarga la lista de ganadores en CSV.
+	 *
+	 * @return void
+	 */
+	public function exportar_ganadores() {
+		$this->comprobar_descarga( 'navidad_tvs_exportar_ganadores' );
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recurring
+		$desde = $this->fecha( isset( $_GET['desde'] ) ? wp_unslash( $_GET['desde'] ) : '' );
+		$hasta = $this->fecha( isset( $_GET['hasta'] ) ? wp_unslash( $_GET['hasta'] ) : '' );
+		// phpcs:enable WordPress.Security.NonceVerification.Recurring
+
+		$filas = $this->database->ganadores( $desde, $hasta );
+
+		$this->enviar_csv(
+			'ganadores',
+			$desde,
+			$hasta,
+			array(
+				'jornada',
+				'nombre',
+				'cedula',
+				'telefono',
+				'ciudad',
+				'departamento',
+				'distancia_m',
+				'llaves',
+				'caidas',
+				'premio_o_puesto',
+				'marcado_en',
+				'jugo_en',
+				'score_id',
+			),
+			array_map(
+				static function ( $f ) {
+					return array(
+						$f['fecha_concurso'],
+						$f['nombre'],
+						$f['cedula'],
+						$f['telefono'],
+						$f['ciudad_propietario'],
+						$f['departamento_propietario'],
+						$f['distancia_m'],
+						$f['items_recogidos'],
+						$f['caidas'],
+						$f['ganador_nota'],
+						$f['ganador_en'],
+						$f['creado_en'],
+						$f['id'],
+					);
+				},
+				$filas
+			)
+		);
+	}
+
+	/**
 	 * Descarga el ranking filtrado en CSV.
 	 *
 	 * @return void
@@ -385,6 +534,154 @@ class NavidadTVS_Ranking {
 				},
 				$filas
 			)
+		);
+	}
+
+	/**
+	 * Informe general: una fila por participante del padrón.
+	 *
+	 * Distinto del padrón con participación, que saca una fila por carrera.
+	 * Aquí la unidad es la PERSONA: cuántas veces jugó en toda la campaña, su
+	 * mejor marca y si ganó. Es el informe que responde "¿qué hizo fulano?" de
+	 * un vistazo, sin tener que juntar filas a mano en Excel.
+	 *
+	 * @return void
+	 */
+	public function exportar_informe_general() {
+		$this->comprobar_descarga( 'navidad_tvs_informe_general' );
+
+		$filas = $this->database->informe_por_participante();
+
+		$this->enviar_csv(
+			'informe-general',
+			'',
+			'',
+			array(
+				'id',
+				'nombre',
+				'cedula',
+				'telefono',
+				'placa',
+				'ciudad',
+				'departamento',
+				'establecimiento',
+				'jornada_asignada',
+				'estado_padron',
+				'intentos',
+				'intentos_validos',
+				'distancia_maxima_m',
+				'fecha_mejor_intento',
+				'primera_participacion',
+				'ultima_participacion',
+				'llaves_mejor_intento',
+				'caidas_mejor_intento',
+				'gano',
+				'premio',
+				'jornadas_en_que_jugo',
+			),
+			array_map(
+				static function ( $f ) {
+					return array(
+						$f['id'],
+						$f['nombre'],
+						$f['cedula'],
+						$f['telefono'],
+						$f['placa'],
+						$f['ciudad_propietario'],
+						$f['departamento_propietario'],
+						$f['razon_social_establecimiento'],
+						$f['fecha_concurso'],
+						$f['estado'],
+						(int) $f['intentos'],
+						(int) $f['intentos_validos'],
+						null === $f['distancia_maxima'] ? '' : (int) $f['distancia_maxima'],
+						(string) $f['fecha_mejor'],
+						(string) $f['primera'],
+						(string) $f['ultima'],
+						null === $f['llaves_mejor'] ? '' : (int) $f['llaves_mejor'],
+						null === $f['caidas_mejor'] ? '' : (int) $f['caidas_mejor'],
+						$f['gano'] ? 'si' : 'no',
+						(string) $f['premio'],
+						(string) $f['jornadas'],
+					);
+				},
+				$filas
+			)
+		);
+	}
+
+	/**
+	 * Informe ejecutivo: los totales y el desglose por día.
+	 *
+	 * Pensado para abrirlo en Excel y graficarlo, así que va en formato largo
+	 * —una fila por dato— y no en un cuadro con títulos de adorno. Un cuadro
+	 * se lee bonito y no se grafica; una tabla de bloque, concepto, día y
+	 * valor se convierte en gráfico seleccionando dos columnas.
+	 *
+	 * @return void
+	 */
+	public function exportar_informe_ejecutivo() {
+		$this->comprobar_descarga( 'navidad_tvs_informe_ejecutivo' );
+
+		$r = $this->database->resumen_ejecutivo();
+
+		$filas = array();
+
+		$totales = array(
+			__( 'Inscritos en el padrón', 'navidad-tvs' )              => $r['inscritos'],
+			__( 'Jornadas con padrón cargado', 'navidad-tvs' )         => $r['jornadas_padron'],
+			__( 'Personas que jugaron alguna vez', 'navidad-tvs' )     => $r['personas_que_jugaron'],
+			__( 'Personas que nunca jugaron', 'navidad-tvs' )          => $r['inscritos'] - $r['personas_que_jugaron'],
+			__( 'Participaciones totales', 'navidad-tvs' )             => $r['participaciones'],
+			__( 'Participaciones válidas', 'navidad-tvs' )             => $r['participaciones_validas'],
+			__( 'Participaciones descalificadas', 'navidad-tvs' )      => $r['participaciones'] - $r['participaciones_validas'],
+			__( 'Ganadores marcados', 'navidad-tvs' )                  => $r['ganadores'],
+			__( 'Revanchas generales abiertas', 'navidad-tvs' )        => $r['revanchas_generales'],
+			__( 'Revanchas individuales concedidas', 'navidad-tvs' )   => $r['revanchas_individuales'],
+			__( 'Distancia máxima de la campaña (m)', 'navidad-tvs' )  => $r['distancia_maxima'],
+			__( 'Distancia promedio (m)', 'navidad-tvs' )              => $r['distancia_promedio'],
+		);
+
+		foreach ( $totales as $concepto => $valor ) {
+			$filas[] = array( 'Total', $concepto, '', $valor );
+		}
+
+		/*
+		 * El porcentaje de conversión es el número que primero va a mirar
+		 * quien reciba esto: de cada cien compradores habilitados, cuántos
+		 * llegaron a jugar.
+		 */
+		if ( $r['inscritos'] > 0 ) {
+			$filas[] = array(
+				'Total',
+				__( 'Porcentaje que jugó', 'navidad-tvs' ),
+				'',
+				round( ( $r['personas_que_jugaron'] * 100 ) / $r['inscritos'], 2 ),
+			);
+		}
+
+		foreach ( $r['inscritos_por_dia'] as $dia => $cuantos ) {
+			$filas[] = array( 'Inscritos por día', __( 'Inscritos', 'navidad-tvs' ), $dia, $cuantos );
+		}
+
+		foreach ( $r['por_dia'] as $dia => $datos ) {
+			$filas[] = array( 'Participaciones por día', __( 'Participaciones', 'navidad-tvs' ), $dia, $datos['participaciones'] );
+			$filas[] = array( 'Participaciones por día', __( 'Válidas', 'navidad-tvs' ), $dia, $datos['validas'] );
+			$filas[] = array( 'Participaciones por día', __( 'Ganadores', 'navidad-tvs' ), $dia, $datos['ganadores'] );
+			$filas[] = array( 'Participaciones por día', __( 'Distancia máxima (m)', 'navidad-tvs' ), $dia, $datos['maxima'] );
+			$filas[] = array( 'Participaciones por día', __( 'Distancia promedio (m)', 'navidad-tvs' ), $dia, $datos['promedio'] );
+		}
+
+		foreach ( $r['por_departamento'] as $depto => $cuantos ) {
+			$filas[] = array( 'Participaciones por departamento', __( 'Participaciones', 'navidad-tvs' ), $depto, $cuantos );
+		}
+
+		$this->enviar_csv(
+			'informe-ejecutivo',
+			'',
+			'',
+			array( 'bloque', 'concepto', 'dimension', 'valor' ),
+			$filas
 		);
 	}
 

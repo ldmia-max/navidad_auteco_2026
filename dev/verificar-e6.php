@@ -316,6 +316,9 @@ function sesion_de_prueba( $db, $participante_id, $seed, $hace_segundos ) {
 		$db->tabla_sesiones,
 		array(
 			'participante_id' => $participante_id,
+			// La jornada de la sesión es lo que define en qué día cuenta la
+			// carrera desde que existen las revanchas.
+			'fecha_concurso'  => NavidadTVS_Plugin::hoy(),
 			'nombre_digitado' => 'PRUEBA E6',
 			'seed'            => $seed,
 			'nonce'           => $nonce,
@@ -411,6 +414,7 @@ $wpdb->insert(
 	$db->tabla_sesiones,
 	array(
 		'participante_id' => $participante_id,
+		'fecha_concurso'  => NavidadTVS_Plugin::hoy(),
 		'nombre_digitado' => 'PRUEBA E6',
 		'seed'            => $seed_prueba,
 		'nonce'           => $nonce_emitida,

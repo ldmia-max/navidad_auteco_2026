@@ -193,7 +193,9 @@ class NavidadTVS_Acceso {
 			return $no_elegible;
 		}
 
-		if ( $participante['fecha_concurso'] !== NavidadTVS_Plugin::hoy() ) {
+		$hoy = NavidadTVS_Plugin::hoy();
+
+		if ( ! $this->puede_jugar_hoy( $participante, $hoy ) ) {
 			return $no_elegible;
 		}
 
@@ -205,23 +207,35 @@ class NavidadTVS_Acceso {
 			);
 		}
 
-		// --- 5. Un solo intento -------------------------------------------------
+		// --- 5. Un intento por jornada -------------------------------------------
+		/*
+		 * Antes era un intento en toda la campaña. Con las revanchas pasa a ser
+		 * uno POR JORNADA: haber jugado el lunes no impide volver el sábado de
+		 * revancha, pero dentro del mismo día nadie juega dos veces.
+		 *
+		 * Las dos comprobaciones hacen falta y comprueban cosas distintas.
+		 * tiene_score_en dice si llegó a enviar un resultado;
+		 * tiene_sesion_consumida_en, si llegó a arrancar la carrera. Quien
+		 * arranca y cierra la pestaña gastó su intento igual, y sin la segunda
+		 * podría volver a entrar tantas veces como quisiera hasta que le
+		 * saliera una pista que le gustara.
+		 */
 		$ya_jugo = new WP_Error(
 			'ya_participo',
-			__( 'Este número ya participó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+			__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),
 			array( 'status' => 409 )
 		);
 
-		if ( $this->database->tiene_score( (int) $participante['id'] ) ) {
+		if ( $this->database->tiene_score_en( (int) $participante['id'], $hoy ) ) {
 			return $ya_jugo;
 		}
 
-		if ( $this->database->tiene_sesion_consumida( (int) $participante['id'] ) ) {
+		if ( $this->database->tiene_sesion_consumida_en( (int) $participante['id'], $hoy ) ) {
 			return $ya_jugo;
 		}
 
 		// --- 6. Sesión ------------------------------------------------------------
-		$sesion = $this->obtener_o_crear_sesion( $participante, $nombre, $ip, $ua );
+		$sesion = $this->obtener_o_crear_sesion( $participante, $nombre, $ip, $ua, $hoy );
 
 		if ( is_wp_error( $sesion ) ) {
 			return $sesion;
@@ -286,10 +300,10 @@ class NavidadTVS_Acceso {
 			);
 		}
 
-		if ( $this->database->tiene_score( (int) $sesion['participante_id'] ) ) {
+		if ( $this->database->tiene_score_en( (int) $sesion['participante_id'], (string) $sesion['fecha_concurso'] ) ) {
 			return new WP_Error(
 				'ya_participo',
-				__( 'Este número ya participó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+				__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),
 				array( 'status' => 409 )
 			);
 		}
@@ -313,6 +327,55 @@ class NavidadTVS_Acceso {
 	}
 
 	/**
+	 * Si un participante está habilitado para jugar en una fecha.
+	 *
+	 * Tres caminos, y basta con uno:
+	 *
+	 * 1. Es su jornada, la que traía el padrón. El caso normal.
+	 * 2. Hay revancha individual para él ese día. Se concede a mano desde el
+	 *    panel y sirve para atender un reclamo concreto.
+	 * 3. Es jornada de revancha general y él todavía no ha ganado nada.
+	 *
+	 * El punto 3 lleva dos condiciones que conviene explicar.
+	 *
+	 * La primera: quien ya ganó no vuelve. La revancha es "para quien no pudo
+	 * participar o no ganó", así que premiar dos veces a la misma persona
+	 * saldría de lo acordado. Se mira si tiene algún resultado MARCADO como
+	 * ganador, no si quedó entre los primeros: el ganador lo decide el
+	 * organizador a mano, y hasta que no lo marca no hay ganador.
+	 *
+	 * La segunda: solo entran quienes ya tenían jornada asignada antes de esa
+	 * fecha. Un comprador cuyo día es la semana que viene no ha perdido nada
+	 * todavía, así que una revancha no le devuelve nada; adelantarle el turno
+	 * le daría dos oportunidades en vez de una.
+	 *
+	 * @param array  $participante Fila del padrón.
+	 * @param string $fecha        Jornada Y-m-d.
+	 * @return bool
+	 */
+	private function puede_jugar_hoy( array $participante, $fecha ) {
+		if ( $participante['fecha_concurso'] === $fecha ) {
+			return true;
+		}
+
+		$id = (int) $participante['id'];
+
+		if ( $this->database->hay_revancha_individual( $id, $fecha ) ) {
+			return true;
+		}
+
+		if ( ! $this->database->hay_revancha_general( $fecha ) ) {
+			return false;
+		}
+
+		if ( $participante['fecha_concurso'] > $fecha ) {
+			return false;
+		}
+
+		return ! $this->database->es_ganador( $id );
+	}
+
+	/**
 	 * Reutiliza la sesión vigente del participante o crea una nueva.
 	 *
 	 * Reutilizarla importa: si cada recarga creara una sesión, alguien que
@@ -323,14 +386,20 @@ class NavidadTVS_Acceso {
 	 * cuando arranca la carrera, no ahora: entrar y cerrar la pestaña sin
 	 * jugar no debería gastar la única oportunidad.
 	 *
+	 * La jornada se pasa aparte y no se saca del padrón: en una revancha, la
+	 * jornada que cuenta es la de HOY, no la que traía el archivo. Sacarla del
+	 * padrón guardaría la carrera de revancha con la fecha del día original y
+	 * el ranking del sábado enseñaría resultados del lunes.
+	 *
 	 * @param array  $participante Fila del padrón.
 	 * @param string $nombre       Nombre digitado.
 	 * @param string $ip           IP del visitante.
 	 * @param string $ua           User agent.
+	 * @param string $jornada      Fecha en la que se está jugando, Y-m-d.
 	 * @return array|WP_Error
 	 */
-	private function obtener_o_crear_sesion( $participante, $nombre, $ip, $ua ) {
-		$vigente = $this->database->sesion_vigente_de( (int) $participante['id'], self::VIGENCIA_MINUTOS );
+	private function obtener_o_crear_sesion( $participante, $nombre, $ip, $ua, $jornada ) {
+		$vigente = $this->database->sesion_vigente_de( (int) $participante['id'], self::VIGENCIA_MINUTOS, $jornada );
 
 		if ( null !== $vigente ) {
 			return $vigente;
@@ -339,6 +408,7 @@ class NavidadTVS_Acceso {
 		$id = $this->database->crear_sesion(
 			array(
 				'participante_id'  => (int) $participante['id'],
+				'fecha_concurso'   => $jornada,
 				'nombre_digitado'  => $nombre,
 				// uint32: es lo que consume el PRNG mulberry32 del juego.
 				'seed'             => random_int( 0, 4294967295 ),
@@ -358,7 +428,7 @@ class NavidadTVS_Acceso {
 			);
 		}
 
-		return $this->database->sesion_vigente_de( (int) $participante['id'], self::VIGENCIA_MINUTOS );
+		return $this->database->sesion_vigente_de( (int) $participante['id'], self::VIGENCIA_MINUTOS, $jornada );
 	}
 
 	/**

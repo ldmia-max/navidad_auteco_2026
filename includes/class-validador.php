@@ -79,10 +79,20 @@ class NavidadTVS_Validador {
 
 		$participante_id = (int) $sesion['participante_id'];
 
-		if ( $this->database->tiene_score( $participante_id ) ) {
+		/*
+		 * La jornada sale de la SESIÓN y no del padrón.
+		 *
+		 * En una revancha la persona juega un día distinto al que traía el
+		 * archivo. Si el resultado se guardara con la fecha del padrón, la
+		 * carrera del sábado aparecería en el ranking del lunes y el índice
+		 * único por jornada la tomaría por un intento repetido de aquel día.
+		 */
+		$jornada = (string) $sesion['fecha_concurso'];
+
+		if ( $this->database->tiene_score_en( $participante_id, $jornada ) ) {
 			return new WP_Error(
 				'ya_participo',
-				__( 'Este número ya participó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+				__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),
 				array( 'status' => 409 )
 			);
 		}
@@ -128,7 +138,7 @@ class NavidadTVS_Validador {
 				'telefono'                 => $participante['telefono'],
 				'ciudad_propietario'       => isset( $participante['ciudad_propietario'] ) ? $participante['ciudad_propietario'] : '',
 				'departamento_propietario' => isset( $participante['departamento_propietario'] ) ? $participante['departamento_propietario'] : '',
-				'fecha_concurso'           => $participante['fecha_concurso'],
+				'fecha_concurso'           => $jornada,
 				'distancia_m'              => $distancia,
 				'distancia_base_m'         => NavidadTVS_Sim_Simulacion::distancia_base_metros( $estado ),
 				'distancia_cliente_m'      => max( 0, (int) ( isset( $datos['distancia'] ) ? $datos['distancia'] : 0 ) ),
@@ -160,10 +170,10 @@ class NavidadTVS_Validador {
 		 * que el fallo es del servidor.
 		 */
 		if ( false === $id ) {
-			if ( $this->database->tiene_score( $participante_id ) ) {
+			if ( $this->database->tiene_score_en( $participante_id, $jornada ) ) {
 				return new WP_Error(
 					'ya_participo',
-					__( 'Este número ya participó. Cada persona tiene un solo intento.', 'navidad-tvs' ),
+					__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),
 					array( 'status' => 409 )
 				);
 			}
