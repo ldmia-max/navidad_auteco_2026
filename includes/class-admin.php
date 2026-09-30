@@ -35,6 +35,9 @@ class NavidadTVS_Admin {
 	/** @var NavidadTVS_Participantes */
 	private $participantes;
 
+	/** @var NavidadTVS_Ranking */
+	private $ranking;
+
 	/**
 	 * @param NavidadTVS_Database $database Acceso a datos.
 	 * @param NavidadTVS_Settings $settings Configuración.
@@ -51,6 +54,9 @@ class NavidadTVS_Admin {
 
 		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-participantes.php';
 		$this->participantes = new NavidadTVS_Participantes( $database );
+
+		require_once NAVIDAD_TVS_PATH . 'includes/admin/class-ranking.php';
+		$this->ranking = new NavidadTVS_Ranking( $database, $settings );
 	}
 
 	/**
@@ -66,6 +72,7 @@ class NavidadTVS_Admin {
 		$this->importador->registrar_hooks();
 		$this->config->registrar_hooks();
 		$this->participantes->registrar_hooks();
+		$this->ranking->registrar_hooks();
 	}
 
 	/**
@@ -148,15 +155,12 @@ class NavidadTVS_Admin {
 	}
 
 	/**
-	 * Ranking de participantes. Se implementa en E8.
+	 * Ranking, exportaciones y auditoría de intentos.
 	 *
 	 * @return void
 	 */
 	public function render_ranking() {
-		$this->render_pendiente(
-			__( 'Ranking', 'navidad-tvs' ),
-			__( 'El listado de participantes y la exportación se implementan en la etapa E8.', 'navidad-tvs' )
-		);
+		$this->ranking->render();
 	}
 
 	/**

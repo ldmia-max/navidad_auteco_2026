@@ -20,7 +20,7 @@ hace commit; el avance a la siguiente etapa se confirma antes de arrancar.
 | E5 | Arte y estética 16 bits | ✅ Completada | 2026-09-22 |
 | E6 | Validación server-side y score | ✅ Completada | 2026-09-24 |
 | E7 | Sitio público | ✅ Completada | 2026-09-24 |
-| E8 | Backoffice y ranking | ⬜ Pendiente | — |
+| E8 | Backoffice y ranking | ✅ Hecho | 30-09-2026 |
 | E9 | Endurecimiento y QA | ⬜ Pendiente | — |
 | E10 | Despliegue y operación | ⬜ Pendiente | — |
 
@@ -243,6 +243,16 @@ Operar y auditar el concurso.
 - Congelamiento del concurso.
 
 **Revisión:** exportar el CSV y verificar orden y totales.
+
+**Cerrada el 30-09-2026.** El congelamiento ya venía de E1 y solo se comprobó
+que `ventana_abierta()` lo respeta. La vista de replay no es un vídeo de la
+carrera: es la reejecución de la simulación con el mismo seed y el mismo log,
+comparada campo a campo con lo guardado. Sirve para lo que hace falta ante un
+reclamo —demostrar que la distancia no se inventó— y avisa si una fila se
+tocó. Un playback visual en el navegador sería otra cosa y no se descarta,
+pero pide un modo de reproducción en el bundle del juego.
+
+Los 21 resultados que había en la base de desarrollo reejecutan idénticos.
 
 ## E9 — Endurecimiento y QA
 

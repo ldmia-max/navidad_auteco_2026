@@ -899,6 +899,227 @@ class NavidadTVS_Database {
 	}
 
 	/**
+	 * Ranking de un rango de fechas, con paginación.
+	 *
+	 * Ordena por distancia descendente y, a igualdad, por hora de registro:
+	 * quien llegó antes a la misma marca queda arriba. Es un desempate que no
+	 * premia ni castiga a nadie por algo que no controla.
+	 *
+	 * Los descalificados se pueden incluir porque el operador necesita verlos
+	 * para revisar una decisión; van marcados con valido = 0 y quien pinte la
+	 * tabla decide cómo mostrarlos.
+	 *
+	 * @param string $desde             Fecha Y-m-d, o vacío para no acotar.
+	 * @param string $hasta             Fecha Y-m-d, o vacío para no acotar.
+	 * @param int    $pagina            Página, base 1.
+	 * @param int    $por_pagina        Filas por página.
+	 * @param bool   $incluir_invalidos Si se incluyen los descalificados.
+	 * @return array
+	 */
+	public function ranking_rango( $desde = '', $hasta = '', $pagina = 1, $por_pagina = 50, $incluir_invalidos = false ) {
+		global $wpdb;
+
+		$por_pagina = max( 1, min( 500, (int) $por_pagina ) );
+		$salto      = max( 0, ( max( 1, (int) $pagina ) - 1 ) * $por_pagina );
+
+		list( $where, $valores ) = $this->where_ranking( $desde, $hasta, $incluir_invalidos );
+
+		$valores[] = $por_pagina;
+		$valores[] = $salto;
+
+		$filas = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, participante_id, nombre, cedula, telefono,
+				        ciudad_propietario, departamento_propietario,
+				        fecha_concurso, distancia_m, distancia_base_m,
+				        items_recogidos, impulsores, caidas, sobrecalentamientos,
+				        valido, motivo_descalificacion, creado_en
+				   FROM {$this->tabla_scores}
+				  {$where}
+				  ORDER BY distancia_m DESC, creado_en ASC
+				  LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$valores
+			),
+			ARRAY_A
+		);
+
+		return (array) $filas;
+	}
+
+	/**
+	 * Cuántas filas tiene el ranking con esos filtros.
+	 *
+	 * Va aparte de ranking_rango() porque la paginación necesita el total
+	 * antes de saber qué página pedir.
+	 *
+	 * @param string $desde             Fecha Y-m-d, o vacío.
+	 * @param string $hasta             Fecha Y-m-d, o vacío.
+	 * @param bool   $incluir_invalidos Si se incluyen los descalificados.
+	 * @return int
+	 */
+	public function contar_ranking_rango( $desde = '', $hasta = '', $incluir_invalidos = false ) {
+		global $wpdb;
+
+		list( $where, $valores ) = $this->where_ranking( $desde, $hasta, $incluir_invalidos );
+
+		if ( empty( $valores ) ) {
+			return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$this->tabla_scores} {$where}" ); // phpcs:ignore WordPress.DB.PreparedSQL
+		}
+
+		return (int) $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$this->tabla_scores} {$where}", $valores ) // phpcs:ignore WordPress.DB.PreparedSQL
+		);
+	}
+
+	/**
+	 * Arma el WHERE del ranking y sus valores.
+	 *
+	 * En un solo sitio para que el listado y el conteo no puedan discrepar:
+	 * si filtraran distinto, la paginación prometería páginas que no existen.
+	 *
+	 * @param string $desde             Fecha Y-m-d, o vacío.
+	 * @param string $hasta             Fecha Y-m-d, o vacío.
+	 * @param bool   $incluir_invalidos Si se incluyen los descalificados.
+	 * @return array{0:string,1:array}
+	 */
+	private function where_ranking( $desde, $hasta, $incluir_invalidos ) {
+		$condiciones = array();
+		$valores     = array();
+
+		if ( ! $incluir_invalidos ) {
+			$condiciones[] = 'valido = 1';
+		}
+
+		if ( '' !== $desde ) {
+			$condiciones[] = 'fecha_concurso >= %s';
+			$valores[]     = $desde;
+		}
+
+		if ( '' !== $hasta ) {
+			$condiciones[] = 'fecha_concurso <= %s';
+			$valores[]     = $hasta;
+		}
+
+		$where = empty( $condiciones ) ? '' : 'WHERE ' . implode( ' AND ', $condiciones );
+
+		return array( $where, $valores );
+	}
+
+	/**
+	 * Devuelve un score por su id, con todo lo necesario para auditarlo.
+	 *
+	 * @param int $id Id del score.
+	 * @return array|null
+	 */
+	public function buscar_score( $id ) {
+		global $wpdb;
+
+		$fila = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$this->tabla_scores} WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				(int) $id
+			),
+			ARRAY_A
+		);
+
+		return $fila ? $fila : null;
+	}
+
+	/**
+	 * Marca o desmarca un resultado como descalificado.
+	 *
+	 * No se borra nada. Un resultado descalificado sigue en la tabla con su
+	 * log de entradas intacto: si mañana alguien reclama, hay que poder volver
+	 * a mirarlo y, si la decisión estuvo mal, deshacerla.
+	 *
+	 * El motivo es obligatorio al descalificar. Una descalificación sin razón
+	 * escrita no se puede defender delante de un participante.
+	 *
+	 * @param int    $id     Id del score.
+	 * @param bool   $valido true rehabilita, false descalifica.
+	 * @param string $motivo Motivo, obligatorio al descalificar.
+	 * @return true|WP_Error
+	 */
+	public function marcar_score_valido( $id, $valido, $motivo = '' ) {
+		global $wpdb;
+
+		$id     = (int) $id;
+		$motivo = trim( (string) $motivo );
+
+		if ( $id <= 0 || ! $this->buscar_score( $id ) ) {
+			return new WP_Error( 'no_existe', __( 'Ese resultado ya no existe.', 'navidad-tvs' ) );
+		}
+
+		if ( ! $valido && '' === $motivo ) {
+			return new WP_Error( 'sin_motivo', __( 'Hay que escribir el motivo de la descalificación.', 'navidad-tvs' ) );
+		}
+
+		$ok = $wpdb->update(
+			$this->tabla_scores,
+			array(
+				'valido'                 => $valido ? 1 : 0,
+				'motivo_descalificacion' => $valido ? '' : substr( $motivo, 0, 255 ),
+			),
+			array( 'id' => $id ),
+			array( '%d', '%s' ),
+			array( '%d' )
+		);
+
+		if ( false === $ok ) {
+			return new WP_Error( 'fallo_bd', __( 'La base de datos rechazó el cambio.', 'navidad-tvs' ) );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Padrón completo con la participación de cada uno, para exportar.
+	 *
+	 * LEFT JOIN y no INNER: la gracia del informe es justamente ver quién NO
+	 * jugó. Con un INNER saldrían solo los que sí, que es lo que ya muestra el
+	 * ranking.
+	 *
+	 * @param string $desde Fecha Y-m-d, o vacío.
+	 * @param string $hasta Fecha Y-m-d, o vacío.
+	 * @return array
+	 */
+	public function padron_con_participacion( $desde = '', $hasta = '' ) {
+		global $wpdb;
+
+		$condiciones = array();
+		$valores     = array();
+
+		if ( '' !== $desde ) {
+			$condiciones[] = 'p.fecha_concurso >= %s';
+			$valores[]     = $desde;
+		}
+
+		if ( '' !== $hasta ) {
+			$condiciones[] = 'p.fecha_concurso <= %s';
+			$valores[]     = $hasta;
+		}
+
+		$where = empty( $condiciones ) ? '' : 'WHERE ' . implode( ' AND ', $condiciones );
+
+		$sql = "SELECT p.id, p.telefono, p.cedula, p.placa, p.fecha_concurso,
+		               p.ciudad_propietario, p.departamento_propietario,
+		               p.razon_social_establecimiento, p.estado,
+		               s.id AS score_id, s.nombre, s.distancia_m, s.items_recogidos,
+		               s.caidas, s.sobrecalentamientos, s.valido,
+		               s.motivo_descalificacion, s.creado_en
+		          FROM {$this->tabla_participantes} p
+		          LEFT JOIN {$this->tabla_scores} s ON s.participante_id = p.id
+		          {$where}
+		         ORDER BY p.fecha_concurso DESC, s.distancia_m DESC, p.id ASC";
+
+		if ( empty( $valores ) ) {
+			return (array) $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+		}
+
+		return (array) $wpdb->get_results( $wpdb->prepare( $sql, $valores ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
 	 * Cuenta scores válidos, opcionalmente de una jornada.
 	 *
 	 * @param string $fecha Fecha Y-m-d, o cadena vacía para todas.
