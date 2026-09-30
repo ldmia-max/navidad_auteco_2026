@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="ntvs" id="ntvs-app">
 
 	<!-- Formulario ----------------------------------------------------- -->
-	<div class="ntvs-panel" id="ntvs-panel-acceso">
+	<div class="ntvs-panel ntvs-panel--acceso" id="ntvs-panel-acceso">
 		<p class="ntvs-panel__intro"><?php esc_html_e( 'Ingresa tus datos para entrar al juego', 'navidad-tvs' ); ?></p>
 
 		<form class="ntvs-form" id="ntvs-form" novalidate>
@@ -74,7 +74,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			<p class="ntvs-error" id="ntvs-error" role="alert" aria-live="assertive" hidden></p>
 
-			<button class="ntvs-boton" type="submit" id="ntvs-enviar">
+			<button class="ntvs-boton ntvs-boton--relieve" type="submit" id="ntvs-enviar">
 				<?php esc_html_e( 'Entrar al juego', 'navidad-tvs' ); ?>
 			</button>
 		</form>

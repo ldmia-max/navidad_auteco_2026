@@ -397,6 +397,15 @@
 	padding: 16px 12px;
 }
 
+/*
+ * El panel de acceso tampoco lleva marco. Es la primera pantalla y lo unico
+ * que hay que mirar son los dos campos; el borde blanco solo metia una caja
+ * mas alrededor de algo que ya se distingue por el fondo.
+ */
+.ntvs-panel--acceso {
+	border: 0;
+}
+
 .ntvs-ayuda__titulo {
 	margin: 0 0 16px;
 	font-size: 15px;
@@ -627,28 +636,26 @@
 	image-rendering: pixelated;
 }
 
-/* --- Botón de iniciar la carrera ------------------------------------------ */
+/* --- Botón con relieve --------------------------------------------------- */
 
 /*
- * Lleva el verde del acelerador porque es el mismo gesto: es el botón que
- * pone la moto en marcha, y conviene que el participante lo reconozca antes
- * de tenerlo debajo del juego.
+ * El mismo botón que lleva el acelerador del mando: verde, tipografía de
+ * píxeles y relieve de biseles duros.
  *
- * Mientras corre la cuenta atrás va en rojo y deshabilitado, y al llegar a
- * cero pasa a verde. Es el semáforo de salida de una carrera, que se entiende
- * sin leer nada, y además el color cambia a la vez que el botón se abre: si
- * solo cambiara el texto, en un teléfono habría que estar leyéndolo.
+ * Lo comparten el de entrar al juego y el de iniciar la carrera. Son los dos
+ * botones con los que el participante avanza, y que se vean iguales es lo que
+ * le dice que el segundo hace lo mismo que el primero: seguir. El relieve va
+ * sin desenfoque, como en el mando, para no romper el aspecto de 16 bits.
+ *
+ * Deshabilitado va en rojo y no en el gris de .ntvs-boton:disabled. Aquí
+ * "bloqueado" nunca significa "roto", significa espera: validando los datos o
+ * contando los diez segundos. El rojo y el verde son el semáforo de salida de
+ * una carrera y se entienden sin leer.
  */
-.ntvs-boton--arranque {
+.ntvs-boton--relieve {
 	font-family: 'Press Start 2P', var(--ntvs-fuente);
 	font-size: 12px;
 	line-height: 1.6;
-	/*
-	 * Caben dos lineas sin que el boton cambie de alto. Con la cuenta atras
-	 * el rotulo ocupa dos y al llegar a cero una sola; sin esto, el boton
-	 * encogeria de golpe y todo lo de arriba daria un salto.
-	 */
-	min-height: 66px;
 	border: 0;
 	background: var(--mando-acelera);
 	box-shadow:
@@ -656,12 +663,12 @@
 		inset -4px -4px 0 var(--mando-acelera-sombra);
 }
 
-.ntvs-boton--arranque:hover:not(:disabled),
-.ntvs-boton--arranque:focus-visible:not(:disabled) {
+.ntvs-boton--relieve:hover:not(:disabled),
+.ntvs-boton--relieve:focus-visible:not(:disabled) {
 	background: #47ae49;
 }
 
-.ntvs-boton--arranque:active:not(:disabled) {
+.ntvs-boton--relieve:active:not(:disabled) {
 	transform: none;
 	box-shadow:
 		inset 4px 4px 0 rgba(0, 0, 0, 0.45),
@@ -672,12 +679,22 @@
  * Va después de .ntvs-boton:disabled para ganarle: esa regla pinta el botón
  * de gris, que aquí sería perder la señal de "todavía no".
  */
-.ntvs-boton--arranque:disabled {
+.ntvs-boton--relieve:disabled {
 	cursor: default;
 	background: var(--ntvs-rojo);
 	box-shadow:
 		inset 4px 4px 0 #f2606c,
 		inset -4px -4px 0 #8d1220;
+}
+
+/*
+ * Lo único propio del botón de iniciar la carrera: caben dos líneas sin que
+ * cambie de alto. Con la cuenta atrás el rótulo ocupa dos y al llegar a cero
+ * una sola; sin esto, el botón encogería de golpe y todo lo de arriba daría
+ * un salto.
+ */
+.ntvs-boton--arranque {
+	min-height: 66px;
 }
 
 /* --- Mando en pantalla ---------------------------------------------------- */
@@ -1214,11 +1231,14 @@
 		line-height: 1.4;
 	}
 
-	.ntvs-boton--arranque {
-		min-height: 54px;
+	.ntvs-boton--relieve {
 		padding: 10px;
 		font-size: 10px;
 		letter-spacing: 1px;
+	}
+
+	.ntvs-boton--arranque {
+		min-height: 54px;
 	}
 }
 

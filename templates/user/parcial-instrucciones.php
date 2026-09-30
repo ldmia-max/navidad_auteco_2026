@@ -185,7 +185,7 @@ $ntvs_fichas = array(
 	 * falta sin duplicar el texto en otro sitio.
 	 */
 	?>
-	<button class="ntvs-boton ntvs-boton--arranque" type="button" id="ntvs-iniciar"
+	<button class="ntvs-boton ntvs-boton--relieve ntvs-boton--arranque" type="button" id="ntvs-iniciar"
 		disabled aria-live="polite">
 		<?php esc_html_e( 'Iniciar carrera', 'navidad-tvs' ); ?>
 	</button>
