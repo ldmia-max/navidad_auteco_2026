@@ -13,7 +13,8 @@
     "arte:png": "tsx src/render/exportar-png.ts",
     "arte:importar": "tsx src/render/importar-png.ts",
     "arte:rejilla": "tsx src/render/buscar-rejilla.ts",
-    "sim:vectores": "tsx src/sim/exportar-vectores.ts"
+    "sim:vectores": "tsx src/sim/exportar-vectores.ts",
+    "arte:iconos": "tsx src/render/exportar-iconos.ts"
   },
   "dependencies": {
     "phaser": "^3.87.0"
