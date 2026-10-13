@@ -89,7 +89,24 @@ class NavidadTVS_Validador {
 		 */
 		$jornada = (string) $sesion['fecha_concurso'];
 
-		if ( $this->database->tiene_score_en( $participante_id, $jornada ) ) {
+		/*
+		 * Las carreras del teléfono de pruebas no se guardan.
+		 *
+		 * Es la pieza que hace inofensivo el atajo. Diseño y los ejecutivos
+		 * pueden jugar cuantas veces quieran, pero nada de eso entra en la
+		 * tabla de resultados: no sale en el ranking, no se puede marcar como
+		 * ganador y no ensucia ningún informe. Si el número llegara a
+		 * filtrarse, lo peor que puede hacer quien lo tenga es jugar gratis.
+		 *
+		 * El participante hay que leerlo igual de todas formas, unas líneas
+		 * más abajo, así que esto no cuesta una consulta de más.
+		 */
+		$participante_prueba = $this->database->buscar_participante( $participante_id );
+
+		$es_prueba = $participante_prueba
+			&& NavidadTVS_Plugin::es_telefono_de_pruebas( $participante_prueba['telefono'] );
+
+		if ( ! $es_prueba && $this->database->tiene_score_en( $participante_id, $jornada ) ) {
 			return new WP_Error(
 				'ya_participo',
 				__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),
@@ -128,6 +145,19 @@ class NavidadTVS_Validador {
 		// --- Segunda malla: plausibilidad -----------------------------------
 		$duracion = $this->duracion_de( $sesion );
 		$motivo   = $this->motivo_implausible( $distancia, $duracion );
+
+		if ( $es_prueba ) {
+			return array(
+				'distancia' => $distancia,
+				'llaves'    => $estado['items'],
+				'caidas'    => $estado['caidas'],
+				'nombre'    => $sesion['nombre_digitado'],
+				'valido'    => '' === $motivo,
+				// El navegador lo enseña para que nadie confunda una carrera
+				// de prueba con una que cuenta.
+				'pruebas'   => true,
+			);
+		}
 
 		$id = $this->database->registrar_score(
 			array(

@@ -90,6 +90,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</p>
 	</div>
 
+	<?php
+	/*
+	 * Cartel de modo de pruebas. Nace oculto y solo aparece cuando el servidor
+	 * dice que esta sesión es del teléfono de pruebas.
+	 *
+	 * Tiene que verse mientras se juega, no solo al final: si un ejecutivo
+	 * hace una buena carrera y luego descubre que no contaba, el aviso llegó
+	 * tarde.
+	 */
+	?>
+	<p class="ntvs-aviso-pruebas" id="ntvs-aviso-pruebas" hidden role="status">
+		<?php esc_html_e( 'Modo de pruebas: puedes repetir las veces que quieras y este resultado NO se guarda.', 'navidad-tvs' ); ?>
+	</p>
+
 	<?php include NAVIDAD_TVS_PATH . 'templates/user/parcial-instrucciones.php'; ?>
 
 	<!-- Juego ------------------------------------------------------------ -->

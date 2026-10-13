@@ -215,6 +215,24 @@ $nombres_dias = array(
 		</p>
 		<table class="form-table" role="presentation">
 			<tr>
+				<th scope="row"><label for="telefono_pruebas"><?php esc_html_e( 'Teléfono de pruebas', 'navidad-tvs' ); ?></label></th>
+				<td>
+					<input type="text" id="telefono_pruebas" name="telefono_pruebas" class="regular-text"
+						value="<?php echo esc_attr( $settings->get( 'telefono_pruebas' ) ); ?>"
+						placeholder="<?php esc_attr_e( 'vacío = desactivado', 'navidad-tvs' ); ?>">
+					<p class="description">
+						<?php esc_html_e( 'Ese número puede entrar fuera de horario, fuera de su jornada y cuantas veces quiera. Sirve para que diseño y los ejecutivos revisen el juego sin esperar a la ventana ni gastar el intento de un comprador.', 'navidad-tvs' ); ?>
+					</p>
+					<p class="description">
+						<strong><?php esc_html_e( 'Sus carreras NO se guardan:', 'navidad-tvs' ); ?></strong>
+						<?php esc_html_e( 'no salen en el ranking, no se pueden marcar como ganadoras y no entran en los informes. Aun así, quítalo cuando termines de probar.', 'navidad-tvs' ); ?>
+					</p>
+					<p class="description">
+						<?php esc_html_e( 'El número tiene que estar en el padrón, con marca TVS. La fecha de su jornada da igual.', 'navidad-tvs' ); ?>
+					</p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><label for="turnstile_site_key"><?php esc_html_e( 'Site key', 'navidad-tvs' ); ?></label></th>
 				<td><input type="text" id="turnstile_site_key" name="turnstile_site_key" class="regular-text"
 					value="<?php echo esc_attr( $settings->get( 'turnstile_site_key' ) ); ?>"></td>

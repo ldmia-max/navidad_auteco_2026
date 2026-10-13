@@ -53,6 +53,17 @@ class NavidadTVS_Settings {
 			'pagina_terminos'      => 0,
 			'pagina_faq'           => 0,
 
+			/*
+			 * Teléfono de pruebas. Vacío = desactivado.
+			 *
+			 * Es el único número que puede entrar fuera de horario, fuera de
+			 * su jornada y cuantas veces quiera. A cambio, sus carreras NO se
+			 * guardan: no aparecen en el ranking ni pueden ganar nada. Está
+			 * para que diseño y los ejecutivos puedan revisar el juego sin
+			 * esperar a las doce ni quemar el intento de un comprador real.
+			 */
+			'telefono_pruebas'     => '',
+
 			// Cloudflare Turnstile. Vacío = desactivado.
 			'turnstile_site_key'   => '',
 			'turnstile_secret_key' => '',

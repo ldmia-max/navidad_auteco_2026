@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.20.0
+ * Version:     1.21.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.20.0' );
+define( 'NAVIDAD_TVS_VERSION', '1.21.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );
@@ -200,6 +200,33 @@ final class NavidadTVS_Plugin {
 	 * @param string $telefono Número tal como viene del CSV o del formulario.
 	 * @return string Diez dígitos, o cadena vacía si no se pudo normalizar.
 	 */
+	/**
+	 * Si un teléfono es el de pruebas.
+	 *
+	 * Vive aquí y no en una de las clases porque lo preguntan dos: el acceso,
+	 * para dejarlo entrar, y el validador, para no guardarle el resultado. Si
+	 * cada uno lo resolviera por su cuenta, el día que cambie la regla una de
+	 * las dos se quedaría atrás, y la mitad mala es la del validador: estaría
+	 * metiendo carreras de prueba en el ranking.
+	 *
+	 * Se compara normalizado por los dos lados, para que dé igual cómo se haya
+	 * escrito el número en los ajustes.
+	 *
+	 * @param string $telefono Teléfono a comprobar.
+	 * @return bool
+	 */
+	public static function es_telefono_de_pruebas( $telefono ) {
+		$configurado = self::normalizar_telefono(
+			(string) self::instancia()->settings->get( 'telefono_pruebas', '' )
+		);
+
+		if ( '' === $configurado ) {
+			return false;
+		}
+
+		return $configurado === self::normalizar_telefono( $telefono );
+	}
+
 	public static function normalizar_telefono( $telefono ) {
 		$digitos = preg_replace( '/\D+/', '', (string) $telefono );
 

@@ -68,6 +68,14 @@ class NavidadTVS_Admin_Settings {
 			'pagina_juego'         => (int) ( $_POST['pagina_juego'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'pagina_terminos'      => (int) ( $_POST['pagina_terminos'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'pagina_faq'           => (int) ( $_POST['pagina_faq'] ?? 0 ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			/*
+			 * Se guarda normalizado a diez dígitos, igual que el padrón, para
+			 * que dé lo mismo cómo lo escriba quien lo configure: con
+			 * indicativo, con espacios o con guiones.
+			 */
+			'telefono_pruebas'     => NavidadTVS_Plugin::normalizar_telefono(
+				sanitize_text_field( wp_unslash( $_POST['telefono_pruebas'] ?? '' ) )
+			),
 			'turnstile_site_key'   => sanitize_text_field( wp_unslash( $_POST['turnstile_site_key'] ?? '' ) ),
 			'turnstile_secret_key' => sanitize_text_field( wp_unslash( $_POST['turnstile_secret_key'] ?? '' ) ),
 		);

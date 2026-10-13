@@ -129,8 +129,21 @@ class NavidadTVS_Acceso {
 			? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 )
 			: '';
 
+		/*
+		 * El teléfono de pruebas se salta la ventana, la jornada y el límite
+		 * de un intento. Es lo que permite a diseño y a los ejecutivos entrar
+		 * a cualquier hora y repetir cuantas veces quieran.
+		 *
+		 * Lo que NO se salta: la marca TVS, el estado del padrón y el resto de
+		 * validaciones. Y sobre todo, sus carreras no se guardan, así que por
+		 * mucho que repita no puede colarse en el ranking ni ganar nada. Es la
+		 * propiedad que hace que este atajo sea aceptable: si el número se
+		 * filtra, lo peor que pasa es que alguien juegue gratis.
+		 */
+		$es_prueba = NavidadTVS_Plugin::es_telefono_de_pruebas( $datos['telefono'] ?? '' );
+
 		// --- 1. Ventana de participación -------------------------------------
-		if ( ! NavidadTVS_Plugin::ventana_abierta() ) {
+		if ( ! $es_prueba && ! NavidadTVS_Plugin::ventana_abierta() ) {
 			return new WP_Error(
 				'fuera_de_horario',
 				__( 'En este momento no hay jornada de participación.', 'navidad-tvs' ),
@@ -195,7 +208,7 @@ class NavidadTVS_Acceso {
 
 		$hoy = NavidadTVS_Plugin::hoy();
 
-		if ( ! $this->puede_jugar_hoy( $participante, $hoy ) ) {
+		if ( ! $es_prueba && ! $this->puede_jugar_hoy( $participante, $hoy ) ) {
 			return $no_elegible;
 		}
 
@@ -226,11 +239,11 @@ class NavidadTVS_Acceso {
 			array( 'status' => 409 )
 		);
 
-		if ( $this->database->tiene_score_en( (int) $participante['id'], $hoy ) ) {
+		if ( ! $es_prueba && $this->database->tiene_score_en( (int) $participante['id'], $hoy ) ) {
 			return $ya_jugo;
 		}
 
-		if ( $this->database->tiene_sesion_consumida_en( (int) $participante['id'], $hoy ) ) {
+		if ( ! $es_prueba && $this->database->tiene_sesion_consumida_en( (int) $participante['id'], $hoy ) ) {
 			return $ya_jugo;
 		}
 
@@ -247,6 +260,8 @@ class NavidadTVS_Acceso {
 			'duracion'       => NAVIDAD_TVS_DURACION_SEGUNDOS,
 			'vigencia'       => self::VIGENCIA_MINUTOS * MINUTE_IN_SECONDS,
 			'cierre_jornada' => $this->settings->get( 'hora_fin' ),
+			// El navegador lo usa para avisar en pantalla de que esto no cuenta.
+			'pruebas'        => $es_prueba,
 		);
 	}
 
@@ -263,20 +278,39 @@ class NavidadTVS_Acceso {
 	 * @return array|WP_Error
 	 */
 	public function iniciar_carrera( $token ) {
-		if ( ! NavidadTVS_Plugin::ventana_abierta() ) {
-			return new WP_Error(
-				'fuera_de_horario',
-				__( 'La jornada de participación ya terminó.', 'navidad-tvs' ),
-				array( 'status' => 403 )
-			);
-		}
-
+		/*
+		 * La comprobación del horario va DESPUÉS de leer la sesión, no antes.
+		 *
+		 * Para saber si este token es del teléfono de pruebas hay que mirar de
+		 * quién es la sesión, y eso exige leerla. Leerla no concede nada: lo
+		 * que gasta el intento es consumir_sesion(), bastante más abajo, y el
+		 * horario sigue cortando antes de llegar ahí.
+		 */
 		$sesion = $this->database->buscar_sesion_por_nonce( (string) $token );
 
 		if ( null === $sesion ) {
 			return new WP_Error(
 				'sesion_invalida',
 				__( 'Tu sesión no es válida. Vuelve a ingresar tus datos.', 'navidad-tvs' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		/*
+		 * Si la sesión es del teléfono de pruebas, el resultado ya existente
+		 * no la bloquea: eso es justamente lo que se quiere, poder repetir.
+		 * Se resuelve desde el participante de la sesión porque aquí no llega
+		 * el teléfono, solo el token.
+		 */
+		$participante_sesion = $this->database->buscar_participante( (int) $sesion['participante_id'] );
+
+		$es_prueba = $participante_sesion
+			&& NavidadTVS_Plugin::es_telefono_de_pruebas( $participante_sesion['telefono'] );
+
+		if ( ! $es_prueba && ! NavidadTVS_Plugin::ventana_abierta() ) {
+			return new WP_Error(
+				'fuera_de_horario',
+				__( 'La jornada de participación ya terminó.', 'navidad-tvs' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -300,7 +334,7 @@ class NavidadTVS_Acceso {
 			);
 		}
 
-		if ( $this->database->tiene_score_en( (int) $sesion['participante_id'], (string) $sesion['fecha_concurso'] ) ) {
+		if ( ! $es_prueba && $this->database->tiene_score_en( (int) $sesion['participante_id'], (string) $sesion['fecha_concurso'] ) ) {
 			return new WP_Error(
 				'ya_participo',
 				__( 'Este número ya participó hoy. Cada persona tiene un solo intento por jornada.', 'navidad-tvs' ),

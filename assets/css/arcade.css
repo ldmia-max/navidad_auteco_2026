@@ -636,6 +636,26 @@
 	image-rendering: pixelated;
 }
 
+/*
+ * Cartel de modo de pruebas.
+ *
+ * Amarillo y con borde grueso a proposito: tiene que cantar. Es la unica
+ * senal de que lo que se esta jugando no cuenta, y confundir una carrera de
+ * prueba con una de verdad delante de un ejecutivo es justo lo que no puede
+ * pasar.
+ */
+.ntvs-aviso-pruebas {
+	margin: 0 0 12px;
+	padding: 10px 12px;
+	font-size: 12px;
+	line-height: 1.5;
+	font-weight: 700;
+	text-align: center;
+	color: #3a2a00;
+	background: #ffd34d;
+	border: 3px solid #a67c00;
+}
+
 /* --- Barra de descarga ---------------------------------------------------- */
 
 /*

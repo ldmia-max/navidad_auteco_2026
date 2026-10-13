@@ -128,7 +128,20 @@ Lo de siempre, que no es del plugin pero sí de la instalación:
 - Copia de la base **antes** de cada jornada. Los resultados no se pueden
   reconstruir: el log de entradas vive en la tabla de scores.
 
-### 2.6 Claves de Turnstile
+### 2.6 El teléfono de pruebas, fuera antes de abrir
+
+En Ajustes hay un **teléfono de pruebas**: ese número entra a cualquier hora,
+fuera de su jornada y cuantas veces quiera. Está para que diseño y los
+ejecutivos revisen el juego sin esperar a la ventana.
+
+Sus carreras **no se guardan**, así que no puede ganar nada ni ensuciar
+informes. Aun así, **déjalo vacío antes de abrir al público**. La pantalla de
+Estado avisa en rojo mientras esté puesto.
+
+El número tiene que estar en el padrón con marca TVS; la fecha de su jornada
+da igual.
+
+### 2.7 Claves de Turnstile
 
 Siguen vacías. Con la clave secreta en blanco, la comprobación **se salta
 entera** (`includes/class-acceso.php`). Funciona, pero deja la puerta abierta a

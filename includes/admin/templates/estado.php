@@ -41,6 +41,29 @@ foreach ( (array) $settings->get( 'dias_habiles' ) as $d ) {
 <div class="wrap">
 	<h1><?php esc_html_e( 'Concurso Navideño TVS', 'navidad-tvs' ); ?></h1>
 
+	<?php
+	/*
+	 * El aviso del teléfono de pruebas va arriba del todo y en rojo.
+	 *
+	 * Un número de pruebas olvidado en producción es una puerta abierta: entra
+	 * a cualquier hora y repite sin límite. No puede ganar nada, porque sus
+	 * carreras no se guardan, pero no tiene por qué seguir ahí cuando el
+	 * concurso esté en marcha. Que se vea en la primera pantalla del panel es
+	 * lo que hace que alguien se acuerde de quitarlo.
+	 */
+	?>
+	<?php if ( '' !== (string) $settings->get( 'telefono_pruebas' ) ) : ?>
+		<div class="notice notice-error">
+			<p>
+				<strong><?php esc_html_e( 'Hay un teléfono de pruebas activo.', 'navidad-tvs' ); ?></strong>
+				<code><?php echo esc_html( $settings->get( 'telefono_pruebas' ) ); ?></code>
+			</p>
+			<p>
+				<?php esc_html_e( 'Ese número entra a cualquier hora y repite sin límite. Sus carreras no se guardan y no puede ganar, pero quítalo en Configuración cuando termines de probar.', 'navidad-tvs' ); ?>
+			</p>
+		</div>
+	<?php endif; ?>
+
 	<?php if ( $settings->get( 'concurso_congelado' ) ) : ?>
 		<div class="notice notice-warning">
 			<p><strong><?php esc_html_e( 'El concurso está congelado.', 'navidad-tvs' ); ?></strong>

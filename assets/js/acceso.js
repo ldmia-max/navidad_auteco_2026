@@ -251,6 +251,16 @@
 				}
 
 				sesion = resultado.datos;
+
+				// El servidor es quien dice si esto cuenta o no; el navegador
+				// solo lo enseña.
+				if ( sesion.pruebas ) {
+					var cartel = document.getElementById( 'ntvs-aviso-pruebas' );
+					if ( cartel ) {
+						cartel.hidden = false;
+					}
+				}
+
 				mostrarInstrucciones();
 			} )
 			.catch( function ( error ) {
