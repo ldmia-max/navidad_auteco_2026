@@ -52,7 +52,22 @@
 	padding: 16px;
 	font-family: var(--ntvs-fuente);
 	color: var(--ntvs-crema);
-	background: var(--ntvs-azul-profundo);
+
+	/*
+	 * Transparente, para que se vea el fondo que tenga puesto la página.
+	 *
+	 * Aquí había un azul profundo opaco. Mientras el juego iba sobre negro no
+	 * estorbaba, pero tapa cualquier fondo que se le ponga al contenedor
+	 * donde vive el shortcode, y además solo en los 720 px centrales: al
+	 * quitar el negro del panel aparecía una franja azul en medio, con la
+	 * imagen asomando a los lados. O se quita este también, o no se ve nada.
+	 *
+	 * Las pantallas que necesitan fondo propio lo llevan: los paneles de
+	 * acceso y de ayuda son azules por su cuenta, y el cuadro de resultados
+	 * tiene el suyo. Lo único que se pierde es el relleno de alrededor, que
+	 * es justo donde se quiere ver la imagen.
+	 */
+	background: transparent;
 	image-rendering: pixelated;
 	-webkit-font-smoothing: none;
 }
@@ -1006,11 +1021,11 @@
 	margin-top: -16px;
 	margin-bottom: -16px;
 	/*
-	 * Negro, no el azul profundo del resto. Es la zona donde está el juego, y
-	 * el negro la separa del resto de la página y hace de continuación del
-	 * lienzo, que también lo tiene detrás.
+	 * Transparente. Antes era negro para separar la zona de juego del resto
+	 * de la página; ahora esa separación la hace el fondo que lleve puesto el
+	 * contenedor, y el negro solo lo tapaba.
 	 */
-	background: #000;
+	background: transparent;
 }
 
 .ntvs-game-root {
@@ -1018,7 +1033,20 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: #000;
+
+	/*
+	 * Transparente, y es la que de verdad tapaba los lados del lienzo.
+	 *
+	 * El `width: fit-content` de abajo hace pensar que esta caja se ciñe al
+	 * lienzo, pero no: main.ts le pone `width: 100%` por JavaScript al
+	 * ajustar la escala. Medido en la página real con el juego corriendo,
+	 * 1264 px de caja para un lienzo de 600; esos 664 px de negro eran los
+	 * que no dejaban ver el fondo.
+	 *
+	 * El lienzo es opaco y se dibuja encima, así que quitarlo no destapa
+	 * nada del juego: solo lo que hay detrás.
+	 */
+	background: transparent;
 	/*
 	 * Sin marco. El lienzo llevaba un borde blanco de 3 px que, con el mando
 	 * justo debajo, dejaba una línea blanca entre la pantalla y el control.
