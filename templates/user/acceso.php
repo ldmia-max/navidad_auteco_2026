@@ -92,16 +92,45 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<?php
 	/*
-	 * Cartel de modo de pruebas. Nace oculto y solo aparece cuando el servidor
+	 * Marca de modo de pruebas. Nace oculta y solo aparece cuando el servidor
 	 * dice que esta sesión es del teléfono de pruebas.
 	 *
 	 * Tiene que verse mientras se juega, no solo al final: si un ejecutivo
 	 * hace una buena carrera y luego descubre que no contaba, el aviso llegó
 	 * tarde.
+	 *
+	 * Es solo el triángulo, sin letrero. El juego se revisa delante de gente
+	 * —clientes, dirección— y un cartel que dice "pruebas" se lee desde el
+	 * otro lado de la sala. El texto sigue estando en el title y en el
+	 * aria-label: lo ve quien pasa el ratón por encima y lo oye quien usa
+	 * lector de pantalla, que son justamente los que lo necesitan.
+	 *
+	 * El id no cambia: acceso.js lo busca por ese nombre para descubrirlo.
 	 */
+	$titulo_pruebas = __( 'Modo de pruebas: puedes repetir las veces que quieras y este resultado no se guarda.', 'navidad-tvs' );
 	?>
-	<p class="ntvs-aviso-pruebas" id="ntvs-aviso-pruebas" hidden role="status">
-		<?php esc_html_e( 'Modo de pruebas: puedes repetir las veces que quieras y este resultado NO se guarda.', 'navidad-tvs' ); ?>
+	<p class="ntvs-marca-pruebas" id="ntvs-aviso-pruebas" hidden role="status">
+		<span
+			class="ntvs-marca-pruebas__icono"
+			role="img"
+			title="<?php echo esc_attr( $titulo_pruebas ); ?>"
+			aria-label="<?php echo esc_attr( $titulo_pruebas ); ?>"
+		>
+			<?php
+			/*
+			 * El triángulo va en SVG y no en PNG como los iconos de la ayuda:
+			 * aquellos dibujan objetos del juego y por eso son pixel art, pero
+			 * esto es un adorno de la página. En SVG se ve nítido a cualquier
+			 * tamaño, no suma un archivo al paquete y toma los colores de la
+			 * hoja de estilos.
+			 */
+			?>
+			<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+				<path d="M12 3 21.5 20.5h-19z" />
+				<rect x="11" y="8" width="2" height="6.5" />
+				<rect x="11" y="16" width="2" height="2" />
+			</svg>
+		</span>
 	</p>
 
 	<?php include NAVIDAD_TVS_PATH . 'templates/user/parcial-instrucciones.php'; ?>

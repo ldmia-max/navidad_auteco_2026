@@ -652,23 +652,49 @@
 }
 
 /*
- * Cartel de modo de pruebas.
+ * Marca de modo de pruebas.
  *
- * Amarillo y con borde grueso a proposito: tiene que cantar. Es la unica
- * senal de que lo que se esta jugando no cuenta, y confundir una carrera de
- * prueba con una de verdad delante de un ejecutivo es justo lo que no puede
- * pasar.
+ * Antes era un cartel amarillo a todo lo ancho con el texto "Modo de
+ * pruebas". Se quito a peticion: el juego se revisa delante de gente y ese
+ * letrero se leia desde el otro lado de la sala.
+ *
+ * Queda el triangulo de advertencia, arrinconado a la derecha. Identifica el
+ * modo para quien sabe lo que mira y no dice nada a quien no. El texto no se
+ * perdio: vive en el title y en el aria-label del icono.
+ *
+ * line-height: 0 porque el <p> reservaba el alto de una linea de texto
+ * debajo del icono y lo separaba del panel del juego sin motivo.
  */
-.ntvs-aviso-pruebas {
-	margin: 0 0 12px;
-	padding: 10px 12px;
-	font-size: 12px;
-	line-height: 1.5;
-	font-weight: 700;
-	text-align: center;
-	color: #3a2a00;
-	background: #ffd34d;
-	border: 3px solid #a67c00;
+.ntvs-marca-pruebas {
+	display: flex;
+	justify-content: flex-end;
+	margin: 0 0 8px;
+	line-height: 0;
+}
+
+.ntvs-marca-pruebas__icono {
+	display: inline-block;
+	cursor: help;
+}
+
+.ntvs-marca-pruebas svg {
+	display: block;
+}
+
+/*
+ * Los colores del icono van aqui y no en los atributos del SVG, igual que el
+ * resto de la paleta. Son los del cartel que habia antes: amarillo de
+ * advertencia, borde tostado y marca casi negra.
+ */
+.ntvs-marca-pruebas svg path {
+	fill: #ffd34d;
+	stroke: #a67c00;
+	stroke-width: 1.6;
+	stroke-linejoin: round;
+}
+
+.ntvs-marca-pruebas svg rect {
+	fill: #3a2a00;
 }
 
 /* --- Barra de descarga ---------------------------------------------------- */
