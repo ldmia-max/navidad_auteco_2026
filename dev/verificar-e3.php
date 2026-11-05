@@ -48,6 +48,7 @@ $config_original = array(
 	'concurso_congelado' => $settings->get( 'concurso_congelado' ),
 	'fecha_inicio'       => $settings->get( 'fecha_inicio' ),
 	'fecha_fin'          => $settings->get( 'fecha_fin' ),
+	'telefono_pruebas'   => $settings->get( 'telefono_pruebas' ),
 );
 
 /** Deja la ventana abierta ahora mismo. */
@@ -65,7 +66,18 @@ function abrir_ventana( $settings ) {
 	);
 }
 
-/** Cierra la ventana. */
+/**
+ * Cierra la ventana del todo.
+ *
+ * El teléfono de pruebas se vacía aquí, y no es un detalle: mientras esté
+ * puesto, la página del juego pinta el formulario aunque el concurso esté
+ * cerrado. Es a propósito —es lo único que permite revisar el juego antes de
+ * la fecha de apertura—, pero deja sin sentido la comprobación de más abajo,
+ * que es que con la ventana cerrada el formulario no existe en el HTML.
+ *
+ * Esa otra mitad, la de que el formulario SÍ aparece con el teléfono puesto,
+ * se comprueba en verificar-rango-fechas.php.
+ */
 function cerrar_ventana( $settings ) {
 	$settings->set(
 		array(
@@ -73,6 +85,7 @@ function cerrar_ventana( $settings ) {
 			'hora_fin'           => '03:30',
 			'dias_habiles'       => array( 1, 2, 3, 4, 5, 6 ),
 			'concurso_congelado' => false,
+			'telefono_pruebas'   => '',
 		)
 	);
 }

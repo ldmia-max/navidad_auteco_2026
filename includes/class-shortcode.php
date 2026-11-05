@@ -215,9 +215,31 @@ class NavidadTVS_Shortcode {
 		$url_faq   = $this->url_pagina( 'pagina_faq' );
 		$site_key  = $site_key;
 
+		/*
+		 * Con un teléfono de pruebas configurado, el formulario se pinta
+		 * aunque la ventana esté cerrada.
+		 *
+		 * El servidor ya dejaba entrar a ese número fuera de horario y fuera
+		 * del rango de fechas, pero la plantilla no se enteraba y mostraba la
+		 * pantalla de cerrado, sin ningún sitio donde escribirlo. El permiso
+		 * existía y no había forma de usarlo desde el navegador. Con el
+		 * horario pasaba desapercibido porque en desarrollo la ventana está
+		 * abierta todo el día; con las fechas del concurso deja de serlo, que
+		 * es lo que obligó a arreglarlo.
+		 *
+		 * Pintarlo no concede nada. El formulario es cosmético: quien lo
+		 * encuentre con el concurso cerrado y escriba cualquier otro número
+		 * se lleva el mismo rechazo por hora de servidor. Lo único que decide
+		 * sigue siendo el endpoint.
+		 *
+		 * Se apaga solo: en cuanto se vacía el teléfono de pruebas vuelve la
+		 * pantalla de cerrado, sin tocar nada más.
+		 */
+		$hay_telefono_pruebas = '' !== (string) $this->settings->get( 'telefono_pruebas' );
+
 		ob_start();
 
-		if ( $estado['abierta'] ) {
+		if ( $estado['abierta'] || $hay_telefono_pruebas ) {
 			include NAVIDAD_TVS_PATH . 'templates/user/acceso.php';
 		} else {
 			include NAVIDAD_TVS_PATH . 'templates/user/fuera-de-horario.php';

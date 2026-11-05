@@ -131,11 +131,29 @@ Lo de siempre, que no es del plugin pero sí de la instalación:
 ### 2.6 El teléfono de pruebas, fuera antes de abrir
 
 En Ajustes hay un **teléfono de pruebas**: ese número entra a cualquier hora,
-fuera de su jornada y cuantas veces quiera. Está para que diseño y los
-ejecutivos revisen el juego sin esperar a la ventana.
+fuera de su jornada, fuera del rango de fechas y cuantas veces quiera. Está
+para que diseño y los ejecutivos revisen el juego sin esperar a la ventana.
+
+Mientras la casilla tenga algo, **la página del juego muestra el formulario
+aunque el concurso esté cerrado**. Sin esto la casilla sería inútil antes del
+23 de noviembre: el servidor dejaba entrar al número, pero la pantalla de
+cerrado no tenía dónde escribirlo.
+
+**La página no anuncia nada de esto.** Quien entre antes de la fecha de
+apertura ve exactamente la misma pantalla que verá el primer día: sin cartel
+de "todavía no abre", sin mención de pruebas y sin la fecha de arranque. La
+única señal es el triángulo amarillo, y aparece **solo después** de entrar,
+cuando el servidor confirma que esa sesión es de pruebas. Es una marca
+interna: la reconoce quien está probando y no le dice nada a nadie más.
+
+El efecto secundario, a cambio: un comprador que llegue antes del 23 verá un
+formulario normal y se llevará un error al enviarlo, en vez de la pantalla que
+le dice cuándo empieza. Es asumible mientras el sitio no esté difundido, y
+desaparece en cuanto se vacía la casilla.
 
 Sus carreras **no se guardan**, así que no puede ganar nada ni ensuciar
-informes. Aun así, **déjalo vacío antes de abrir al público**. La pantalla de
+informes. Aun así, **déjalo vacío antes de abrir al público**: con eso vuelve
+la pantalla de cerrado y el arranque del concurso es el normal. La pantalla de
 Estado avisa en rojo mientras esté puesto.
 
 El número tiene que estar en el padrón con marca TVS; la fecha de su jornada
@@ -165,12 +183,19 @@ recarga.
 
 Dos cosas que conviene saber:
 
-- **El teléfono de pruebas se salta el rango**, igual que se salta el horario.
-  Es lo que permite revisar el juego en noviembre con el concurso configurado
-  para diciembre.
+- **El teléfono de pruebas se salta el rango**, igual que se salta el horario,
+  y mientras esté configurado **la página del juego pinta el formulario aunque
+  el concurso esté cerrado**, sin anunciarlo. Es lo que permite revisar el
+  juego en noviembre con el concurso configurado para el 23. Al vaciar la
+  casilla vuelve la pantalla de cerrado sin tocar nada más. Está explicado en
+  §2.6.
 - **`dev/abrir-ventana.php abrir` borra el rango** al abrir la ventana de
   desarrollo, y lo dice al terminar. Si se corre contra una instalación que ya
   tiene fechas puestas, hay que volver a ponerlas a mano.
+
+Que el formulario se vea no concede nada: es cosmético. Quien lo encuentre con
+el concurso cerrado y escriba cualquier otro número se lleva el mismo rechazo
+por hora de servidor. Lo único que decide sigue siendo el endpoint.
 
 ---
 

@@ -18,6 +18,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="ntvs" id="ntvs-app">
 
+	<?php
+	/*
+	 * Esta pantalla se pinta también con el concurso cerrado, siempre que
+	 * haya un teléfono de pruebas configurado. Es lo único que permite
+	 * revisar el juego antes de la fecha de apertura: el servidor deja entrar
+	 * a ese número, pero la pantalla de cerrado no tiene dónde escribirlo.
+	 *
+	 * Cuando eso pasa, la página NO lo anuncia. Aquí hubo un cartel que decía
+	 * que el concurso todavía no abría y que el formulario era para pruebas
+	 * internas; se quitó a petición. La única señal de que esto es una sesión
+	 * de pruebas es el triángulo de más abajo, y es deliberadamente discreta:
+	 * la reconoce quien está probando y no le dice nada a nadie más.
+	 */
+	?>
+
 	<!-- Formulario ----------------------------------------------------- -->
 	<div class="ntvs-panel ntvs-panel--acceso" id="ntvs-panel-acceso">
 		<p class="ntvs-panel__intro"><?php esc_html_e( 'Ingresa tus datos para entrar al juego', 'navidad-tvs' ); ?></p>

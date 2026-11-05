@@ -36,6 +36,7 @@ $previo = array(
 	'hora_fin'           => $settings->get( 'hora_fin' ),
 	'dias_habiles'       => $settings->get( 'dias_habiles' ),
 	'concurso_congelado' => $settings->get( 'concurso_congelado' ),
+	'telefono_pruebas'   => $settings->get( 'telefono_pruebas' ),
 );
 
 $hoy = NavidadTVS_Plugin::hoy();
@@ -232,6 +233,105 @@ comprobar(
 	false !== strpos( $estado['mensaje'], 'próxima jornada' )
 		|| false !== strpos( $estado['mensaje'], 'abre a las' ),
 	$estado['mensaje']
+);
+
+// ===========================================================================
+echo "\n--- El modo de pruebas sobrevive a las fechas ---\n";
+
+/*
+ * El caso real: el concurso está configurado para más adelante y hay que
+ * seguir revisando el juego hasta que empiece.
+ *
+ * El servidor siempre dejó entrar al teléfono de pruebas fuera del horario y
+ * fuera del rango, pero la pantalla mostraba el cartel de cerrado y no había
+ * dónde escribir el número. Lo que se comprueba aquí es que el formulario
+ * aparece mientras el teléfono esté puesto, y que desaparece en cuanto se
+ * borra, sin tocar ninguna otra casilla.
+ */
+$settings->set(
+	array(
+		'fecha_inicio' => $dentro_de( 18 ),
+		'fecha_fin'    => $dentro_de( 48 ),
+		'hora_inicio'  => '12:00',
+		'hora_fin'     => '13:30',
+		'dias_habiles' => array( 1, 2, 3, 4, 5, 6 ),
+	)
+);
+
+comprobar( 'el escenario parte con la ventana cerrada', ! NavidadTVS_Plugin::ventana_abierta() );
+
+$settings->set( array( 'telefono_pruebas' => '' ) );
+$html = do_shortcode( '[' . NavidadTVS_Shortcode::TAG . ']' );
+
+comprobar( 'sin telefono de pruebas: no hay formulario', false === strpos( $html, 'ntvs-form' ) );
+comprobar( 'sin telefono de pruebas: sale la pantalla de cerrado', false !== strpos( $html, 'ntvs--cerrado' ) );
+
+$settings->set( array( 'telefono_pruebas' => '3999000111' ) );
+$html_pruebas = do_shortcode( '[' . NavidadTVS_Shortcode::TAG . ']' );
+
+comprobar( 'con telefono de pruebas: hay formulario', false !== strpos( $html_pruebas, 'ntvs-form' ) );
+
+/*
+ * Y no se anuncia por ninguna parte. El participante que llegue antes de la
+ * fecha de apertura tiene que ver exactamente la misma pantalla que verá el
+ * primer día: ni cartel de "todavía no abre", ni mención de que esto son
+ * pruebas, ni la fecha de arranque asomando por un rincón.
+ *
+ * Se comprueba contra el HTML entero, no contra una clase concreta, porque lo
+ * que importa no es dónde saldría el texto sino que no salga en ningún lado.
+ */
+foreach ( array(
+	'Todavía no abre',
+	'pruebas internas',
+	'El concurso empieza el',
+) as $filtrado ) {
+	comprobar(
+		sprintf( 'no se filtra "%s"', $filtrado ),
+		false === strpos( $html_pruebas, $filtrado )
+	);
+}
+
+/*
+ * La única señal es el triángulo, que viaja en el HTML pero nace oculto: lo
+ * descubre acceso.js cuando el servidor confirma que la sesión es de pruebas.
+ */
+comprobar(
+	'el triangulo viaja en la pagina',
+	false !== strpos( $html_pruebas, 'ntvs-marca-pruebas' )
+);
+comprobar(
+	'y viaja oculto',
+	(bool) preg_match( '/<p class="ntvs-marca-pruebas"[^>]*\shidden/', $html_pruebas )
+);
+
+/*
+ * "Modo de pruebas" sí aparece en el código fuente: es el title y el
+ * aria-label del triángulo, que es lo que explica el icono a quien pasa el
+ * ratón por encima o usa lector de pantalla. No se puede quitar sin dejar el
+ * icono mudo.
+ *
+ * Lo que sí tiene que cumplirse es que esa frase no exista en ningún otro
+ * sitio de la página: fuera del bloque oculto, ni rastro. Quien no abra el
+ * código fuente no tiene forma de enterarse, y quien lo abra ya está mirando
+ * donde un participante no mira.
+ */
+$sin_marca = preg_replace( '#<p class="ntvs-marca-pruebas".*?</p>#s', '', $html_pruebas );
+
+comprobar(
+	'la frase "Modo de pruebas" solo vive dentro del triangulo oculto',
+	false === strpos( (string) $sin_marca, 'Modo de pruebas' )
+		&& false !== strpos( $html_pruebas, 'Modo de pruebas' )
+);
+
+// Con la ventana abierta la pantalla tiene que ser la misma.
+$settings->set( array( 'fecha_inicio' => $dentro_de( -5 ), 'fecha_fin' => $dentro_de( 5 ), 'hora_inicio' => '00:00', 'hora_fin' => '23:59' ) );
+$html_abierto = do_shortcode( '[' . NavidadTVS_Shortcode::TAG . ']' );
+
+comprobar( 'concurso abierto: hay formulario', false !== strpos( $html_abierto, 'ntvs-form' ) );
+comprobar(
+	'la pantalla de antes y la de despues son identicas',
+	$html_pruebas === $html_abierto,
+	strlen( $html_pruebas ) . ' vs ' . strlen( $html_abierto ) . ' bytes'
 );
 
 // ===========================================================================
