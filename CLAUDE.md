@@ -127,6 +127,13 @@ La ventana de participación (12:00–1:30 p. m., lunes a sábado) se valida
 siempre con hora del servidor en `America/Bogota`. La hora del dispositivo del
 participante no se consulta para nada.
 
+Encima del horario diario hay un **rango de fechas** configurable (fecha
+inicio y fecha final, los dos extremos incluidos) que impide entrar antes del
+lanzamiento y permite extender el concurso sin tocar código. Todo eso se
+decide en un solo sitio, `NavidadTVS_Plugin::ventana_abierta()`; cualquier
+comprobación nueva de "¿se puede jugar ahora?" va ahí y no en el formulario,
+que es por donde se cuela el olvido.
+
 ### 6. El padrón trae datos personales reales
 
 `ayudas/` está en `.gitignore` y así se queda. Teléfonos, cédulas y placas
@@ -184,6 +191,7 @@ docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verif
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/probar-endpoint-e6.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-participantes.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-revanchas.php
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-rango-fechas.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-modo-pruebas.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e8.php
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/prueba-carga.php

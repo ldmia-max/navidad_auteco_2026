@@ -3,7 +3,7 @@
  * Plugin Name: Concurso Navideño TVS
  * Plugin URI:  https://www.auteco.com.co/tvs
  * Description: Juego arcade-retro estilo Excitebike para la campaña navideña de Auteco TVS. Carrera de 90 segundos; gana quien recorra más metros.
- * Version:     1.23.0
+ * Version:     1.24.0
  * Author:      Auteco
  * Text Domain: navidad-tvs
  * Domain Path: /languages
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * create_tables() en instalaciones ya activas, y además invalida el caché de
  * CSS y JS en los navegadores.
  */
-define( 'NAVIDAD_TVS_VERSION', '1.23.0' );
+define( 'NAVIDAD_TVS_VERSION', '1.24.0' );
 
 define( 'NAVIDAD_TVS_FILE', __FILE__ );
 define( 'NAVIDAD_TVS_PATH', plugin_dir_path( __FILE__ ) );
@@ -267,10 +267,92 @@ final class NavidadTVS_Plugin {
 	}
 
 	/**
+	 * Pasa una fecha Y-m-d a "24 de diciembre de 2026".
+	 *
+	 * Los meses van a mano y no con wp_date(): el nombre saldría en el idioma
+	 * del sitio, y aquí todo el texto visible está en español pase lo que pase
+	 * con el locale de WordPress.
+	 *
+	 * Vive aquí, y no en la clase que la usa, porque la usan dos que no se
+	 * conocen entre sí: el aviso de fuera de horario y los textos legales.
+	 *
+	 * @param string $fecha Formato Y-m-d.
+	 * @return string La fecha en letra, o la cadena recibida si no la entiende.
+	 */
+	public static function fecha_legible( $fecha ) {
+		$partes = explode( '-', (string) $fecha );
+
+		if ( 3 !== count( $partes ) ) {
+			return (string) $fecha;
+		}
+
+		$meses = array(
+			1  => __( 'enero', 'navidad-tvs' ),
+			2  => __( 'febrero', 'navidad-tvs' ),
+			3  => __( 'marzo', 'navidad-tvs' ),
+			4  => __( 'abril', 'navidad-tvs' ),
+			5  => __( 'mayo', 'navidad-tvs' ),
+			6  => __( 'junio', 'navidad-tvs' ),
+			7  => __( 'julio', 'navidad-tvs' ),
+			8  => __( 'agosto', 'navidad-tvs' ),
+			9  => __( 'septiembre', 'navidad-tvs' ),
+			10 => __( 'octubre', 'navidad-tvs' ),
+			11 => __( 'noviembre', 'navidad-tvs' ),
+			12 => __( 'diciembre', 'navidad-tvs' ),
+		);
+
+		$mes = (int) $partes[1];
+
+		if ( ! isset( $meses[ $mes ] ) ) {
+			return (string) $fecha;
+		}
+
+		return sprintf(
+			/* translators: 1: día del mes, 2: nombre del mes, 3: año */
+			__( '%1$d de %2$s de %3$d', 'navidad-tvs' ),
+			(int) $partes[2],
+			$meses[ $mes ],
+			(int) $partes[0]
+		);
+	}
+
+	/**
+	 * Indica si una fecha cae dentro del rango del concurso.
+	 *
+	 * Los dos extremos entran, y cada uno es opcional: vacío significa sin
+	 * límite por ese lado. Las fechas se comparan como cadenas Y-m-d, que para
+	 * ese formato ordena igual que por calendario.
+	 *
+	 * @param string $fecha Fecha Y-m-d en hora de Colombia.
+	 * @return bool
+	 */
+	public static function dentro_del_rango( $fecha ) {
+		$settings = self::instancia()->settings;
+
+		$inicio = (string) $settings->get( 'fecha_inicio' );
+		$fin    = (string) $settings->get( 'fecha_fin' );
+
+		if ( '' !== $inicio && $fecha < $inicio ) {
+			return false;
+		}
+
+		if ( '' !== $fin && $fecha > $fin ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Indica si en este momento está abierta la ventana de participación.
 	 *
 	 * Siempre con hora de servidor. La hora del dispositivo del participante
 	 * no interviene: cambiarla no abre la ventana.
+	 *
+	 * Es el único sitio donde se decide esto. El rango de fechas se comprueba
+	 * aquí y no en el formulario de acceso para que lo hereden de una vez el
+	 * shortcode, el endpoint de estado, el arranque de la carrera y el panel:
+	 * cualquiera de esos caminos por separado se olvidaría tarde o temprano.
 	 *
 	 * @param DateTimeImmutable|null $momento Para pruebas. Por defecto, ahora.
 	 * @return bool
@@ -283,6 +365,10 @@ final class NavidadTVS_Plugin {
 		}
 
 		$momento = $momento ? $momento : self::ahora();
+
+		if ( ! self::dentro_del_rango( $momento->format( 'Y-m-d' ) ) ) {
+			return false;
+		}
 
 		// 'N' devuelve 1 (lunes) a 7 (domingo).
 		$dia = (int) $momento->format( 'N' );

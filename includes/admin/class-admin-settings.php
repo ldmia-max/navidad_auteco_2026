@@ -58,6 +58,15 @@ class NavidadTVS_Admin_Settings {
 		sort( $dias );
 
 		$valores = array(
+			/*
+			 * Una fecha ilegible se guarda como vacía, no como la anterior.
+			 * Vacío aquí significa "sin límite", que es un estado válido y
+			 * visible en la pantalla; conservar a escondidas la fecha previa
+			 * dejaría el formulario diciendo una cosa y el concurso haciendo
+			 * otra.
+			 */
+			'fecha_inicio'         => $this->sanear_fecha( $_POST['fecha_inicio'] ?? '' ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			'fecha_fin'            => $this->sanear_fecha( $_POST['fecha_fin'] ?? '' ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'hora_inicio'          => $this->sanear_hora( $_POST['hora_inicio'] ?? '', '12:00' ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'hora_fin'             => $this->sanear_hora( $_POST['hora_fin'] ?? '', '13:30' ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			'dias_habiles'         => $dias,
@@ -92,6 +101,24 @@ class NavidadTVS_Admin_Settings {
 		if ( empty( $valores['dias_habiles'] ) ) {
 			$valores['dias_habiles'] = $this->settings->get( 'dias_habiles' );
 			$aviso                   = 'sin_dias';
+		}
+
+		/*
+		 * Un rango al revés no cierra el concurso un rato: lo cierra para
+		 * siempre, y sin decir por qué. Se rechaza el cambio entero —las dos
+		 * fechas, no solo la de cierre— y se dejan las que había.
+		 *
+		 * Volver a las dos anteriores es lo que mantiene la invariante: el par
+		 * guardado siempre es un rango válido, así que restaurarlo no puede
+		 * dejar otro inválido. Devolver solo una sí podría.
+		 *
+		 * Las dos fechas iguales se aceptan: es un concurso de un solo día.
+		 */
+		if ( '' !== $valores['fecha_inicio'] && '' !== $valores['fecha_fin']
+			&& $valores['fecha_fin'] < $valores['fecha_inicio'] ) {
+			$valores['fecha_inicio'] = (string) $this->settings->get( 'fecha_inicio' );
+			$valores['fecha_fin']    = (string) $this->settings->get( 'fecha_fin' );
+			$aviso                   = 'fechas_invalidas';
 		}
 
 		$this->settings->set( $valores );
@@ -142,6 +169,37 @@ class NavidadTVS_Admin_Settings {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Valida una fecha en formato Y-m-d.
+	 *
+	 * Vacío es un valor legítimo: significa que no hay límite por ese lado.
+	 *
+	 * checkdate() hace falta además del patrón. El input de tipo date no deja
+	 * escribir un 31 de febrero, pero el formulario se puede enviar sin
+	 * navegador, y una fecha así la aceptaría la expresión regular y luego
+	 * DateTime la correría al 3 de marzo.
+	 *
+	 * @param string $valor Valor recibido.
+	 * @return string Fecha Y-m-d, o cadena vacía.
+	 */
+	private function sanear_fecha( $valor ) {
+		$valor = sanitize_text_field( wp_unslash( (string) $valor ) );
+
+		if ( '' === $valor ) {
+			return '';
+		}
+
+		if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $m ) ) {
+			return '';
+		}
+
+		if ( ! checkdate( (int) $m[2], (int) $m[3], (int) $m[1] ) ) {
+			return '';
+		}
+
+		return $valor;
 	}
 
 	/**

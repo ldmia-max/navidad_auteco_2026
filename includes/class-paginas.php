@@ -130,6 +130,7 @@ class NavidadTVS_Paginas {
 			array(
 				'enlaces' => $this->enlaces(),
 				'horario' => $horario['horario'],
+				'rango'   => $horario['rango'],
 				'abierta' => ! empty( $horario['abierta'] ),
 				'premios' => (int) $this->settings->get( 'premios_por_jornada' ),
 			)

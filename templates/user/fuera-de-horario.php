@@ -43,6 +43,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 			?>
 		</p>
 
+		<?php
+		/*
+		 * El rango de fechas solo se imprime si está configurado. Sin él la
+		 * frase quedaría a medias, y además no habría nada que contar: el
+		 * concurso estaría abierto todos los días hábiles.
+		 */
+		?>
+		<?php if ( ! empty( $estado['rango'] ) ) : ?>
+			<p class="ntvs-horario"><?php echo esc_html( $estado['rango'] ); ?></p>
+		<?php endif; ?>
+
 		<?php if ( ! empty( $estado['mensaje'] ) ) : ?>
 			<p class="ntvs-proxima"><?php echo esc_html( $estado['mensaje'] ); ?></p>
 		<?php endif; ?>

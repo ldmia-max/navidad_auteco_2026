@@ -46,6 +46,8 @@ $config_original = array(
 	'hora_fin'           => $settings->get( 'hora_fin' ),
 	'dias_habiles'       => $settings->get( 'dias_habiles' ),
 	'concurso_congelado' => $settings->get( 'concurso_congelado' ),
+	'fecha_inicio'       => $settings->get( 'fecha_inicio' ),
+	'fecha_fin'          => $settings->get( 'fecha_fin' ),
 );
 
 /** Deja la ventana abierta ahora mismo. */
@@ -55,6 +57,8 @@ function abrir_ventana( $settings ) {
 		array(
 			'hora_inicio'        => $ahora->modify( '-30 minutes' )->format( 'H:i' ),
 			'hora_fin'           => $ahora->modify( '+30 minutes' )->format( 'H:i' ),
+			'fecha_inicio'       => '',
+			'fecha_fin'          => '',
 			'dias_habiles'       => array( 1, 2, 3, 4, 5, 6, 7 ),
 			'concurso_congelado' => false,
 		)

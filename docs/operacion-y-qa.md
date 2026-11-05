@@ -18,7 +18,7 @@ No hay que hacer nada con esto; se lista para saber qué está cubierto.
 | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` en las páginas del concurso | `includes/class-seguridad.php` |
 | `Cache-Control: no-store` en los endpoints del concurso | igual |
 | Límite de intentos por IP y por teléfono | `includes/class-rate-limit.php` |
-| Ventana horaria y congelamiento, validados con hora del servidor | `navidad-tvs.php`, `includes/class-acceso.php` |
+| Ventana horaria, rango de fechas y congelamiento, validados con hora del servidor | `navidad-tvs.php`, `includes/class-acceso.php` |
 | Un solo intento, garantizado por índice único en la base | `includes/class-database.php` |
 | La distancia la calcula el servidor reejecutando el log | `includes/class-validador.php` |
 | Malla de plausibilidad por duración y por tope de metros | igual |
@@ -147,6 +147,31 @@ Siguen vacías. Con la clave secreta en blanco, la comprobación **se salta
 entera** (`includes/class-acceso.php`). Funciona, pero deja la puerta abierta a
 un script que pruebe teléfonos. Ponerlas en Ajustes → Concurso TVS.
 
+### 2.8 Las fechas del concurso, puestas antes de abrir
+
+En Configuración hay **fecha inicio** y **fecha final**. Fuera de ese rango no
+se puede participar, aunque la hora caiga dentro de la jornada. Los dos días
+entran: el último se juega completo, hasta la hora de cierre.
+
+**Vienen vacías de fábrica, y vacío significa sin tope.** Con las dos en
+blanco el concurso está disponible todos los días hábiles, sin principio ni
+final; es cómodo mientras se arma el sitio y es justo lo que no se quiere el
+día del lanzamiento. La pantalla de Configuración avisa mientras estén así, y
+la de Estado dice en qué parte del rango cae hoy.
+
+Para **extender el concurso** basta con correr la fecha final. No hay que
+tocar código ni volver a empaquetar: el cambio surte efecto en la siguiente
+recarga.
+
+Dos cosas que conviene saber:
+
+- **El teléfono de pruebas se salta el rango**, igual que se salta el horario.
+  Es lo que permite revisar el juego en noviembre con el concurso configurado
+  para diciembre.
+- **`dev/abrir-ventana.php abrir` borra el rango** al abrir la ventana de
+  desarrollo, y lo dice al terminar. Si se corre contra una instalación que ya
+  tiene fechas puestas, hay que volver a ponerlas a mano.
+
 ---
 
 ## 3. QA en dispositivos reales
@@ -215,6 +240,9 @@ reales: las de prueba llevan placa `ZZZ…`.
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-e1.php
 # ... e2, e3, e4, e6, e8
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-participantes.php
+
+# Rango de fechas: validación del formulario y avisos de la página pública
+docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/verificar-rango-fechas.php
 
 # Carga: 50 accesos simultáneos, o los que se le pidan
 docker compose run --rm wpcli eval-file wp-content/plugins/navidad-tvs/dev/prueba-carga.php

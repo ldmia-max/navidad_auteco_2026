@@ -557,7 +557,7 @@ class NavidadTVS_Acceso {
 	 * Describe la próxima apertura de la ventana, para el aviso de fuera de
 	 * horario.
 	 *
-	 * @return array Con 'abierta', 'mensaje' y 'horario'.
+	 * @return array Con 'abierta', 'mensaje', 'horario' y 'rango'.
 	 */
 	public function estado_ventana() {
 		$abierta = NavidadTVS_Plugin::ventana_abierta();
@@ -571,11 +571,14 @@ class NavidadTVS_Acceso {
 			$this->hora_legible( $fin )
 		);
 
+		$rango = $this->rango_legible();
+
 		if ( $abierta ) {
 			return array(
 				'abierta' => true,
 				'mensaje' => '',
 				'horario' => $horario,
+				'rango'   => $rango,
 			);
 		}
 
@@ -584,18 +587,92 @@ class NavidadTVS_Acceso {
 				'abierta' => false,
 				'mensaje' => __( 'El concurso está cerrado por el momento.', 'navidad-tvs' ),
 				'horario' => $horario,
+				'rango'   => $rango,
 			);
 		}
 
 		return array(
 			'abierta' => false,
-			'mensaje' => $this->mensaje_proxima_apertura( $inicio ),
+			'mensaje' => $this->mensaje_cerrado( $inicio ),
 			'horario' => $horario,
+			'rango'   => $rango,
 		);
 	}
 
 	/**
+	 * Aviso de por qué está cerrado ahora mismo.
+	 *
+	 * El rango de fechas manda sobre el horario diario: a quien entra en
+	 * noviembre no le sirve saber que las jornadas son de 12:00 a 1:30, le
+	 * sirve saber que el concurso arranca en diciembre.
+	 *
+	 * @param string $hora_inicio Hora de apertura, formato H:i.
+	 * @return string
+	 */
+	private function mensaje_cerrado( $hora_inicio ) {
+		$hoy    = NavidadTVS_Plugin::hoy();
+		$inicio = (string) $this->settings->get( 'fecha_inicio' );
+		$fin    = (string) $this->settings->get( 'fecha_fin' );
+
+		if ( '' !== $inicio && $hoy < $inicio ) {
+			return sprintf(
+				/* translators: %s: fecha de inicio del concurso */
+				__( 'El concurso empieza el %s.', 'navidad-tvs' ),
+				$this->fecha_legible( $inicio )
+			);
+		}
+
+		if ( '' !== $fin && $hoy > $fin ) {
+			return __( 'El concurso ya terminó. Gracias a todos los que participaron.', 'navidad-tvs' );
+		}
+
+		return $this->mensaje_proxima_apertura( $hora_inicio );
+	}
+
+	/**
+	 * El rango de fechas en una frase, o cadena vacía si no hay rango.
+	 *
+	 * @return string
+	 */
+	private function rango_legible() {
+		$inicio = (string) $this->settings->get( 'fecha_inicio' );
+		$fin    = (string) $this->settings->get( 'fecha_fin' );
+
+		if ( '' !== $inicio && '' !== $fin ) {
+			return sprintf(
+				/* translators: 1: fecha de inicio, 2: fecha de fin */
+				__( 'Del %1$s al %2$s.', 'navidad-tvs' ),
+				$this->fecha_legible( $inicio ),
+				$this->fecha_legible( $fin )
+			);
+		}
+
+		if ( '' !== $inicio ) {
+			return sprintf(
+				/* translators: %s: fecha de inicio */
+				__( 'A partir del %s.', 'navidad-tvs' ),
+				$this->fecha_legible( $inicio )
+			);
+		}
+
+		if ( '' !== $fin ) {
+			return sprintf(
+				/* translators: %s: fecha de fin */
+				__( 'Hasta el %s.', 'navidad-tvs' ),
+				$this->fecha_legible( $fin )
+			);
+		}
+
+		return '';
+	}
+
+	/**
 	 * Arma el aviso de cuándo vuelve a abrir.
+	 *
+	 * Solo se llama cuando hoy cae dentro del rango del concurso, así que lo
+	 * único que hay que vigilar es no prometer una jornada que ya no existe:
+	 * el último día, pasada la hora de cierre, la respuesta no es "el lunes"
+	 * sino que se acabó.
 	 *
 	 * @param string $hora_inicio Hora de apertura, formato H:i.
 	 * @return string
@@ -614,9 +691,15 @@ class NavidadTVS_Acceso {
 			);
 		}
 
+		$fin = (string) $this->settings->get( 'fecha_fin' );
+
 		// Buscar el próximo día hábil, mirando como mucho una semana adelante.
 		for ( $i = 1; $i <= 7; $i++ ) {
 			$candidato = $ahora->modify( "+{$i} day" );
+
+			if ( '' !== $fin && $candidato->format( 'Y-m-d' ) > $fin ) {
+				break;
+			}
 
 			if ( in_array( (int) $candidato->format( 'N' ), $dias, true ) ) {
 				return sprintf(
@@ -626,6 +709,14 @@ class NavidadTVS_Acceso {
 					$this->hora_legible( $inicio )
 				);
 			}
+		}
+
+		if ( '' !== $fin ) {
+			return sprintf(
+				/* translators: %s: último día del concurso */
+				__( 'Hoy fue la última jornada. El concurso cierra el %s.', 'navidad-tvs' ),
+				$this->fecha_legible( $fin )
+			);
 		}
 
 		return __( 'Consulta los términos y condiciones para conocer las fechas de participación.', 'navidad-tvs' );
@@ -651,6 +742,16 @@ class NavidadTVS_Acceso {
 		return 0 === $m
 			? sprintf( '%d:00 %s', $h12, $sufijo )
 			: sprintf( '%d:%02d %s', $h12, $m, $sufijo );
+	}
+
+	/**
+	 * Pasa una fecha Y-m-d a "24 de diciembre de 2026".
+	 *
+	 * @param string $fecha Formato Y-m-d.
+	 * @return string
+	 */
+	private function fecha_legible( $fecha ) {
+		return NavidadTVS_Plugin::fecha_legible( $fecha );
 	}
 
 	/**

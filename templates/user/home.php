@@ -2,7 +2,7 @@
 /**
  * Portada del concurso.
  *
- * Variables: $enlaces, $horario, $abierta, $premios.
+ * Variables: $enlaces, $horario, $rango, $abierta, $premios.
  *
  * @package NavidadTVS
  */
@@ -34,7 +34,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</a>
 		<?php endif; ?>
 
-		<p class="ntvs-hero__horario"><?php echo esc_html( $horario ); ?></p>
+		<p class="ntvs-hero__horario">
+			<?php echo esc_html( $horario ); ?>
+			<?php
+			/*
+			 * El rango de fechas solo sale si está configurado. Sin él no hay
+			 * nada que contar: el concurso estaría abierto todos los días hábiles.
+			 */
+			if ( '' !== $rango ) :
+				?>
+				<br><?php echo esc_html( $rango ); ?>
+			<?php endif; ?>
+		</p>
 	</header>
 
 	<section class="ntvs-bloque" aria-labelledby="ntvs-como">

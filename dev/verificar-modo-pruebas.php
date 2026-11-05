@@ -186,6 +186,8 @@ $antes = array(
 	'hora_fin'           => $cfg->get( 'hora_fin' ),
 	'dias_habiles'       => $cfg->get( 'dias_habiles' ),
 	'concurso_congelado' => $cfg->get( 'concurso_congelado' ),
+	'fecha_inicio'       => $cfg->get( 'fecha_inicio' ),
+	'fecha_fin'          => $cfg->get( 'fecha_fin' ),
 );
 
 limpiar( $db );
@@ -234,6 +236,11 @@ $cfg->set(
 	array(
 		'hora_inicio'        => '03:00',
 		'hora_fin'           => '03:01',
+		// Sin rango de fechas en todo el guion. Más abajo se abre la ventana
+		// para el grupo de control, y un rango puesto la dejaría cerrada por
+		// un motivo que no es el que se está probando.
+		'fecha_inicio'       => '',
+		'fecha_fin'          => '',
 		'dias_habiles'       => array( 1, 2, 3, 4, 5, 6, 7 ),
 		'concurso_congelado' => false,
 		'telefono_pruebas'   => '',

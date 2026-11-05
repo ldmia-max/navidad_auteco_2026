@@ -45,6 +45,33 @@ class NavidadTVS_Contenido {
 	}
 
 	/**
+	 * Una fecha del concurso, en letra y sacada de la configuración.
+	 *
+	 * Estas dos fechas ya no se redactan a mano: son las mismas que decide
+	 * quién puede entrar, así que se leen de Ajustes. Si se publicara en los
+	 * términos un rango distinto del que aplica el servidor, el que manda
+	 * sería el del servidor y el texto legal estaría mintiendo. Y al extender
+	 * el concurso, que es justo para lo que están esas casillas, nadie se
+	 * acordaría de venir a cambiar los términos.
+	 *
+	 * Mientras la casilla esté vacía sigue saliendo el [pendiente: …], que es
+	 * lo que impide dar el sitio por terminado sin haberlas puesto.
+	 *
+	 * @param string $clave 'fecha_inicio' o 'fecha_fin'.
+	 * @param string $que   Qué falta, para la marca de pendiente.
+	 * @return string
+	 */
+	private static function fecha_configurada( $clave, $que ) {
+		$valor = (string) NavidadTVS_Plugin::instancia()->settings->get( $clave );
+
+		if ( '' === $valor ) {
+			return self::pendiente( $que );
+		}
+
+		return NavidadTVS_Plugin::fecha_legible( $valor );
+	}
+
+	/**
 	 * Preguntas frecuentes, agrupadas por tema.
 	 *
 	 * @return array<int, array{titulo: string, preguntas: array<int, array{p: string, r: string}>}>
@@ -69,8 +96,8 @@ class NavidadTVS_Contenido {
 						'r' => sprintf(
 							/* translators: 1: fecha de inicio, 2: fecha de cierre. */
 							__( 'Entre el %1$s y el %2$s.', 'navidad-tvs' ),
-							call_user_func( $p, __( 'fecha de inicio', 'navidad-tvs' ) ),
-							call_user_func( $p, __( 'fecha de cierre', 'navidad-tvs' ) )
+							self::fecha_configurada( 'fecha_inicio', __( 'fecha de inicio', 'navidad-tvs' ) ),
+							self::fecha_configurada( 'fecha_fin', __( 'fecha de cierre', 'navidad-tvs' ) )
 						),
 					),
 					array(
@@ -296,8 +323,8 @@ class NavidadTVS_Contenido {
 					sprintf(
 						/* translators: 1: fecha de inicio, 2: fecha de cierre. */
 						__( 'La actividad se desarrolla entre el %1$s y el %2$s, ambas fechas inclusive.', 'navidad-tvs' ),
-						call_user_func( $p, __( 'fecha de inicio', 'navidad-tvs' ) ),
-						call_user_func( $p, __( 'fecha de cierre', 'navidad-tvs' ) )
+						self::fecha_configurada( 'fecha_inicio', __( 'fecha de inicio', 'navidad-tvs' ) ),
+						self::fecha_configurada( 'fecha_fin', __( 'fecha de cierre', 'navidad-tvs' ) )
 					),
 					__( 'Cada día hábil de la actividad constituye una jornada independiente, con sus propios ganadores.', 'navidad-tvs' ),
 					__( 'La participación se habilita de lunes a sábado, entre las 12:00 p. m. y la 1:30 p. m., hora legal de la República de Colombia. Los domingos no hay jornada.', 'navidad-tvs' ),

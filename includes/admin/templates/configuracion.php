@@ -45,13 +45,55 @@ $nombres_dias = array(
 		</p></div>
 	<?php elseif ( 'sin_dias' === $aviso ) : ?>
 		<div class="notice notice-error"><p><?php esc_html_e( 'Hay que dejar al menos un día hábil. Se conservaron los anteriores.', 'navidad-tvs' ); ?></p></div>
+	<?php elseif ( 'fechas_invalidas' === $aviso ) : ?>
+		<div class="notice notice-error"><p><?php esc_html_e( 'La fecha final no puede ser anterior a la inicial. Se conservaron las anteriores.', 'navidad-tvs' ); ?></p></div>
 	<?php endif; ?>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( 'navidad_tvs_guardar_config' ); ?>
 		<input type="hidden" name="action" value="navidad_tvs_guardar_config">
 
-		<h2><?php esc_html_e( 'Ventana de participación', 'navidad-tvs' ); ?></h2>
+		<h2><?php esc_html_e( 'Fechas del concurso', 'navidad-tvs' ); ?></h2>
+		<p class="description">
+			<?php esc_html_e( 'Fuera de este rango no se puede participar, ni siquiera dentro del horario. Los dos días entran: el último se juega completo, hasta la hora de cierre.', 'navidad-tvs' ); ?>
+		</p>
+
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><label for="fecha_inicio"><?php esc_html_e( 'Fecha inicio de concurso', 'navidad-tvs' ); ?></label></th>
+				<td>
+					<input type="date" id="fecha_inicio" name="fecha_inicio"
+						value="<?php echo esc_attr( $settings->get( 'fecha_inicio' ) ); ?>">
+					<p class="description"><?php esc_html_e( 'Antes de este día nadie entra. Déjala vacía para no poner tope por ese lado.', 'navidad-tvs' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="fecha_fin"><?php esc_html_e( 'Fecha final de concurso', 'navidad-tvs' ); ?></label></th>
+				<td>
+					<input type="date" id="fecha_fin" name="fecha_fin"
+						value="<?php echo esc_attr( $settings->get( 'fecha_fin' ) ); ?>">
+					<p class="description"><?php esc_html_e( 'Último día en que se puede jugar. Si el cliente pide extender el concurso, se corre esta fecha y ya; no hace falta tocar nada más.', 'navidad-tvs' ); ?></p>
+				</td>
+			</tr>
+		</table>
+
+		<?php
+		$f_inicio = (string) $settings->get( 'fecha_inicio' );
+		$f_fin    = (string) $settings->get( 'fecha_fin' );
+
+		/*
+		 * Sin rango el concurso vive abierto todos los días hábiles, para
+		 * siempre. Es el valor de fábrica y es razonable mientras se arma el
+		 * sitio, pero nadie quiere llegar así al lanzamiento, así que se dice.
+		 */
+		if ( '' === $f_inicio && '' === $f_fin ) :
+			?>
+			<div class="notice notice-warning inline">
+				<p><?php esc_html_e( 'No hay rango de fechas: el concurso está disponible cualquier día hábil, sin principio ni final. Pon las dos fechas antes de abrir al público.', 'navidad-tvs' ); ?></p>
+			</div>
+		<?php endif; ?>
+
+		<h2><?php esc_html_e( 'Horario de la jornada', 'navidad-tvs' ); ?></h2>
 		<p class="description">
 			<?php esc_html_e( 'Siempre en hora de Colombia (America/Bogota) y medida en el servidor. Cambiar la hora del celular no abre la ventana.', 'navidad-tvs' ); ?>
 		</p>

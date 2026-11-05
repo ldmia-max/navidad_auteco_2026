@@ -79,12 +79,71 @@ foreach ( (array) $settings->get( 'dias_habiles' ) as $d ) {
 		</div>
 	<?php endif; ?>
 
+	<?php
+	/*
+	 * Por qué está cerrado importa tanto como que lo esté. Sin esto, un
+	 * concurso que todavía no empieza y uno congelado se ven igual desde
+	 * aquí, y se pierde media mañana buscando en el sitio equivocado.
+	 */
+	$f_inicio = (string) $settings->get( 'fecha_inicio' );
+	$f_fin    = (string) $settings->get( 'fecha_fin' );
+
+	if ( ! $abierta && ! $settings->get( 'concurso_congelado' ) ) :
+		if ( '' !== $f_inicio && $hoy < $f_inicio ) :
+			?>
+			<div class="notice notice-info">
+				<p>
+					<?php
+					printf(
+						/* translators: %s: fecha de inicio del concurso */
+						esc_html__( 'El concurso todavía no empieza: arranca el %s.', 'navidad-tvs' ),
+						esc_html( $f_inicio )
+					);
+					?>
+				</p>
+			</div>
+			<?php
+		elseif ( '' !== $f_fin && $hoy > $f_fin ) :
+			?>
+			<div class="notice notice-info">
+				<p>
+					<?php
+					printf(
+						/* translators: %s: fecha final del concurso */
+						esc_html__( 'El concurso terminó el %s.', 'navidad-tvs' ),
+						esc_html( $f_fin )
+					);
+					?>
+				</p>
+			</div>
+			<?php
+		endif;
+	endif;
+	?>
+
 	<h2><?php esc_html_e( 'Jornada de hoy', 'navidad-tvs' ); ?></h2>
 	<table class="widefat striped" style="max-width:640px">
 		<tbody>
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Fecha (hora Colombia)', 'navidad-tvs' ); ?></th>
 				<td><?php echo esc_html( $hoy ); ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Fechas del concurso', 'navidad-tvs' ); ?></th>
+				<td>
+					<?php
+					if ( '' === $f_inicio && '' === $f_fin ) {
+						echo '<em>' . esc_html__( 'sin rango: cualquier día hábil', 'navidad-tvs' ) . '</em>';
+					} else {
+						printf(
+							/* translators: 1: fecha de inicio, 2: fecha final */
+							esc_html__( '%1$s a %2$s', 'navidad-tvs' ),
+							esc_html( '' !== $f_inicio ? $f_inicio : __( 'sin tope', 'navidad-tvs' ) ),
+							esc_html( '' !== $f_fin ? $f_fin : __( 'sin tope', 'navidad-tvs' ) )
+						);
+					}
+					?>
+				</td>
 			</tr>
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Horario', 'navidad-tvs' ); ?></th>

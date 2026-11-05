@@ -45,6 +45,8 @@ $config_previa = array(
 	'hora_fin'           => $settings_e1->get( 'hora_fin' ),
 	'dias_habiles'       => $settings_e1->get( 'dias_habiles' ),
 	'concurso_congelado' => $settings_e1->get( 'concurso_congelado' ),
+	'fecha_inicio'       => $settings_e1->get( 'fecha_inicio' ),
+	'fecha_fin'          => $settings_e1->get( 'fecha_fin' ),
 );
 $settings_e1->set(
 	array(
@@ -52,6 +54,11 @@ $settings_e1->set(
 		'hora_fin'           => '13:30',
 		'dias_habiles'       => array( 1, 2, 3, 4, 5, 6 ),
 		'concurso_congelado' => false,
+		// Sin rango: estas comprobaciones son sobre la hora y el día. Si
+		// quedara puesto el rango real del concurso, las fechas de septiembre
+		// de abajo caerían fuera y fallarían todas por el motivo equivocado.
+		'fecha_inicio'       => '',
+		'fecha_fin'          => '',
 	)
 );
 
@@ -77,6 +84,65 @@ $dentro = new DateTimeImmutable( '2026-09-22 12:30:00', $tz );
 comprobar( 'congelado ignora la hora', false, NavidadTVS_Plugin::ventana_abierta( $dentro ) );
 $settings->set( array( 'concurso_congelado' => false ) );
 comprobar( 'descongelado vuelve a abrir', true, NavidadTVS_Plugin::ventana_abierta( $dentro ) );
+
+echo "\n--- rango de fechas del concurso ---\n";
+
+/*
+ * Todos los momentos de aquí abajo son martes a las 12:30, o sea dentro del
+ * horario y en día hábil. Lo único que cambia la respuesta es la fecha, que
+ * es justo lo que se está probando.
+ */
+$martes_1  = new DateTimeImmutable( '2026-12-01 12:30:00', $tz );
+$martes_8  = new DateTimeImmutable( '2026-12-08 12:30:00', $tz );
+$martes_15 = new DateTimeImmutable( '2026-12-15 12:30:00', $tz );
+$martes_22 = new DateTimeImmutable( '2026-12-22 12:30:00', $tz );
+
+$settings->set(
+	array(
+		'fecha_inicio' => '2026-12-08',
+		'fecha_fin'    => '2026-12-15',
+	)
+);
+
+comprobar( 'antes del inicio (1 dic)', false, NavidadTVS_Plugin::ventana_abierta( $martes_1 ) );
+comprobar( 'primer dia (8 dic, entra)', true, NavidadTVS_Plugin::ventana_abierta( $martes_8 ) );
+comprobar( 'ultimo dia (15 dic, entra)', true, NavidadTVS_Plugin::ventana_abierta( $martes_15 ) );
+comprobar( 'despues del final (22 dic)', false, NavidadTVS_Plugin::ventana_abierta( $martes_22 ) );
+
+// El último día se juega la jornada entera, hasta la hora de cierre.
+$ultimo_tarde = new DateTimeImmutable( '2026-12-15 13:29:00', $tz );
+$ultimo_cierre = new DateTimeImmutable( '2026-12-15 13:30:00', $tz );
+comprobar( 'ultimo dia 13:29 (entra)', true, NavidadTVS_Plugin::ventana_abierta( $ultimo_tarde ) );
+comprobar( 'ultimo dia 13:30 (cierra igual)', false, NavidadTVS_Plugin::ventana_abierta( $ultimo_cierre ) );
+
+// Un solo extremo: el otro queda sin tope.
+$settings->set( array( 'fecha_inicio' => '2026-12-08', 'fecha_fin' => '' ) );
+comprobar( 'solo inicio: antes no', false, NavidadTVS_Plugin::ventana_abierta( $martes_1 ) );
+comprobar( 'solo inicio: mucho despues si', true, NavidadTVS_Plugin::ventana_abierta( $martes_22 ) );
+
+$settings->set( array( 'fecha_inicio' => '', 'fecha_fin' => '2026-12-15' ) );
+comprobar( 'solo final: mucho antes si', true, NavidadTVS_Plugin::ventana_abierta( $martes_1 ) );
+comprobar( 'solo final: despues no', false, NavidadTVS_Plugin::ventana_abierta( $martes_22 ) );
+
+// Concurso de un solo día: las dos fechas iguales.
+$settings->set( array( 'fecha_inicio' => '2026-12-08', 'fecha_fin' => '2026-12-08' ) );
+comprobar( 'un solo dia: ese dia', true, NavidadTVS_Plugin::ventana_abierta( $martes_8 ) );
+comprobar( 'un solo dia: el siguiente no', false, NavidadTVS_Plugin::ventana_abierta( $martes_15 ) );
+
+// Sin rango no hay restriccion por fecha.
+$settings->set( array( 'fecha_inicio' => '', 'fecha_fin' => '' ) );
+comprobar( 'sin rango: cualquier dia habil', true, NavidadTVS_Plugin::ventana_abierta( $martes_1 ) );
+
+// El congelamiento manda sobre el rango: dentro de fechas y aun asi cerrado.
+$settings->set(
+	array(
+		'fecha_inicio'       => '2026-12-08',
+		'fecha_fin'          => '2026-12-15',
+		'concurso_congelado' => true,
+	)
+);
+comprobar( 'congelado dentro del rango', false, NavidadTVS_Plugin::ventana_abierta( $martes_8 ) );
+$settings->set( array( 'concurso_congelado' => false ) );
 
 $settings_e1->set( $config_previa );
 

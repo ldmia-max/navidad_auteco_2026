@@ -28,6 +28,22 @@ class NavidadTVS_Settings {
 	 */
 	public function defaults() {
 		return array(
+			/*
+			 * Rango de fechas del concurso, Y-m-d y hora de Colombia. Los dos
+			 * extremos entran: el último día se juega completo.
+			 *
+			 * Vacío = sin límite por ese lado. Es el valor de fábrica a
+			 * propósito: la jornada diaria ya la cortan la hora y los días
+			 * hábiles, y una instalación que se actualiza no puede quedarse
+			 * cerrada de golpe por un rango que nadie escribió.
+			 *
+			 * Para lo que sirve de verdad es para las dos puntas: impedir que
+			 * alguien entre antes del lanzamiento y permitir alargar el
+			 * concurso si el cliente lo pide, sin tocar código.
+			 */
+			'fecha_inicio'         => '',
+			'fecha_fin'            => '',
+
 			// Ventana de participación, hora de Colombia.
 			'hora_inicio'          => '12:00',
 			'hora_fin'             => '13:30',

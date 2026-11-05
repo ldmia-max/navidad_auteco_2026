@@ -26,10 +26,17 @@ if ( 'cerrar' === $accion ) {
 		return;
 	}
 
+	// El rango de fechas tambien se quita. Abrir solo la franja horaria no
+	// sirve de nada si el concurso esta configurado para empezar en diciembre:
+	// la ventana seguiria cerrada y costaria entender por que.
+	$rango_previo = array( $settings->get( 'fecha_inicio' ), $settings->get( 'fecha_fin' ) );
+
 	$settings->set(
 		array(
 			'hora_inicio'  => $inicio,
 			'hora_fin'     => $fin,
+			'fecha_inicio' => '',
+			'fecha_fin'    => '',
 			'dias_habiles' => array( 1, 2, 3, 4, 5, 6, 7 ),
 		)
 	);
@@ -41,5 +48,15 @@ if ( 'cerrar' === $accion ) {
 		$settings->get( 'hora_fin' ),
 		$ahora->format( 'H:i' )
 	);
+
+	if ( '' !== $rango_previo[0] || '' !== $rango_previo[1] ) {
+		printf(
+			"OJO: se borro el rango de fechas que habia (%s a %s). Hay que volver\n"
+			. "     a ponerlo en Ajustes antes de entregar.\n",
+			'' !== $rango_previo[0] ? $rango_previo[0] : 'sin tope',
+			'' !== $rango_previo[1] ? $rango_previo[1] : 'sin tope'
+		);
+	}
+
 	echo "Recordar: correr 'abrir-ventana.php cerrar' antes de entregar.\n";
 }
