@@ -658,7 +658,7 @@
 		}
 
 		pon( 'ntvs-res-nombre', resultado.nombre );
-		pon( 'ntvs-res-distancia', resultado.distancia + ' m' );
+		pon( 'ntvs-res-distancia', resultado.distancia + ' metros' );
 		pon( 'ntvs-res-logos', resultado.items );
 		pon( 'ntvs-res-caidas', resultado.caidas );
 		pon( 'ntvs-res-sobrecal', resultado.sobrecalentamientos );
@@ -741,7 +741,7 @@
 			} )
 			.then( function ( oficial ) {
 				// A partir de aquí manda el servidor, no lo que vio la pantalla.
-				pon( 'ntvs-res-distancia', oficial.distancia + ' m' );
+				pon( 'ntvs-res-distancia', oficial.distancia + ' metros' );
 				pon( 'ntvs-res-logos', oficial.llaves );
 				pon( 'ntvs-res-caidas', oficial.caidas );
 
