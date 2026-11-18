@@ -255,15 +255,8 @@ class NavidadTVS_Shortcode {
 	 * @return string
 	 */
 	private function url_pagina( $clave ) {
-		$id = (int) $this->settings->get( $clave );
+		$url = NavidadTVS_Paginas::url_de( $clave );
 
-		if ( $id > 0 ) {
-			$url = get_permalink( $id );
-			if ( $url ) {
-				return $url;
-			}
-		}
-
-		return '#';
+		return '' !== $url ? $url : '#';
 	}
 }

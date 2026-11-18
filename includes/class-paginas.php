@@ -27,6 +27,18 @@ class NavidadTVS_Paginas {
 	const TAG_FAQ      = 'concurso_tvs_faq';
 	const TAG_TERMINOS = 'concurso_tvs_terminos';
 
+	/*
+	 * Slug de cada página del concurso, por clave de configuración. Es lo que
+	 * se busca cuando la casilla está vacía: una página creada a mano con este
+	 * slug ya funciona sin tener que asignarla en Ajustes.
+	 */
+	const SLUGS = array(
+		'pagina_home'     => 'concurso-navideno-tvs',
+		'pagina_juego'    => 'jugar',
+		'pagina_faq'      => 'preguntas-frecuentes',
+		'pagina_terminos' => 'terminos-y-condiciones',
+	);
+
 	/** @var NavidadTVS_Settings */
 	private $settings;
 
@@ -86,16 +98,44 @@ class NavidadTVS_Paginas {
 	 * @return array{juego: string, faq: string, terminos: string}
 	 */
 	private function enlaces() {
-		$de = function ( $clave ) {
-			$id = (int) $this->settings->get( $clave );
-			return $id > 0 ? (string) get_permalink( $id ) : '';
-		};
-
 		return array(
-			'juego'    => $de( 'pagina_juego' ),
-			'faq'      => $de( 'pagina_faq' ),
-			'terminos' => $de( 'pagina_terminos' ),
+			'juego'    => self::url_de( 'pagina_juego' ),
+			'faq'      => self::url_de( 'pagina_faq' ),
+			'terminos' => self::url_de( 'pagina_terminos' ),
 		);
+	}
+
+	/**
+	 * URL de una página del concurso, o cadena vacía si no existe.
+	 *
+	 * Primero mira la casilla de Ajustes. Si está vacía, busca la página por su
+	 * slug, y solo la acepta si está publicada: un borrador con el mismo nombre
+	 * no debe salir como enlace público.
+	 *
+	 * Lo usan la portada, el juego y los enlaces entre páginas, para que los
+	 * tres resuelvan igual.
+	 *
+	 * @param string $clave Clave de la configuración, por ejemplo 'pagina_faq'.
+	 * @return string
+	 */
+	public static function url_de( $clave ) {
+		$id = (int) NavidadTVS_Plugin::instancia()->settings->get( $clave );
+
+		if ( $id <= 0 && isset( self::SLUGS[ $clave ] ) ) {
+			$pagina = get_page_by_path( self::SLUGS[ $clave ] );
+
+			if ( $pagina instanceof WP_Post && 'publish' === $pagina->post_status ) {
+				$id = (int) $pagina->ID;
+			}
+		}
+
+		if ( $id <= 0 ) {
+			return '';
+		}
+
+		$url = get_permalink( $id );
+
+		return $url ? (string) $url : '';
 	}
 
 	/**
