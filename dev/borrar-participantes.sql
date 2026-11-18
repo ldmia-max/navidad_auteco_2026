@@ -19,16 +19,15 @@
 --  ---------------------------------------------------------------
 --  EL PREFIJO DE LAS TABLAS
 --  ---------------------------------------------------------------
---  Este archivo usa `wp_`. Si tu instalación usa otro, hay que
---  cambiarlo en todas partes antes de ejecutar.
+--  Este archivo usa `mdjiGKa_`, el prefijo de la instalación de
+--  producción (base wp_ztcxb). Es sensible a mayúsculas: `mdjiGKa_`
+--  no es lo mismo que `mdjigka_`, y con una letra distinta MySQL
+--  responde "Table doesn't exist" y no borra nada.
 --
---  Para saber cuál es: en phpMyAdmin, mira el nombre de las tablas en
---  la columna de la izquierda. Si ves `wp_options`, el prefijo es `wp_`;
---  si ves `wpxy_options`, es `wpxy_`.
---
---  Para cambiarlo: en la caja de SQL de phpMyAdmin, selecciona todo y
---  usa Buscar y reemplazar del editor, o pega el archivo en un editor
---  de texto y reemplaza `wp_navidad_tvs_` y `wp_options`.
+--  Si ejecutas esto en OTRA instalación, cambia `mdjiGKa_` por el
+--  prefijo de esa instalación en todo el archivo. Para verlo: en
+--  phpMyAdmin, mira el nombre de cualquier tabla de WordPress en la
+--  columna de la izquierda (por ejemplo, `mdjiGKa_options`).
 --
 --  ---------------------------------------------------------------
 --  CÓMO EJECUTARLO
@@ -46,23 +45,23 @@
 --  Ejecuta solo este bloque primero. Apunta los números: el paso 3
 --  comprueba que quedaron en cero.
 
-SELECT 'participantes del padrón'            AS concepto, COUNT(*) AS filas FROM wp_navidad_tvs_participantes
+SELECT 'participantes del padrón'            AS concepto, COUNT(*) AS filas FROM mdjiGKa_navidad_tvs_participantes
 UNION ALL
-SELECT 'sesiones de juego',                  COUNT(*) FROM wp_navidad_tvs_sesiones
+SELECT 'sesiones de juego',                  COUNT(*) FROM mdjiGKa_navidad_tvs_sesiones
 UNION ALL
-SELECT 'resultados de carreras',             COUNT(*) FROM wp_navidad_tvs_scores
+SELECT 'resultados de carreras',             COUNT(*) FROM mdjiGKa_navidad_tvs_scores
 UNION ALL
-SELECT 'de esos, marcados como GANADORES',   COUNT(*) FROM wp_navidad_tvs_scores WHERE ganador = 1
+SELECT 'de esos, marcados como GANADORES',   COUNT(*) FROM mdjiGKa_navidad_tvs_scores WHERE ganador = 1
 UNION ALL
-SELECT 'revanchas de una persona',           COUNT(*) FROM wp_navidad_tvs_revanchas WHERE participante_id > 0
+SELECT 'revanchas de una persona',           COUNT(*) FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id > 0
 UNION ALL
-SELECT 'revanchas generales (SE CONSERVAN)', COUNT(*) FROM wp_navidad_tvs_revanchas WHERE participante_id = 0
+SELECT 'revanchas generales (SE CONSERVAN)', COUNT(*) FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id = 0
 UNION ALL
-SELECT 'contadores del limitador',           COUNT(*) FROM wp_options
+SELECT 'contadores del limitador',           COUNT(*) FROM mdjiGKa_options
  WHERE option_name LIKE '\_transient\_navidad\_tvs\_rl\_%'
     OR option_name LIKE '\_transient\_timeout\_navidad\_tvs\_rl\_%'
 UNION ALL
-SELECT 'informes de importación guardados',  COUNT(*) FROM wp_options
+SELECT 'informes de importación guardados',  COUNT(*) FROM mdjiGKa_options
  WHERE option_name LIKE '\_transient\_navidad\_tvs\_import\_resultado\_%'
     OR option_name LIKE '\_transient\_timeout\_navidad\_tvs\_import\_resultado\_%';
 
@@ -85,32 +84,32 @@ START TRANSACTION;
 -- por un estado donde un resultado apunte a alguien que ya no está.
 
 -- Resultados: distancias, logs de entradas y marcas de ganador.
-DELETE FROM wp_navidad_tvs_scores;
+DELETE FROM mdjiGKa_navidad_tvs_scores;
 
 -- Sesiones: cada intento emitido, se haya jugado o no.
-DELETE FROM wp_navidad_tvs_sesiones;
+DELETE FROM mdjiGKa_navidad_tvs_sesiones;
 
 -- Revanchas concedidas a personas concretas.
 -- Las generales (participante_id = 0) NO se tocan: son una decisión del
 -- organizador sobre el calendario, no algo que generara un participante.
 -- Para borrarlas también, está el paso 5.
-DELETE FROM wp_navidad_tvs_revanchas WHERE participante_id > 0;
+DELETE FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id > 0;
 
 -- Y el padrón.
-DELETE FROM wp_navidad_tvs_participantes;
+DELETE FROM mdjiGKa_navidad_tvs_participantes;
 
 -- Contadores del limitador de intentos. Van por teléfono y por IP, así
 -- que son datos de los participantes igual que los demás; además, si se
 -- quedan, alguien que acumuló rechazos sigue bloqueado aunque su fila ya
 -- no exista.
-DELETE FROM wp_options
+DELETE FROM mdjiGKa_options
  WHERE option_name LIKE '\_transient\_navidad\_tvs\_rl\_%'
     OR option_name LIKE '\_transient\_timeout\_navidad\_tvs\_rl\_%';
 
 -- El informe de la última importación, que queda guardado quince minutos
 -- para poder descargar el CSV de rechazos. Si se queda, la pantalla de
 -- importar enseña el resumen de un archivo cuyas filas ya no están.
-DELETE FROM wp_options
+DELETE FROM mdjiGKa_options
  WHERE option_name LIKE '\_transient\_navidad\_tvs\_import\_resultado\_%'
     OR option_name LIKE '\_transient\_timeout\_navidad\_tvs\_import\_resultado\_%';
 
@@ -123,23 +122,23 @@ COMMIT;
 --  Todas las filas de 'filas' tienen que salir en 0, menos las revanchas
 --  generales, que se conservan a propósito.
 
-SELECT 'participantes del padrón'            AS concepto, COUNT(*) AS filas FROM wp_navidad_tvs_participantes
+SELECT 'participantes del padrón'            AS concepto, COUNT(*) AS filas FROM mdjiGKa_navidad_tvs_participantes
 UNION ALL
-SELECT 'sesiones de juego',                  COUNT(*) FROM wp_navidad_tvs_sesiones
+SELECT 'sesiones de juego',                  COUNT(*) FROM mdjiGKa_navidad_tvs_sesiones
 UNION ALL
-SELECT 'resultados de carreras',             COUNT(*) FROM wp_navidad_tvs_scores
+SELECT 'resultados de carreras',             COUNT(*) FROM mdjiGKa_navidad_tvs_scores
 UNION ALL
-SELECT 'revanchas de una persona',           COUNT(*) FROM wp_navidad_tvs_revanchas WHERE participante_id > 0
+SELECT 'revanchas de una persona',           COUNT(*) FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id > 0
 UNION ALL
-SELECT 'revanchas generales (SE CONSERVAN)', COUNT(*) FROM wp_navidad_tvs_revanchas WHERE participante_id = 0
+SELECT 'revanchas generales (SE CONSERVAN)', COUNT(*) FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id = 0
 UNION ALL
-SELECT 'contadores del limitador',           COUNT(*) FROM wp_options
+SELECT 'contadores del limitador',           COUNT(*) FROM mdjiGKa_options
  WHERE option_name LIKE '\_transient\_navidad\_tvs\_rl\_%'
     OR option_name LIKE '\_transient\_timeout\_navidad\_tvs\_rl\_%';
 
 -- Y esto comprueba que la configuración del concurso sigue en su sitio.
 -- Tienen que aparecer navidad_tvs_settings y navidad_tvs_db_version.
-SELECT option_name FROM wp_options WHERE option_name LIKE 'navidad\_tvs\_%';
+SELECT option_name FROM mdjiGKa_options WHERE option_name LIKE 'navidad\_tvs\_%';
 
 
 -- =====================================================================
@@ -152,9 +151,9 @@ SELECT option_name FROM wp_options WHERE option_name LIKE 'navidad\_tvs\_%';
 --  Va FUERA de la transacción porque ALTER TABLE confirma lo anterior por
 --  su cuenta. Ejecútalo después del paso 3, nunca antes.
 
-ALTER TABLE wp_navidad_tvs_participantes AUTO_INCREMENT = 1;
-ALTER TABLE wp_navidad_tvs_sesiones      AUTO_INCREMENT = 1;
-ALTER TABLE wp_navidad_tvs_scores        AUTO_INCREMENT = 1;
+ALTER TABLE mdjiGKa_navidad_tvs_participantes AUTO_INCREMENT = 1;
+ALTER TABLE mdjiGKa_navidad_tvs_sesiones      AUTO_INCREMENT = 1;
+ALTER TABLE mdjiGKa_navidad_tvs_scores        AUTO_INCREMENT = 1;
 
 
 -- =====================================================================
@@ -164,20 +163,20 @@ ALTER TABLE wp_navidad_tvs_scores        AUTO_INCREMENT = 1;
 --  revancha que hubiera abiertas. Son configuración del calendario, no
 --  datos de participantes, y por eso el paso 2 no las toca.
 
-DELETE FROM wp_navidad_tvs_revanchas WHERE participante_id = 0;
-ALTER TABLE wp_navidad_tvs_revanchas AUTO_INCREMENT = 1;
+DELETE FROM mdjiGKa_navidad_tvs_revanchas WHERE participante_id = 0;
+ALTER TABLE mdjiGKa_navidad_tvs_revanchas AUTO_INCREMENT = 1;
 
 
 -- =====================================================================
 --  LO QUE ESTE SCRIPT NO BORRA, A PROPÓSITO
 -- =====================================================================
 --
---  wp_options → navidad_tvs_settings
+--  mdjiGKa_options → navidad_tvs_settings
 --      Horario, días hábiles, premios por jornada, versión de términos,
 --      claves de Turnstile y las páginas creadas. Borrarlo dejaría el
 --      concurso sin configurar.
 --
---  wp_options → navidad_tvs_db_version
+--  mdjiGKa_options → navidad_tvs_db_version
 --      La versión del esquema. Si se borra, el plugin cree que la
 --      instalación es nueva y vuelve a correr las migraciones.
 --
